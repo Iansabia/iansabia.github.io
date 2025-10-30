@@ -1,89 +1,48 @@
-// src/config.ts
-export default {
-  name: "Ian Xavier Sabia",
-  title: "Software Engineer",
+export const siteConfig = {
+  name: "Ian Sabia",
+  title: "Data Science Student @ Boston University",
   description:
-    "Modern, results-driven developer passionate about building efficient, scalable, and visually appealing applications.",
-  accentColor: "#2563eb", // Tailwind blue-600
+    "I’m Ian Sabia, a data science student at Boston University passionate about using data to solve real-world problems through machine learning and analytics.",
+  accentColor: "#1d4ed8",
 
   social: {
-    email: "iansabia@gmail.com",
-    linkedin: "https://linkedin.com/in/iansabia",
+    email: "ian.sabia@bu.edu",
+    linkedin: "https://www.linkedin.com/in/ian-sabia/",
     github: "https://github.com/Iansabia",
   },
 
-  aboutMe: `I’m a dedicated software engineer with a strong focus on clean code, responsive design, and practical problem-solving. I enjoy combining creativity and technology to deliver engaging, scalable, and performance-oriented solutions.`,
+  aboutMe:
+    "I’m a Boston University data science student with experience in Python, R, and SQL. My interests include machine learning, data visualization, and AI applications in finance and healthcare. Outside of data, I love technology, fitness, and travel.",
 
   skills: [
-    "JavaScript",
-    "TypeScript",
-    "React",
-    "Next.js",
-    "Node.js",
-    "Express",
     "Python",
-    "Tailwind CSS",
-    "Astro",
+    "R",
     "SQL",
-    "MongoDB",
-    "Git",
-    "REST APIs",
+    "Pandas",
+    "NumPy",
+    "Matplotlib",
+    "Scikit-learn",
+    "Tableau",
   ],
 
   projects: [
     {
-      name: "Personal Portfolio",
+      name: "NBA Data Analysis",
       description:
-        "A modern developer portfolio built with Astro and Tailwind CSS to showcase projects and experience.",
-      link: "https://iansabia.github.io",
-      skills: ["Astro", "Tailwind CSS", "TypeScript"],
-    },
-    {
-      name: "TaskFlow",
-      description:
-        "A full-stack task management app enabling users to organize, track, and prioritize daily work efficiently.",
-      link: "https://github.com/Iansabia/taskflow",
-      skills: ["React", "Node.js", "Express", "MongoDB"],
-    },
-    {
-      name: "WeatherNow",
-      description:
-        "Responsive weather dashboard displaying real-time weather data using the OpenWeather API.",
-      link: "https://github.com/Iansabia/weather-app",
-      skills: ["JavaScript", "API Integration", "Tailwind CSS"],
-    },
-  ],
-
-  experience: [
-    {
-      company: "Freelance Developer",
-      title: "Software Engineer",
-      dateRange: "2022 – Present",
-      bullets: [
-        "Develop responsive websites and web apps tailored to client needs.",
-        "Implement optimized UI/UX with Astro, React, and Tailwind CSS.",
-        "Collaborate with clients to translate ideas into scalable digital products.",
-      ],
-    },
-    {
-      company: "University Projects",
-      title: "Full-Stack Developer",
-      dateRange: "2020 – 2022",
-      bullets: [
-        "Built full-stack applications using React and Node.js for academic and team projects.",
-        "Applied best practices in responsive design and version control using Git and GitHub.",
-      ],
+        "Analyzed player performance metrics using Python and machine learning to uncover trends and predict game outcomes.",
+      link: "https://github.com/Iansabia/nba-data-analysis",
+      skills: ["Python", "Pandas", "Matplotlib", "Machine Learning"],
     },
   ],
 
   education: [
     {
-      school: "California State University, Fullerton",
-      degree: "Bachelor of Science in Computer Science",
-      dateRange: "2020 – 2024",
+      school: "Boston University",
+      degree: "B.S. in Data Science",
+      dateRange: "Expected 2026",
       achievements: [
-        "Focused on software engineering, web development, and data structures.",
-        "Completed multiple projects involving front-end frameworks and cloud deployment.",
+        "Dean’s List",
+        "Coursework in ML, Statistics, and Data Visualization",
       ],
     },
   ],
