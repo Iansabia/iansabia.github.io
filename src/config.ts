@@ -1,91 +1,89 @@
-export const siteConfig = {
-  name: "Ryan Fitzgerald",
-  title: "Senior Software Engineer",
-  description: "Portfolio website of Ryan Fitzgerald",
-  accentColor: "#1d4ed8",
+// src/config.ts
+export default {
+  name: "Ian Xavier Sabia",
+  title: "Software Engineer",
+  description:
+    "Modern, results-driven developer passionate about building efficient, scalable, and visually appealing applications.",
+  accentColor: "#2563eb", // Tailwind blue-600
+
   social: {
-    email: "your-email@example.com",
-    linkedin: "https://linkedin.com/in/yourprofile",
-    twitter: "https://x.com/rfitzio",
-    github: "https://github.com/RyanFitzgerald",
+    email: "iansabia@gmail.com",
+    linkedin: "https://linkedin.com/in/iansabia",
+    github: "https://github.com/Iansabia",
   },
-  aboutMe:
-    "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Rem quos asperiores nihil consequatur tempore cupiditate architecto natus commodi corrupti quas quasi facere est, dignissimos odit nam veniam sapiente ut, vitae eligendi ipsum dolor, nostrum ullam impedit! Corrupti ratione mollitia temporibus necessitatibus, consectetur reiciendis recusandae id, dolorum quaerat, vero pariatur. Ratione!",
-  skills: ["Javascript", "React", "Node.js", "Python", "AWS", "Docker"],
+
+  aboutMe: `I’m a dedicated software engineer with a strong focus on clean code, responsive design, and practical problem-solving. I enjoy combining creativity and technology to deliver engaging, scalable, and performance-oriented solutions.`,
+
+  skills: [
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Next.js",
+    "Node.js",
+    "Express",
+    "Python",
+    "Tailwind CSS",
+    "Astro",
+    "SQL",
+    "MongoDB",
+    "Git",
+    "REST APIs",
+  ],
+
   projects: [
     {
-      name: "AI Dev Roundup Newsletter",
+      name: "Personal Portfolio",
       description:
-        "One concise email. Five minutes. Every Tuesday. Essential AI news & trends, production-ready libraries, powerful AI tools, and real-world code examples",
-      link: "https://aidevroundup.com/?ref=devportfolio",
-      skills: ["React", "Node.js", "AWS"],
+        "A modern developer portfolio built with Astro and Tailwind CSS to showcase projects and experience.",
+      link: "https://iansabia.github.io",
+      skills: ["Astro", "Tailwind CSS", "TypeScript"],
     },
     {
-      name: "Chrome Extension Mastery: Build Full-Stack Extensions with React & Node.js",
+      name: "TaskFlow",
       description:
-        "Master the art of building production-ready, full-stack Chrome Extensions using modern web technologies and best practices",
-      link: "https://fullstackextensions.com/?ref=devportfolio",
-      skills: ["React", "Node.js", "AWS"],
+        "A full-stack task management app enabling users to organize, track, and prioritize daily work efficiently.",
+      link: "https://github.com/Iansabia/taskflow",
+      skills: ["React", "Node.js", "Express", "MongoDB"],
     },
     {
-      name: "ExtensionKit",
+      name: "WeatherNow",
       description:
-        "Kit to jump-start your Chrome extension projects with a variety of battle-tested starter templates & examples",
-      link: "https://extensionkit.io/?ref=devportfolio",
-      skills: ["React", "Node.js", "AWS"],
+        "Responsive weather dashboard displaying real-time weather data using the OpenWeather API.",
+      link: "https://github.com/Iansabia/weather-app",
+      skills: ["JavaScript", "API Integration", "Tailwind CSS"],
     },
   ],
+
   experience: [
     {
-      company: "Tech Company",
-      title: "Senior Software Engineer",
-      dateRange: "Jan 2022 - Present",
+      company: "Freelance Developer",
+      title: "Software Engineer",
+      dateRange: "2022 – Present",
       bullets: [
-        "Led development of microservices architecture serving 1M+ users",
-        "Reduced API response times by 40% through optimization",
-        "Mentored team of 5 junior developers",
+        "Develop responsive websites and web apps tailored to client needs.",
+        "Implement optimized UI/UX with Astro, React, and Tailwind CSS.",
+        "Collaborate with clients to translate ideas into scalable digital products.",
       ],
     },
     {
-      company: "Startup Inc",
-      title: "Full Stack Developer",
-      dateRange: "Jun 2020 - Dec 2021",
+      company: "University Projects",
+      title: "Full-Stack Developer",
+      dateRange: "2020 – 2022",
       bullets: [
-        "Built and launched MVP product from scratch using React and Node.js",
-        "Implemented CI/CD pipeline reducing deployment time by 60%",
-        "Collaborated with product team to define technical requirements",
-      ],
-    },
-    {
-      company: "Digital Agency",
-      title: "Frontend Developer",
-      dateRange: "Aug 2018 - May 2020",
-      bullets: [
-        "Developed responsive web applications for 20+ clients",
-        "Improved site performance scores by 35% on average",
-        "Introduced modern JavaScript frameworks to legacy codebases",
+        "Built full-stack applications using React and Node.js for academic and team projects.",
+        "Applied best practices in responsive design and version control using Git and GitHub.",
       ],
     },
   ],
+
   education: [
     {
-      school: "University Name",
+      school: "California State University, Fullerton",
       degree: "Bachelor of Science in Computer Science",
-      dateRange: "2014 - 2018",
+      dateRange: "2020 – 2024",
       achievements: [
-        "Graduated Magna Cum Laude with 3.8 GPA",
-        "Dean's List all semesters",
-        "President of Computer Science Club",
-      ],
-    },
-    {
-      school: "Online Platform",
-      degree: "Full Stack Development Certificate",
-      dateRange: "2019",
-      achievements: [
-        "Completed 500+ hours of coursework",
-        "Built 10+ portfolio projects",
-        "Specialized in React and Node.js",
+        "Focused on software engineering, web development, and data structures.",
+        "Completed multiple projects involving front-end frameworks and cloud deployment.",
       ],
     },
   ],
