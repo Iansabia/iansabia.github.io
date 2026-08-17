@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ian Sabia</title>
+<meta name="description" content="Data science student at Boston University. I build data and AI products, and I check whether they are telling the truth.">
+<style>
+  :root{
+    --bg:#fbfbfd;
+    --bg-alt:#f5f5f7;
+    --ink:#1d1d1f;
+    --ink-2:#6e6e73;
+    --ink-3:#86868b;
+    --rule:#d2d2d7;
+    --accent:#0066cc;
+    --card:#ffffff;
+    --shadow:0 4px 24px rgba(0,0,0,.06);
+    --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
+    --ease:cubic-bezier(.25,.1,.25,1);
+    --ease-out:cubic-bezier(.16,1,.3,1);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#000000;
+      --bg-alt:#0a0a0a;
+      --ink:#f5f5f7;
+      --ink-2:#a1a1a6;
+      --ink-3:#86868b;
+      --rule:#2a2a2c;
+      --accent:#2997ff;
+      --card:#141416;
+      --shadow:0 4px 24px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#000000; --bg-alt:#0a0a0a; --ink:#f5f5f7; --ink-2:#a1a1a6;
+    --ink-3:#86868b; --rule:#2a2a2c; --accent:#2997ff; --card:#141416;
+    --shadow:0 4px 24px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:17px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:var(--accent);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:100;
+    backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    background:color-mix(in srgb, var(--bg) 82%, transparent);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s var(--ease);
+  }
+  nav.stuck{border-bottom-color:var(--rule);}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:48px;}
+  nav .mark{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink);}
+  nav ul{display:flex;gap:26px;list-style:none;}
+  nav ul a{font-size:12px;color:var(--ink-2);letter-spacing:.01em;}
+  nav ul a:hover{color:var(--ink);text-decoration:none;}
+  @media(max-width:640px){ nav ul{gap:16px;} nav ul a{font-size:11px;} }
+
+  /* ---------- hero ---------- */
+  header{
+    min-height:88vh;
+    display:flex;align-items:center;
+    padding:80px 0 60px;
+    position:relative;
+  }
+  .eyebrow{
+    font-size:19px;font-weight:600;color:var(--accent);
+    letter-spacing:-.01em;margin-bottom:10px;
+  }
+  h1{
+    font-size:clamp(40px,8.4vw,88px);
+    line-height:1.04;
+    font-weight:700;
+    letter-spacing:-.035em;
+    text-wrap:balance;
+    margin-bottom:22px;
+  }
+  .lede{
+    font-size:clamp(19px,2.5vw,26px);
+    line-height:1.4;
+    font-weight:400;
+    color:var(--ink-2);
+    letter-spacing:-.015em;
+    max-width:36ch;
+    text-wrap:pretty;
+  }
+  .lede strong{color:var(--ink);font-weight:600;}
+  .hero-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px;}
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:15px;font-weight:400;
+    padding:9px 19px;border-radius:980px;
+    transition:transform .25s var(--ease-out), background .25s var(--ease), opacity .25s var(--ease);
+  }
+  .btn.primary{background:var(--accent);color:#fff;}
+  .btn.primary:hover{opacity:.85;text-decoration:none;transform:scale(1.02);}
+  .btn.ghost{border:1px solid var(--rule);color:var(--ink);}
+  .btn.ghost:hover{border-color:var(--ink-3);text-decoration:none;transform:scale(1.02);}
+
+  /* ---------- sections ---------- */
+  section{padding:96px 0;}
+  section.alt{background:var(--bg-alt);}
+  .kicker{
+    font-size:12px;font-weight:600;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--ink-3);margin-bottom:14px;
+  }
+  h2{
+    font-size:clamp(30px,4.6vw,50px);
+    line-height:1.08;font-weight:700;
+    letter-spacing:-.028em;text-wrap:balance;
+    margin-bottom:16px;
+  }
+  .sect-lede{
+    font-size:clamp(17px,2vw,21px);
+    color:var(--ink-2);max-width:60ch;
+    line-height:1.45;letter-spacing:-.01em;
+  }
+
+  /* ---------- feature block ---------- */
+  .feature{padding:78px 0;border-top:1px solid var(--rule);}
+  .feature:first-of-type{border-top:none;padding-top:8px;}
+  .feature h3{
+    font-size:clamp(25px,3.4vw,38px);
+    line-height:1.1;font-weight:700;letter-spacing:-.025em;
+    margin-bottom:6px;text-wrap:balance;
+  }
+  .feature .role{
+    font-size:15px;color:var(--ink-3);margin-bottom:20px;
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  }
+  .feature .role .dot{color:var(--rule);}
+  .feature p{
+    font-size:17px;line-height:1.6;color:var(--ink-2);
+    max-width:62ch;margin-bottom:14px;
+  }
+  .feature p strong{color:var(--ink);font-weight:600;}
+  .stats{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:1px;background:var(--rule);border:1px solid var(--rule);
+    border-radius:12px;overflow:hidden;margin:26px 0 20px;
+  }
+  .stat{background:var(--card);padding:18px 20px;}
+  .stat .n{
+    font-size:27px;font-weight:600;letter-spacing:-.02em;
+    display:block;line-height:1.1;font-variant-numeric:tabular-nums;
+  }
+  .stat .l{font-size:13px;color:var(--ink-3);margin-top:5px;display:block;line-height:1.3;}
+  .links{display:flex;flex-wrap:wrap;gap:18px;font-size:15px;margin-top:4px;}
+  .links a::after{content:" ›";}
+
+  /* ---------- writing ---------- */
+  .note{
+    background:var(--card);border:1px solid var(--rule);
+    border-radius:16px;padding:30px 32px;box-shadow:var(--shadow);
+    max-width:64ch;
+  }
+  .note h3{font-size:22px;letter-spacing:-.02em;margin-bottom:12px;line-height:1.2;}
+  .note p{color:var(--ink-2);font-size:16px;line-height:1.6;margin-bottom:12px;}
+  .note p:last-child{margin-bottom:0;}
+
+  /* ---------- contact ---------- */
+  .contact-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:14px;margin-top:32px;
+  }
+  .ccard{
+    background:var(--card);border:1px solid var(--rule);border-radius:14px;
+    padding:20px 22px;transition:transform .3s var(--ease-out), border-color .3s var(--ease);
+  }
+  .ccard:hover{transform:translateY(-2px);border-color:var(--ink-3);}
+  .ccard .k{font-size:12px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.07em;}
+  .ccard .v{font-size:16px;margin-top:6px;display:block;word-break:break-word;}
+
+  footer{
+    padding:44px 0 60px;border-top:1px solid var(--rule);
+    font-size:13px;color:var(--ink-3);
+  }
+
+  /* ---------- scroll reveal ---------- */
+  .reveal{
+    opacity:0;transform:translateY(24px);
+    transition:opacity .85s var(--ease-out), transform .85s var(--ease-out);
+    will-change:opacity,transform;
+  }
+  .reveal.in{opacity:1;transform:none;}
+  @supports (animation-timeline:view()){
+    @media (prefers-reduced-motion:no-preference){
+      .reveal:not(.in){
+        animation:rise linear both;
+        animation-timeline:view();
+        animation-range:entry 0% entry 62%;
+      }
+    }
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(24px);}
+    to{opacity:1;transform:none;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    .reveal{opacity:1!important;transform:none!important;animation:none!important;transition:none!important;}
+    .btn,.ccard{transition:none!important;}
+  }
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px;}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="wrap">
+    <span class="mark">Ian Sabia</span>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow reveal">Boston University, Data Science &rsquo;28</div>
+    <h1 class="reveal">I build data and AI products, then check whether they are telling the truth.</h1>
+    <p class="lede reveal">Last summer I shipped a conversational analytics agent to a medical device plant&rsquo;s quality team, then spent the rest of it trying to break my own work. <strong>The model was the easy part.</strong></p>
+    <div class="hero-links reveal">
+      <a class="btn primary" href="#work">See the work</a>
+      <a class="btn ghost" href="mailto:iansabia@bu.edu">Get in touch</a>
+    </div>
+  </div>
+</header>
+
+<section id="work">
+  <div class="wrap">
+    <div class="kicker reveal">Experience</div>
+    <h2 class="reveal">Things I have shipped to real users.</h2>
+    <p class="sect-lede reveal">Three of these had paying customers or people who depended on them at work. That constraint is most of what I have learned so far.</p>
+
+    <div class="feature reveal" style="margin-top:48px;">
+      <h3>Medtronic</h3>
+      <div class="role">Engineering Intern, Quality Systems <span class="dot">&middot;</span> Summer 2026 <span class="dot">&middot;</span> North Haven, CT</div>
+      <p>A surgical device plant kept its quality and production records in five separate systems with no governed way to query across them, so the quality team had effectively become the site&rsquo;s manual lookup service. I interviewed them to find where the time was actually going, then built a governed semantic layer over the ERP and put a conversational agent on top of it.</p>
+      <p>I shipped it into <strong>Microsoft Teams</strong> instead of building an app, because Teams was already where the plant worked and adoption then required no new habit. After presenting to site leadership it was released across operations.</p>
+      <div class="stats">
+        <div class="stat"><span class="n">~16.9M</span><span class="l">ERP rows modeled</span></div>
+        <div class="stat"><span class="n">15 min &rarr; 1</span><span class="l">record lookup time</span></div>
+        <div class="stat"><span class="n">5 &rarr; 1</span><span class="l">systems, one place to ask</span></div>
+        <div class="stat"><span class="n">15</span><span class="l">agent tools shipped</span></div>
+      </div>
+      <p>The part I think about most is what made it accurate. It was not the model. It was roughly 35,000 characters of domain rules written by hand: never sum production receipts across bill-of-material levels, never average an average, the fiscal year starts in May. And when I audited the agent against the source system, the real defects were upstream in the data, not in the answers.</p>
+    </div>
+
+    <div class="feature reveal">
+      <h3>Continuum</h3>
+      <div class="role">Co-Founder <span class="dot">&middot;</span> 2025&ndash;present <span class="dot">&middot;</span> Boston, MA</div>
+      <p>An on-course golf tracker that reads your swing and ball from ordinary phone video. We started building for indoor simulators. After about seventy conversations with golfers we moved the whole product outdoors, because that is where people actually wanted to understand their game, and we kept it free by running on the phone they already carry.</p>
+      <p>I lead product and ML: the computer vision stack in PyTorch, a per-player Bayesian shot model, and the evaluation harness that decides what we are allowed to claim about accuracy before the product is allowed to give advice.</p>
+      <div class="links"><a href="https://iansabia.github.io/continuum-caddy/">See the product</a></div>
+    </div>
+
+    <div class="feature reveal">
+      <h3>KoalaACO</h3>
+      <div class="role">Co-Founder <span class="dot">&middot;</span> 2020&ndash;2023</div>
+      <p>A paid automated-checkout service that grew out of a 350-member community. People kept asking us to place orders on our own cards, so we charged a fee for it and then built the automation behind it. I was fifteen when it started.</p>
+      <div class="stats">
+        <div class="stat"><span class="n">300+</span><span class="l">paying customers</span></div>
+        <div class="stat"><span class="n">$500k+</span><span class="l">gross merchandise value</span></div>
+        <div class="stat"><span class="n">2+ yrs</span><span class="l">run end to end</span></div>
+      </div>
+      <p>It is the first time I found demand before building anything, which was mostly an accident at the time and is now the part I try to repeat on purpose.</p>
+    </div>
+  </div>
+</section>
+
+<section id="projects" class="alt">
+  <div class="wrap">
+    <div class="kicker reveal">Projects</div>
+    <h2 class="reveal">Research and code.</h2>
+
+    <div class="feature reveal" style="margin-top:44px;">
+      <h3>Complexity Is Not an Edge</h3>
+      <div class="role">ML research <span class="dot">&middot;</span> Boston University, DS340</div>
+      <p>We asked whether more model complexity buys more predictive edge on prediction-market price gaps, and trained four tiers to find out: linear regression and XGBoost, then GRU/LSTM/TFT, then PPO, then PPO with an autoencoder.</p>
+      <p>It does not. <strong>Linear regression won.</strong> It reached a 0.501 per-trade Sharpe at +15.0 bps of alpha while the reinforcement-learning model collapsed to +0.5 bps, roughly thirty times less edge for a great deal more compute. We re-ran every claim on a leakage-free split before publishing rather than tuning until the result looked better, and wrote it up as a 29-page paper.</p>
+      <div class="links"><a href="https://github.com/Iansabia/DS340-Project">Read the paper and code</a></div>
+    </div>
+
+    <div class="feature reveal">
+      <h3>An AI calculator</h3>
+      <div class="role">Open-source hardware <span class="dot">&middot;</span> 38 stars</div>
+      <p>A camera and an ESP32-S3 wired to a TI-Nspire graphing calculator, so it can photograph a handwritten problem and return a worked solution on the device. I wrote the firmware, the on-calculator client, and the local proxy that talks to the model.</p>
+      <div class="links"><a href="https://github.com/OtterCadGH/nternet-Link">See the build</a></div>
+    </div>
+
+    <div class="feature reveal">
+      <h3>Omi</h3>
+      <div class="role">Open-source contribution <span class="dot">&middot;</span> merged</div>
+      <p>Found and fixed a nested-transaction bug in the desktop agent runtime of Omi, an AI wearables company, and had the fix merged into their production codebase.</p>
+      <div class="links"><a href="https://github.com/BasedHardware/omi/pull/8443">See the pull request</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <div class="kicker reveal">About</div>
+    <h2 class="reveal">What I am actually interested in.</h2>
+    <div class="note reveal" style="margin-top:28px;">
+      <h3>Trust is the hard part, not intelligence.</h3>
+      <p>Every system I have built recently has been easy to make impressive in a demo and hard to make honest in production. The agent at Medtronic was accurate because of the rules around it, not the model inside it. The research project was worth something because we published the result we did not want.</p>
+      <p>So the questions I care about are the unglamorous ones. How do you know a system is right? What should it do when it is unsure? Who is accountable for the data underneath it? That is why I am studying data science and taking AI ethics and technology law alongside it, and why I want to work on data platforms rather than on top of them.</p>
+      <p>I am a junior at Boston University in the Faculty of Computing &amp; Data Sciences, graduating in Spring 2028, with a minor in philosophy. I spend the rest of my time on chess, skiing, and golf, which is how the startup started.</p>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="alt">
+  <div class="wrap">
+    <div class="kicker reveal">Contact</div>
+    <h2 class="reveal">Say hello.</h2>
+    <p class="sect-lede reveal">I am looking for a product management internship for summer 2027, and I am always happy to talk about data platforms, evaluation, or golf.</p>
+    <div class="contact-grid reveal">
+      <div class="ccard"><span class="k">Email</span><a class="v" href="mailto:iansabia@bu.edu">iansabia@bu.edu</a></div>
+      <div class="ccard"><span class="k">LinkedIn</span><a class="v" href="https://linkedin.com/in/iansabia">/in/iansabia</a></div>
+      <div class="ccard"><span class="k">GitHub</span><a class="v" href="https://github.com/Iansabia">@Iansabia</a></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Ian Xavier Sabia &middot; Boston, MA</div>
+</footer>
+
+<script>
+(function(){
+  var nav = document.getElementById('nav');
+  var onScroll = function(){ nav.classList.toggle('stuck', window.scrollY > 8); };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var els = document.querySelectorAll('.reveal');
+  if (reduce || !('IntersectionObserver' in window)) {
+    els.forEach(function(el){ el.classList.add('in'); });
+    return;
+  }
+  // Hero is above the fold: reveal immediately, staggered.
+  var hero = document.querySelectorAll('header .reveal');
+  hero.forEach(function(el, i){
+    el.style.transitionDelay = (i * 90) + 'ms';
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('in'); }); });
+  });
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {rootMargin: '0px 0px -12% 0px', threshold: 0.05});
+  els.forEach(function(el){ if (!el.closest('header')) io.observe(el); });
+})();
+</script>
+
+</body>
+</html>
