@@ -136,7 +136,22 @@
   .fread b{color:var(--ink);font-weight:500}
   .fnote{color:var(--body);font-size:14px;margin-top:12px}
   .fnote a{color:var(--ink)}
-  @media (max-width:900px){.fcards{grid-template-columns:1fr}}
+  /* always side by side: three columns with tighter type on mid widths, a swipeable row on phones */
+  .fline{flex-wrap:wrap;gap:2px 10px}
+  @media (max-width:900px){
+    .fcards{gap:10px}
+    .fbody{padding:12px;gap:10px}
+    .fdiff{flex-wrap:wrap;gap:2px 8px}
+    .fdiff strong{font-size:32px}
+    .wk{font-size:10px;padding:5px 0}
+    .weeks{gap:3px}
+  }
+  @media (max-width:640px){
+    .fcards{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(220px,74%);overflow-x:auto;scroll-snap-type:x mandatory;
+      padding-bottom:6px;margin-right:calc(-1 * var(--gut));padding-right:var(--gut);scrollbar-width:none}
+    .fcards::-webkit-scrollbar{display:none}
+    .fcard{scroll-snap-align:start}
+  }
 
   /* work entries */
   .work{display:grid;gap:clamp(56px,7vw,90px)}
