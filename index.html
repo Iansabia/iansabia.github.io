@@ -4,375 +4,912 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ian Sabia</title>
-<meta name="description" content="Data science student at Boston University. I build data and AI products, and I check whether they are telling the truth.">
+<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<meta name="description" content="Ian Sabia. Data science at Boston University. I build AI products people actually use, then check that they tell the truth.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://iansabia.github.io/">
+<meta property="og:title" content="Ian Sabia">
+<meta property="og:description" content="Data science at Boston University. AI agents at Medtronic, an AI golf caddy at Continuum, and a self-driving model for NVIDIA's Physical AI challenge.">
+<meta property="og:image" content="https://iansabia.github.io/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Ian Sabia. Data science at Boston University.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
+  /* Continuum palette: cream by day, night violet by night. The band is always night. */
   :root{
-    --bg:#fbfbfd;
-    --bg-alt:#f5f5f7;
-    --ink:#1d1d1f;
-    --ink-2:#6e6e73;
-    --ink-3:#86868b;
-    --rule:#d2d2d7;
-    --accent:#0066cc;
-    --card:#ffffff;
-    --shadow:0 4px 24px rgba(0,0,0,.06);
-    --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
-    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
-    --ease:cubic-bezier(.25,.1,.25,1);
-    --ease-out:cubic-bezier(.16,1,.3,1);
+    --bg:#F6F1E6; --tile:#ECE5D6; --ghost:#E2DAC8; --ink:#0B0817; --body:#4A4363; --rule:#D3CAB5;
+    --acc:#6D4FE8; --warm:#c0632f;
+    --nbg:#0B0817; --ntile:#15102A; --nghost:#1B1533; --nink:#EFEAF8; --nbody:#A79FBF; --nrule:#2A2342; --nacc:#9B85FF; --nwarm:#e08a55;
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"Instrument Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --gut:clamp(16px,4vw,48px);
+    --max:1120px;
+    color-scheme:light;
   }
-  @media (prefers-color-scheme:dark){
-    :root:not([data-theme="light"]){
-      --bg:#000000;
-      --bg-alt:#0a0a0a;
-      --ink:#f5f5f7;
-      --ink-2:#a1a1a6;
-      --ink-3:#86868b;
-      --rule:#2a2a2c;
-      --accent:#2997ff;
-      --card:#141416;
-      --shadow:0 4px 24px rgba(0,0,0,.5);
-    }
-  }
+  /* Light is the default for everyone. Dark is opt-in: a soft charcoal, with violet kept for accents only. */
   :root[data-theme="dark"]{
-    --bg:#000000; --bg-alt:#0a0a0a; --ink:#f5f5f7; --ink-2:#a1a1a6;
-    --ink-3:#86868b; --rule:#2a2a2c; --accent:#2997ff; --card:#141416;
-    --shadow:0 4px 24px rgba(0,0,0,.5);
+    --bg:#1C1B21; --tile:#25232C; --ghost:#2F2C37; --ink:#F4F2F7; --body:#C3BECF; --rule:#3D3A47; --acc:#AE9CFF; --warm:#EE9A63;
+    --nbg:#2A2733; --ntile:#33303D; --nghost:#3B3846; --nink:#F4F2F7; --nbody:#C3BECF; --nrule:#46424F; --nacc:#B9A9FF; --nwarm:#F0A06C; color-scheme:dark;
   }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;transition:background-color .35s,color .35s;overflow-x:hidden}
+  a{color:inherit}
+  ::selection{background:var(--acc);color:#fff}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gut)}
+  .mono{font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+  .skip{position:absolute;left:-999px;top:8px;background:var(--acc);color:#fff;padding:8px 12px;z-index:50}
+  .skip:focus{left:8px}
+  :focus-visible{outline:2px solid var(--acc);outline-offset:3px}
 
-  *{box-sizing:border-box;margin:0;padding:0;}
-  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
-  body{
-    background:var(--bg);
-    color:var(--ink);
-    font-family:var(--sans);
-    font-size:17px;
-    line-height:1.5;
-    -webkit-font-smoothing:antialiased;
-    overflow-x:hidden;
-  }
-  a{color:var(--accent);text-decoration:none;}
-  a:hover{text-decoration:underline;}
-  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+  /* top bar */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0}
+  .top nav{display:flex;gap:22px;align-items:center}
+  .top a{text-decoration:none;font-weight:500;font-size:15px}
+  .top nav a{position:relative;padding:4px 0}
+  .top nav a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .35s var(--ease)}
+  .top nav a:hover::after{transform:scaleX(1)}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand svg{width:26px;height:26px}
+  .brand span{white-space:nowrap}
+  .toggle{background:none;border:1.5px solid var(--rule);color:var(--ink);border-radius:999px;width:58px;height:30px;position:relative;cursor:pointer;transition:border-color .3s}
+  .toggle:hover{border-color:var(--ink)}
+  .toggle i{position:absolute;top:4px;left:5px;width:19px;height:19px;border-radius:50%;background:var(--warm);transition:transform .45s var(--ease),background .3s;box-shadow:0 0 0 0 transparent}
+  :root[data-theme="dark"] .toggle i{transform:translateX(26px);background:var(--acc)}
 
-  /* ---------- nav ---------- */
-  nav{
-    position:sticky;top:0;z-index:100;
-    backdrop-filter:saturate(180%) blur(20px);
-    -webkit-backdrop-filter:saturate(180%) blur(20px);
-    background:color-mix(in srgb, var(--bg) 82%, transparent);
-    border-bottom:1px solid transparent;
-    transition:border-color .3s var(--ease);
-  }
-  nav.stuck{border-bottom-color:var(--rule);}
-  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:48px;}
-  nav .mark{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink);}
-  nav ul{display:flex;gap:26px;list-style:none;}
-  nav ul a{font-size:12px;color:var(--ink-2);letter-spacing:.01em;}
-  nav ul a:hover{color:var(--ink);text-decoration:none;}
-  @media(max-width:640px){ nav ul{gap:16px;} nav ul a{font-size:11px;} }
+  /* hero band */
+  .hero{display:grid;grid-template-columns:1fr 290px;background:var(--nbg);color:var(--nink);border:1px solid var(--nbg);position:relative;overflow:hidden;min-height:440px;transition:background-color .35s}
+  .hero-main{position:relative;padding:clamp(28px,5vw,60px);display:flex;flex-direction:column;justify-content:flex-end;min-height:440px;cursor:crosshair}
+  #tracer{position:absolute;inset:0;width:100%;height:100%}
+  .hero h1{font-family:var(--serif);font-weight:700;font-size:clamp(54px,9vw,112px);line-height:.92;letter-spacing:-.025em;position:relative;pointer-events:none}
+  .hero h1 em{font-style:italic;font-weight:500;color:var(--nacc)}
+  .hero .tag{position:relative;max-width:430px;margin-top:18px;color:var(--nbody);font-size:18px;pointer-events:none}
+  .hero .tag b{color:var(--nink);font-weight:500}
+  .hero .links{position:relative;display:flex;flex-wrap:wrap;gap:18px;margin-top:26px}
+  .hero .links a{color:var(--nink);text-decoration:none;font-weight:500;border-bottom:1.5px solid var(--nacc);padding-bottom:2px;transition:color .2s,border-color .2s}
+  .hero .links a:hover{color:var(--nwarm);border-color:var(--nwarm)}
+  .hint{position:absolute;top:22px;left:clamp(28px,5vw,60px);color:var(--nbody);opacity:.85;pointer-events:none;transition:opacity .5s}
+  .meta{border-left:1px solid var(--nrule);display:flex;flex-direction:column;position:relative;z-index:1;background:var(--nbg);transition:background-color .35s}
+  .meta div{padding:20px 22px;border-bottom:1px solid var(--nrule)}
+  .meta div:last-child{border-bottom:0;flex:1}
+  .meta dt{color:var(--nbody);font-size:11px}
+  .meta dd{margin-top:6px;font-size:16px;font-weight:500;line-height:1.35}
+  .meta dd .big{font-family:var(--serif);font-size:30px;font-weight:500;letter-spacing:-.01em;display:block;line-height:1.05}
+  .meta dd small{color:var(--nbody);font-size:13px;font-weight:400}
+  .shotread{font-family:var(--mono);font-size:13px;color:var(--nink)}
+  .shotread span{color:var(--nwarm)}
+  .shotread small{font-family:var(--sans);font-size:12px;color:var(--nbody)}
 
-  /* ---------- hero ---------- */
-  header{
-    min-height:88vh;
-    display:flex;align-items:center;
-    padding:80px 0 60px;
-    position:relative;
-  }
-  .eyebrow{
-    font-size:19px;font-weight:600;color:var(--accent);
-    letter-spacing:-.01em;margin-bottom:10px;
-  }
-  h1{
-    font-size:clamp(40px,8.4vw,88px);
-    line-height:1.04;
-    font-weight:700;
-    letter-spacing:-.035em;
-    text-wrap:balance;
-    margin-bottom:22px;
-  }
-  .lede{
-    font-size:clamp(19px,2.5vw,26px);
-    line-height:1.4;
-    font-weight:400;
-    color:var(--ink-2);
-    letter-spacing:-.015em;
-    max-width:36ch;
-    text-wrap:pretty;
-  }
-  .lede strong{color:var(--ink);font-weight:600;}
-  .hero-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px;}
-  .btn{
-    display:inline-flex;align-items:center;gap:6px;
-    font-size:15px;font-weight:400;
-    padding:9px 19px;border-radius:980px;
-    transition:transform .25s var(--ease-out), background .25s var(--ease), opacity .25s var(--ease);
-  }
-  .btn.primary{background:var(--accent);color:#fff;}
-  .btn.primary:hover{opacity:.85;text-decoration:none;transform:scale(1.02);}
-  .btn.ghost{border:1px solid var(--rule);color:var(--ink);}
-  .btn.ghost:hover{border-color:var(--ink-3);text-decoration:none;transform:scale(1.02);}
+  /* sections */
+  section.block{padding:clamp(64px,9vw,110px) 0 0}
+  .head{display:flex;align-items:flex-end;gap:18px;margin-bottom:10px}
+  .head .num{color:var(--acc);padding-bottom:12px}
+  .rule{height:3px;background:var(--ink);width:min(560px,70%);margin-bottom:22px;transform-origin:left;transform:scaleX(0);transition:transform 1s var(--ease)}
+  .in .rule,.rule.in{transform:scaleX(1)}
+  h2{font-family:var(--serif);font-weight:700;font-size:clamp(38px,5.4vw,64px);line-height:1;letter-spacing:-.02em}
+  .sub{color:var(--body);margin:10px 0 30px;max-width:620px}
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
 
-  /* ---------- sections ---------- */
-  section{padding:96px 0;}
-  section.alt{background:var(--bg-alt);}
-  .kicker{
-    font-size:12px;font-weight:600;text-transform:uppercase;
-    letter-spacing:.08em;color:var(--ink-3);margin-bottom:14px;
-  }
-  h2{
-    font-size:clamp(30px,4.6vw,50px);
-    line-height:1.08;font-weight:700;
-    letter-spacing:-.028em;text-wrap:balance;
-    margin-bottom:16px;
-  }
-  .sect-lede{
-    font-size:clamp(17px,2vw,21px);
-    color:var(--ink-2);max-width:60ch;
-    line-height:1.45;letter-spacing:-.01em;
-  }
+  /* currently table */
+  .now{border-top:1px solid var(--rule)}
+  .now a,.now div.row{display:grid;grid-template-columns:200px 1fr auto;gap:18px;padding:16px 14px;border-bottom:1px solid var(--rule);text-decoration:none;align-items:baseline;transition:background .25s,padding .35s var(--ease)}
+  .now a:hover{background:var(--tile);padding-left:22px}
+  .now b{font-weight:600}
+  .now span{color:var(--body)}
+  .now .when{color:var(--body);white-space:nowrap}
+  .pill,.now .pill{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--acc);color:#fff;padding:3px 8px;border-radius:3px;margin-left:8px;vertical-align:2px}
 
-  /* ---------- feature block ---------- */
-  .feature{padding:78px 0;border-top:1px solid var(--rule);}
-  .feature:first-of-type{border-top:none;padding-top:8px;}
-  .feature h3{
-    font-size:clamp(25px,3.4vw,38px);
-    line-height:1.1;font-weight:700;letter-spacing:-.025em;
-    margin-bottom:6px;text-wrap:balance;
-  }
-  .feature .role{
-    font-size:15px;color:var(--ink-3);margin-bottom:20px;
-    display:flex;flex-wrap:wrap;gap:8px;align-items:center;
-  }
-  .feature .role .dot{color:var(--rule);}
-  .feature p{
-    font-size:17px;line-height:1.6;color:var(--ink-2);
-    max-width:62ch;margin-bottom:14px;
-  }
-  .feature p strong{color:var(--ink);font-weight:600;}
-  .stats{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-    gap:1px;background:var(--rule);border:1px solid var(--rule);
-    border-radius:12px;overflow:hidden;margin:26px 0 20px;
-  }
-  .stat{background:var(--card);padding:18px 20px;}
-  .stat .n{
-    font-size:27px;font-weight:600;letter-spacing:-.02em;
-    display:block;line-height:1.1;font-variant-numeric:tabular-nums;
-  }
-  .stat .l{font-size:13px;color:var(--ink-3);margin-top:5px;display:block;line-height:1.3;}
-  .links{display:flex;flex-wrap:wrap;gap:18px;font-size:15px;margin-top:4px;}
-  .links a::after{content:" ›";}
+  /* fantasy cards */
+  .rooting{margin-top:34px}
+  .rooting-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-bottom:12px;color:var(--body)}
+  .rooting-h span{white-space:nowrap}
+  .fcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .fcard{border:1px solid var(--rule);background:var(--bg);display:flex;flex-direction:column;transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
+  .fcard:hover{transform:translateY(-3px);box-shadow:0 10px 30px -14px color-mix(in srgb,var(--ink) 45%,transparent)}
+  .fband{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:var(--ghost);color:var(--ink);position:relative}
+  .fband::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:repeating-linear-gradient(90deg,transparent 0 9px,color-mix(in srgb,currentColor 35%,transparent) 9px 10px)}
+  .fcard.mine .fband{background:var(--nbg);color:var(--nink)}
+  .fband .mono{font-size:11px}
+  .fband b{font-family:var(--mono);font-weight:500;font-size:15px;letter-spacing:.02em}
+  .fbody{padding:14px;display:grid;gap:12px;flex:1}
+  .fsub{color:var(--body);font-size:13px}
+  .fdiff{display:flex;align-items:baseline;gap:10px}
+  .fdiff strong{font-family:var(--serif);font-weight:700;font-size:40px;line-height:1;letter-spacing:-.02em}
+  .fdiff strong.up{color:var(--acc)}
+  .fdiff strong.down{color:var(--warm)}
+  .fdiff span{color:var(--body);font-size:13px;line-height:1.3}
+  .fline{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--body);border-top:1px solid var(--rule);padding-top:10px}
+  .fline b{color:var(--ink);font-weight:500}
+  .weeks{display:flex;gap:5px}
+  .wk{flex:1;font-family:var(--mono);font-size:11px;text-align:center;padding:6px 0;border:1px solid var(--rule);background:transparent;color:var(--body);cursor:default;transition:background .2s,color .2s,transform .2s var(--ease)}
+  .wk.W{background:var(--acc);border-color:var(--acc);color:#fff}
+  .wk.L{background:transparent;color:var(--warm);border-color:color-mix(in srgb,var(--warm) 55%,transparent)}
+  .wk:hover,.wk:focus-visible{transform:translateY(-2px)}
+  .fread{font-family:var(--mono);font-size:12px;color:var(--body);min-height:18px}
+  .fread b{color:var(--ink);font-weight:500}
+  .fnote{color:var(--body);font-size:14px;margin-top:12px}
+  .fnote a{color:var(--ink)}
+  @media (max-width:900px){.fcards{grid-template-columns:1fr}}
 
-  /* ---------- writing ---------- */
-  .note{
-    background:var(--card);border:1px solid var(--rule);
-    border-radius:16px;padding:30px 32px;box-shadow:var(--shadow);
-    max-width:64ch;
-  }
-  .note h3{font-size:22px;letter-spacing:-.02em;margin-bottom:12px;line-height:1.2;}
-  .note p{color:var(--ink-2);font-size:16px;line-height:1.6;margin-bottom:12px;}
-  .note p:last-child{margin-bottom:0;}
+  /* work entries */
+  .work{display:grid;gap:clamp(56px,7vw,90px)}
+  .entry{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(24px,4vw,56px);align-items:start}
+  .entry .kicker{color:var(--acc)}
+  .entry h3{font-family:var(--serif);font-weight:700;font-size:clamp(28px,3.4vw,40px);line-height:1.05;letter-spacing:-.015em;margin:8px 0 14px}
+  .entry h3 em{font-weight:500;color:var(--acc)}
+  .entry p{color:var(--body);margin-bottom:14px}
+  .entry p b{color:var(--ink);font-weight:600}
+  .more{display:inline-flex;align-items:center;gap:8px;font-weight:600;text-decoration:none;border-bottom:2px solid var(--acc);padding-bottom:2px;margin-top:6px;transition:gap .3s var(--ease),color .2s}
+  .more:hover{gap:14px;color:var(--acc)}
+  .panel{border:1px solid var(--rule);background:var(--tile);transition:background-color .35s,border-color .35s}
+  .panel-h{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--rule)}
+  .panel-h .mono{color:var(--body)}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;background:var(--ink);color:var(--bg);border:0;padding:9px 14px;cursor:pointer;transition:background .2s,transform .15s}
+  .btn:hover{background:var(--acc);color:#fff}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+  .btn.ghost:hover{border-color:var(--ink);background:transparent;color:var(--ink)}
 
-  /* ---------- contact ---------- */
-  .contact-grid{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
-    gap:14px;margin-top:32px;
-  }
-  .ccard{
-    background:var(--card);border:1px solid var(--rule);border-radius:14px;
-    padding:20px 22px;transition:transform .3s var(--ease-out), border-color .3s var(--ease);
-  }
-  .ccard:hover{transform:translateY(-2px);border-color:var(--ink-3);}
-  .ccard .k{font-size:12px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.07em;}
-  .ccard .v{font-size:16px;margin-top:6px;display:block;word-break:break-word;}
+  /* medtronic: lookup race */
+  .lanes{padding:16px;display:grid;gap:14px}
+  .lane{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+  .lane .lbl{font-weight:600;font-size:15px}
+  .lane .lbl small{display:block;color:var(--body);font-weight:400;font-size:13px}
+  .clock{font-family:var(--mono);font-size:26px;font-variant-numeric:tabular-nums;min-width:96px;text-align:right}
+  .chips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 9px;border:1px solid var(--rule);color:var(--body);background:var(--bg);transition:background .3s,color .3s,border-color .3s}
+  .chip.on{background:var(--warm);border-color:var(--warm);color:#fff}
+  .chip.done{background:var(--ghost);color:var(--body);border-color:var(--ghost);text-decoration:line-through}
+  .chip.agent.on{background:var(--acc);border-color:var(--acc)}
+  .track{grid-column:1/-1;height:6px;background:var(--ghost);position:relative;overflow:hidden}
+  .track i{position:absolute;inset:0;transform-origin:left;transform:scaleX(0);background:var(--warm)}
+  .lane.b .track i{background:var(--acc)}
+  .verdict{padding:0 16px 14px;color:var(--body);font-size:14px;min-height:22px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule)}
+  .stats div{padding:14px 16px;border-right:1px solid var(--rule)}
+  .stats div:nth-child(3n){border-right:0}
+  .stats div:nth-child(n+4){border-top:1px solid var(--rule)}
+  .stats b{display:block;font-family:var(--serif);font-weight:500;font-size:28px;line-height:1.05;letter-spacing:-.01em}
+  .stats span{color:var(--body);font-size:13px}
 
-  footer{
-    padding:44px 0 60px;border-top:1px solid var(--rule);
-    font-size:13px;color:var(--ink-3);
-  }
+  /* continuum: range */
+  .range{position:relative;aspect-ratio:4/3.4;background:var(--tile);overflow:hidden;cursor:crosshair;touch-action:manipulation}
+  .range svg{position:absolute;inset:0;width:100%;height:100%}
+  .caddy{padding:14px 16px;border-top:1px solid var(--rule);display:flex;gap:12px;align-items:flex-start;min-height:74px}
+  .caddy .dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--acc);margin-top:7px;box-shadow:0 0 0 0 var(--acc);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--acc) 60%,transparent)}70%{box-shadow:0 0 0 10px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  .caddy p{margin:0;color:var(--ink);font-size:15px}
+  .caddy p small{display:block;color:var(--body);font-size:13px;margin-top:2px}
+  .vs{display:grid;gap:10px;margin:18px 0 16px}
+  .bar{display:grid;grid-template-columns:150px 1fr 70px;gap:12px;align-items:center;font-size:14px}
+  .bar .t{height:12px;background:var(--ghost);position:relative}
+  .bar .t i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--body);transition:width 1.4s var(--ease)}
+  .bar.me .t i{background:var(--acc)}
+  .bar .v{font-family:var(--mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+  .bar.me{font-weight:600}
 
-  /* ---------- scroll reveal ---------- */
-  .reveal{
-    opacity:0;transform:translateY(24px);
-    transition:opacity .85s var(--ease-out), transform .85s var(--ease-out);
-    will-change:opacity,transform;
+  /* nvidia board */
+  .board{padding:18px 16px 8px;display:grid;gap:14px}
+  .board .bar{grid-template-columns:170px 1fr 58px}
+  .rank{display:flex;align-items:baseline;gap:14px;padding:16px;border-top:1px solid var(--rule)}
+  .rank b{font-family:var(--serif);font-size:64px;line-height:.8;font-weight:700;color:var(--acc)}
+  .rank span{color:var(--body);font-size:14px}
+  .rank span strong{color:var(--ink);font-weight:600;display:block;font-size:16px}
+  .rank em{font-style:normal}
+  .rank em.live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:6px;vertical-align:1px;animation:pulse 2.4s infinite}
+
+  /* projects */
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+  .card{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:24px 22px 22px;text-decoration:none;display:flex;flex-direction:column;gap:10px;position:relative;transition:background .3s;min-height:230px}
+  .card:hover{background:var(--tile)}
+  .card .top-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .card .tagline{color:var(--acc)}
+  .stars{font-family:var(--mono);font-size:12px;color:var(--body);white-space:nowrap;opacity:0;transition:opacity .4s}
+  .stars.ok{opacity:1}
+  .card h4{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1.1;letter-spacing:-.01em}
+  .card p{color:var(--body);font-size:15px}
+  .card .go{margin-top:auto;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;transition:gap .3s var(--ease)}
+  .card:hover .go{gap:14px;color:var(--acc)}
+  .mini{display:grid;gap:6px;margin:4px 0}
+  .mini .bar{grid-template-columns:110px 1fr 84px;font-size:13px}
+
+  /* off the clock */
+  .off{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:0;border:1px solid var(--rule)}
+  .trip{background:var(--nbg);color:var(--nink);padding:22px;position:relative;min-height:320px;display:flex;flex-direction:column;gap:22px;transition:background-color .35s}
+  .trip .mono{color:var(--nbody);font-size:11px}
+  .board-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--nrule)}
+  .board-top b{color:var(--nwarm);font-weight:500;margin-left:6px}
+  .dep{display:grid;grid-template-columns:auto 1fr auto 1.2fr;gap:14px;align-items:end}
+  .dep > div{display:flex;flex-direction:column;gap:2px}
+  .dep b{font-family:var(--mono);font-weight:500;font-size:clamp(28px,4vw,40px);letter-spacing:.04em;line-height:1}
+  .dep b.sm{font-family:var(--serif);font-size:clamp(22px,2.6vw,28px);letter-spacing:-.01em}
+  .dep small{color:var(--nbody);font-size:12px}
+  .dep .arrow{color:var(--nacc);padding-bottom:16px}
+  .dep .arrow svg{width:100%;height:16px}
+  .dep-meta{border-left:1px solid var(--nrule);padding-left:14px}
+  .flaps{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:10px}
+  .unit{display:flex;flex-direction:column;gap:6px}
+  .digits{display:flex;gap:3px}
+  .flap{position:relative;flex:1;min-width:0;height:clamp(52px,6.4vw,74px);background:linear-gradient(var(--ntile) 50%,var(--nghost) 50%);border-radius:5px;display:grid;place-items:center;font-family:var(--mono);font-weight:500;font-size:clamp(30px,4.2vw,48px);color:var(--nink);perspective:300px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+  .flap::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--nbg);opacity:.9}
+  .flap span{display:block;transform-origin:50% 50%;backface-visibility:hidden}
+  .flap.out span{animation:flipOut .14s ease-in forwards}
+  .flap.in span{animation:flipIn .2s cubic-bezier(.22,1,.36,1)}
+  @keyframes flipOut{to{transform:rotateX(-90deg);opacity:.4}}
+  @keyframes flipIn{from{transform:rotateX(90deg);opacity:.4}to{transform:none;opacity:1}}
+  .unit:first-child .flap{color:var(--nwarm)}
+  .wait{display:flex;flex-direction:column;gap:8px;margin-top:auto}
+  .wait-bar{position:relative;height:2px;background:var(--nrule)}
+  .wait-bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--nacc);transition:width 1.6s var(--ease)}
+  #waitPlane{position:absolute;top:50%;left:0;width:20px;height:20px;transform:translate(-50%,-50%) rotate(90deg);color:var(--nwarm);transition:left 1.6s var(--ease)}
+  #waitPlane svg{width:100%;height:100%}
+  @media (max-width:640px){.dep{grid-template-columns:auto 1fr auto}.dep-meta{grid-column:1/-1;border-left:0;padding-left:0;border-top:1px solid var(--nrule);padding-top:10px}}
+  .likes{padding:22px;display:flex;flex-direction:column;gap:14px}
+  .likes ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+  .likes li{border:1px solid var(--rule);padding:7px 12px;font-size:14px;cursor:default;transition:background .25s,color .25s,border-color .25s,transform .25s var(--ease)}
+  .likes li:hover{background:var(--ink);color:var(--bg);border-color:var(--ink);transform:translateY(-2px) rotate(-1.5deg)}
+  .likes p{color:var(--body);font-size:15px}
+
+  /* contact + footer */
+  .contact{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+  .contact a{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:22px;text-decoration:none;display:flex;flex-direction:column;gap:6px;transition:background .25s,color .25s}
+  .contact a:hover{background:var(--ink);color:var(--bg)}
+  .contact a:hover .mono{color:var(--warm)}
+  .contact .mono{color:var(--acc)}
+  .contact b{font-weight:600;font-size:17px;word-break:break-word}
+  footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding:26px 0 40px;margin-top:70px;border-top:1px solid var(--rule)}
+  footer .stamp{display:flex;border:1px solid var(--rule)}
+  footer .stamp span{padding:6px 10px;color:var(--body)}
+  footer .stamp span+span{border-left:1px solid var(--rule)}
+  footer .stamp b{color:var(--ink);font-weight:500;margin-left:6px}
+  footer p{color:var(--body);font-size:14px}
+
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr}
+    .meta{border-left:0;border-top:1px solid var(--nrule);display:grid;grid-template-columns:1fr 1fr}
+    .meta div{border-right:1px solid var(--nrule)}
+    .meta div:nth-child(2n){border-right:0}
+    .entry{grid-template-columns:1fr}
+    .off{grid-template-columns:1fr}
   }
-  .reveal.in{opacity:1;transform:none;}
-  @supports (animation-timeline:view()){
-    @media (prefers-reduced-motion:no-preference){
-      .reveal:not(.in){
-        animation:rise linear both;
-        animation-timeline:view();
-        animation-range:entry 0% entry 62%;
-      }
-    }
-  }
-  @keyframes rise{
-    from{opacity:0;transform:translateY(24px);}
-    to{opacity:1;transform:none;}
+  @media (max-width:640px){
+    body{font-size:16px}
+    .hero-main{min-height:540px}
+    .top nav{gap:14px}
+    .brand span{display:none}
+    .top nav a.hide-sm{display:none}
+    .now a,.now div.row{grid-template-columns:1fr;gap:2px}
+    .grid,.contact{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .stats div{border-right:1px solid var(--rule)!important;border-top:1px solid var(--rule)}
+    .stats div:nth-child(2n){border-right:0!important}
+    .stats div:nth-child(-n+2){border-top:0}
+    .bar,.board .bar{grid-template-columns:96px 1fr 50px}
   }
   @media (prefers-reduced-motion:reduce){
-    html{scroll-behavior:auto;}
-    .reveal{opacity:1!important;transform:none!important;animation:none!important;transition:none!important;}
-    .btn,.ccard{transition:none!important;}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+    .rule{transform:none}
   }
-  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px;}
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#" aria-label="Ian Sabia, home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
+      <span class="mono" style="font-size:13px">Ian Sabia</span>
+    </a>
+    <nav aria-label="Main">
+      <a href="#work">Work</a>
+      <a href="#projects">Projects</a>
+      <a class="hide-sm" href="#off">Off the clock</a>
+      <a href="#contact">Contact</a>
+      <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
+    </nav>
+  </header>
 
-<nav id="nav">
-  <div class="wrap">
-    <span class="mark">Ian Sabia</span>
-    <ul>
-      <li><a href="#work">Work</a></li>
-      <li><a href="#projects">Projects</a></li>
-      <li><a href="#contact">Contact</a></li>
-    </ul>
-  </div>
-</nav>
-
-<header>
-  <div class="wrap">
-    <div class="eyebrow reveal">Boston University, Data Science &rsquo;28</div>
-    <h1 class="reveal">I build data and AI products, then check whether they are telling the truth.</h1>
-    <p class="lede reveal">Last summer I shipped a conversational analytics agent to a medical device plant&rsquo;s quality team, then spent the rest of it trying to break my own work. <strong>The model was the easy part.</strong></p>
-    <div class="hero-links reveal">
-      <a class="btn primary" href="#work">See the work</a>
-      <a class="btn ghost" href="mailto:iansabia@bu.edu">Get in touch</a>
-    </div>
-  </div>
-</header>
-
-<section id="work">
-  <div class="wrap">
-    <div class="kicker reveal">Experience</div>
-    <h2 class="reveal">Things I have shipped to real users.</h2>
-    <p class="sect-lede reveal">Three of these had paying customers or people who depended on them at work. That constraint is most of what I have learned so far.</p>
-
-    <div class="feature reveal" style="margin-top:48px;">
-      <h3>Medtronic</h3>
-      <div class="role">Engineering Intern, Quality Systems <span class="dot">&middot;</span> Summer 2026 <span class="dot">&middot;</span> North Haven, CT</div>
-      <p>A surgical device plant kept its quality and production records in five separate systems with no governed way to query across them, so the quality team had effectively become the site&rsquo;s manual lookup service. I interviewed them to find where the time was actually going, then built a governed semantic layer over the ERP and put a conversational agent on top of it.</p>
-      <p>I shipped it into <strong>Microsoft Teams</strong> instead of building an app, because Teams was already where the plant worked and adoption then required no new habit. After presenting to site leadership it was released across operations.</p>
-      <div class="stats">
-        <div class="stat"><span class="n">~16.9M</span><span class="l">ERP rows modeled</span></div>
-        <div class="stat"><span class="n">15 min &rarr; 1</span><span class="l">record lookup time</span></div>
-        <div class="stat"><span class="n">5 &rarr; 1</span><span class="l">systems, one place to ask</span></div>
-        <div class="stat"><span class="n">15</span><span class="l">agent tools shipped</span></div>
+  <main id="main">
+  <section class="hero" aria-label="Intro">
+    <div class="hero-main" id="heroMain">
+      <canvas id="tracer" aria-hidden="true"></canvas>
+      <span class="hint mono" id="hint" data-touch="Tap anywhere to hit a shot">Click anywhere to hit a shot</span>
+      <h1>Ian<br><em>Sabia</em></h1>
+      <p class="tag">Data science at Boston University. <b>I build AI products people actually use, then check that they tell the truth.</b></p>
+      <div class="links">
+        <a href="mailto:iansabia@bu.edu">Email</a>
+        <a href="https://linkedin.com/in/iansabia">LinkedIn</a>
+        <a href="https://github.com/Iansabia">GitHub</a>
       </div>
-      <p>The part I think about most is what made it accurate. It was not the model. It was roughly 35,000 characters of domain rules written by hand: never sum production receipts across bill-of-material levels, never average an average, the fiscal year starts in May. And when I audited the agent against the source system, the real defects were upstream in the data, not in the answers.</p>
     </div>
+    <dl class="meta">
+      <div><dt class="mono">Now</dt><dd>Looking for a Summer 2027 product management internship</dd></div>
+      <div><dt class="mono">Next</dt><dd>Spring 2027 on exchange at Bocconi, Milan</dd></div>
+      <div><dt class="mono">Last shot</dt><dd class="shotread" id="shotread">About <span>269 yd</span><br><small>mine, for real</small></dd></div>
+      <div><dt class="mono">Revised</dt><dd>Oct 22, 2026</dd></div>
+    </dl>
+  </section>
 
-    <div class="feature reveal">
-      <h3>Continuum</h3>
-      <div class="role">Co-Founder <span class="dot">&middot;</span> 2025&ndash;present <span class="dot">&middot;</span> Boston, MA</div>
-      <p>An on-course golf tracker that reads your swing and ball from ordinary phone video. We started building for indoor simulators. After about seventy conversations with golfers we moved the whole product outdoors, because that is where people actually wanted to understand their game, and we kept it free by running on the phone they already carry.</p>
-      <p>I lead product and ML: the computer vision stack in PyTorch, a per-player Bayesian shot model, and the evaluation harness that decides what we are allowed to claim about accuracy before the product is allowed to give advice.</p>
-      <div class="links"><a href="https://iansabia.github.io/continuum-caddy/">See the product</a></div>
+  <section class="block" id="currently">
+    <div class="head reveal"><h2>Currently</h2><span class="num mono">01</span></div>
+    <div class="rule"></div>
+    <p class="sub reveal">What I'm building and studying this fall.</p>
+    <div class="now reveal">
+      <a href="#medtronic"><b>Medtronic</b><span>Engineering Intern, Quality Systems</span><span class="when mono">May 2026 &ndash; now</span></a>
+      <a href="#continuum"><b>Continuum</b><span>Co-Founder, AI golf caddy</span><span class="when mono">Jul 2025 &ndash; now</span></a>
+      <a href="#nvidia"><b>NVIDIA challenge</b><span>Self-driving reasoning model <span class="pill" data-rank>#3</span></span><span class="when mono">Oct 2026</span></a>
+      <div class="row"><b>Boston University</b><span>B.S. Data Science, Philosophy minor</span><span class="when mono">Class of 2028</span></div>
     </div>
+    <div class="rooting reveal">
+      <div class="rooting-h"><span class="mono">Rooting for &middot; fantasy football</span><span class="mono" id="fUpdated"></span></div>
+      <div class="fcards" id="fcards"></div>
+      <p class="fnote">My <a href="#projects">Fantasy AI</a> sets all three lineups. <span data-touch="Tap a week to see the score.">Hover a week to see the score.</span></p>
+    </div>
+  </section>
 
-    <div class="feature reveal">
-      <h3>KoalaACO</h3>
-      <div class="role">Co-Founder <span class="dot">&middot;</span> 2020&ndash;2023</div>
-      <p>A paid automated-checkout service that grew out of a 350-member community. People kept asking us to place orders on our own cards, so we charged a fee for it and then built the automation behind it. I was fifteen when it started.</p>
-      <div class="stats">
-        <div class="stat"><span class="n">300+</span><span class="l">paying customers</span></div>
-        <div class="stat"><span class="n">$500k+</span><span class="l">gross merchandise value</span></div>
-        <div class="stat"><span class="n">2+ yrs</span><span class="l">run end to end</span></div>
+  <section class="block" id="work">
+    <div class="head reveal"><h2>Work</h2><span class="num mono">02</span></div>
+    <div class="rule"></div>
+    <p class="sub reveal">Things real people depend on. Each one has a small toy you can play with.</p>
+
+    <div class="work">
+      <article class="entry" id="medtronic">
+        <div class="reveal">
+          <span class="kicker mono">Medtronic &middot; North Haven, CT</span>
+          <h3>Five systems, <em>one question</em></h3>
+          <p>A medical device plant kept its quality records in five separate systems. Every time someone had a question, the quality team dug through them by hand.</p>
+          <p>I sat with the team first to learn what they actually used. Then I built <b>one Snowflake database across all five</b>, with an AI agent on top that lives in <b>Microsoft Teams</b>, where the plant already works. After I presented it to site leadership, it rolled out across the site.</p>
+          <p>The model was the easy part. What made it accurate was the boring stuff underneath: clean joins, written rules, and sending unsure matches to a human instead of guessing.</p>
+        </div>
+        <div class="panel reveal" aria-label="Lookup race">
+          <div class="panel-h"><span class="mono">Lookup race &middot; sped up 300&times;</span><button class="btn" id="raceBtn">Run a lookup</button></div>
+          <div class="lanes">
+            <div class="lane a">
+              <div class="lbl">By hand<small>10 to 15 minutes in each system</small></div>
+              <div class="clock" id="clockA">0:00</div>
+              <div class="chips" id="chipsA"><span class="chip">Orders &amp; inventory</span><span class="chip">Fix-it records</span><span class="chip">Customer complaints</span><span class="chip">Production line</span><span class="chip">Audit history</span></div>
+              <div class="track"><i id="trackA"></i></div>
+            </div>
+            <div class="lane b">
+              <div class="lbl">Ask the agent<small>One question in Teams</small></div>
+              <div class="clock" id="clockB">0:00</div>
+              <div class="chips"><span class="chip agent" id="chipB">One database, 5 sources</span></div>
+              <div class="track"><i id="trackB"></i></div>
+            </div>
+          </div>
+          <p class="verdict" id="verdict">By hand, a question that touches all five systems is five separate lookups, 10 to 15 minutes each. With the agent, about a minute.</p>
+          <div class="stats">
+            <div><b data-count="38" data-suffix="M">0</b><span>rows of data in one place</span></div>
+            <div><b data-count="115">0</b><span>tables, all linked</span></div>
+            <div><b data-count="18">0</b><span>tools the AI can use</span></div>
+            <div><b data-count="16">0</b><span>views you can ask in plain English</span></div>
+            <div><b data-count="93700" data-prefix="~">0</b><span>documents it can search</span></div>
+            <div><b data-count="70" data-prefix="15&ndash;" data-suffix="&times;">0</b><span>faster answers after tuning</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry" id="continuum">
+        <div class="reveal">
+          <span class="kicker mono">Continuum &middot; Co-Founder</span>
+          <h3>The caddy <em>you already own</em></h3>
+          <p>An AI caddy that runs on your phone. It tracks your shots from ordinary video, gives swing feedback, and tells you where to aim based on where you've been missing.</p>
+          <p>We started out building software for indoor simulators. About 70 conversations with golfers moved us onto the course instead. I lead product and ML.</p>
+          <p>We test everything against hand labels before we trust it. When SAM 3.1 beat our own ball tracker on the same 91 hand-labeled frames, in a test that cost under $1, we switched.</p>
+          <div class="vs" id="samBars">
+            <div class="bar me"><span>SAM 3.1</span><div class="t"><i data-w="91"></i></div><span class="v">0.91</span></div>
+            <div class="bar"><span>Our old tracker</span><div class="t"><i data-w="53"></i></div><span class="v">0.53</span></div>
+            <span class="mono" style="color:var(--body);font-size:11px">Accuracy score (F1), 1.0 is perfect</span>
+          </div>
+          <a class="more" href="https://iansabia.github.io/continuum-caddy/">See Continuum <span aria-hidden="true">&rarr;</span></a>
+        </div>
+        <div class="panel reveal" aria-label="Range game">
+          <div class="panel-h"><span class="mono">Range session &middot; a toy, not the real model</span><button class="btn ghost" id="rangeReset">Reset</button></div>
+          <div class="range" id="range" role="application" aria-label="Golf range. Click where you want to aim. The caddy learns your miss after three shots.">
+            <svg id="rangeSvg" viewBox="0 0 400 340" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+          </div>
+          <div class="caddy" aria-live="polite"><span class="dot" aria-hidden="true"></span><p id="caddyTxt">Click where you want to aim. Hit three and I'll tell you what you're doing.<small>150 yards to the flag.</small></p></div>
+        </div>
+      </article>
+
+      <article class="entry" id="nvidia">
+        <div class="reveal">
+          <span class="kicker mono">NVIDIA Physical AI challenge &middot; solo</span>
+          <h3>Teaching a car <em>to explain itself</em></h3>
+          <p>NVIDIA's challenge asks a self-driving model to explain why the car makes its decision in unusual scenes. A judge model grades each explanation against human labels.</p>
+          <p>I took NVIDIA's own driving model, <b>Alpamayo 1.5</b> (10 billion parameters), and trained it further on the task. I got the full model running on a MacBook and rewrote one piece of it so it writes its answers <b>4 to 7&times; faster</b>. Total spent out of pocket: <b>$0</b>.</p>
+          <p>The code goes public after the contest ends on Oct 31.</p>
+          <a class="more" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026">See the challenge <span aria-hidden="true">&rarr;</span></a>
+        </div>
+        <div class="panel reveal" aria-label="Test set scores">
+          <div class="panel-h"><span class="mono">Judge's score on the test set</span><span class="mono" style="color:var(--acc)">Oct 2026</span></div>
+          <div class="board" id="board">
+            <div class="bar me"><span>My fine-tune</span><div class="t"><i data-w="77.4"></i></div><span class="v" data-num="0.774">0.000</span></div>
+            <div class="bar"><span>GPT-5.5</span><div class="t"><i data-w="50.2"></i></div><span class="v" data-num="0.502">0.000</span></div>
+            <div class="bar"><span>Base Alpamayo 1.5</span><div class="t"><i data-w="41.4"></i></div><span class="v" data-num="0.414">0.000</span></div>
+          </div>
+          <div class="rank"><b data-rank>#3</b><span><strong id="rankLine">#3 on the public leaderboard</strong><em id="rankSrc">As of Oct 22, 2026.</em> Baselines are NVIDIA's published numbers.</span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="block" id="projects">
+    <div class="head reveal"><h2>Projects</h2><span class="num mono">03</span></div>
+    <div class="rule"></div>
+    <p class="sub reveal">Smaller things I built because I wanted them to exist. Star counts are live from GitHub.</p>
+    <div class="grid reveal">
+      <a class="card" href="https://github.com/Iansabia/fantasy-ai">
+        <div class="top-row"><span class="tagline mono">Python &middot; agents</span><span class="stars" data-repo="Iansabia/fantasy-ai"></span></div>
+        <h4>Fantasy AI Manager</h4>
+        <p>I was in too many fantasy leagues, so I built an agent that runs three of them for me: lineups, injuries, waivers and trade ideas. Plain code makes every call. The AI only reads the news and explains. Its records are up in Currently.</p>
+        <span class="go">View the code <span aria-hidden="true">&rarr;</span></span>
+      </a>
+      <a class="card" href="https://github.com/Iansabia/DS340-Project">
+        <div class="top-row"><span class="tagline mono">Research &middot; DS340</span><span class="stars" data-repo="Iansabia/DS340-Project"></span></div>
+        <h4>Complexity is not an edge</h4>
+        <p>Polymarket and Kalshi often price the same event differently. Does a fancier model profit more from those gaps? No. The simplest model won, with about 30&times; more edge per trade.</p>
+        <div class="mini" id="alphaBars">
+          <div class="bar me"><span>Simple model</span><div class="t"><i data-w="100"></i></div><span class="v">+15.0 bps</span></div>
+          <div class="bar"><span>Fanciest model</span><div class="t"><i data-w="3.3"></i></div><span class="v">+0.5 bps</span></div>
+        </div>
+        <span class="go">Read the paper <span aria-hidden="true">&rarr;</span></span>
+      </a>
+      <a class="card" href="https://github.com/OtterCadGH/nternet-Link">
+        <div class="top-row"><span class="tagline mono">C++ &middot; ESP32-S3</span><span class="stars" data-repo="OtterCadGH/nternet-Link"></span></div>
+        <h4>An AI graphing calculator</h4>
+        <p>A camera and an ESP32 chip wired into a TI-Nspire. It photographs a handwritten problem and shows a worked solution on the calculator. I wrote the firmware, the calculator client and the local proxy.</p>
+        <span class="go">See the build <span aria-hidden="true">&rarr;</span></span>
+      </a>
+      <a class="card" href="https://github.com/BasedHardware/omi/pull/8443">
+        <div class="top-row"><span class="tagline mono">TypeScript &middot; open source</span><span class="stars" data-repo="BasedHardware/omi"></span></div>
+        <h4>A fix inside Omi</h4>
+        <p>Omi is an open-source AI wearable. Its macOS app broke chat and tasks whenever two database transactions nested. I wrote a failing test first, fixed it, and it was merged into main.</p>
+        <span class="go">See the pull request <span aria-hidden="true">&rarr;</span></span>
+      </a>
+    </div>
+  </section>
+
+  <section class="block" id="off">
+    <div class="head reveal"><h2>Off the clock</h2><span class="num mono">04</span></div>
+    <div class="rule"></div>
+    <p class="sub reveal">Before any of this, I co-founded KoalaACO in high school. It grew to 300+ paying customers.</p>
+    <div class="off reveal">
+      <div class="trip" aria-label="Countdown to Milan">
+        <div class="board-top"><span class="mono">Departures</span><span class="mono">Milan <b id="milanTime">--:--</b></span></div>
+        <div class="dep">
+          <div><span class="mono">From</span><b>BOS</b><small>Boston</small></div>
+          <div class="arrow" aria-hidden="true"><svg viewBox="0 0 64 16"><path d="M0 8h58" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 4"/><path d="M54 3l7 5-7 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></div>
+          <div><span class="mono">To</span><b>MXP</b><small>Milan</small></div>
+          <div class="dep-meta"><span class="mono">For</span><b class="sm">Bocconi</b><small>Spring 2027</small></div>
+        </div>
+        <div class="flaps" id="flaps" role="timer" aria-live="off">
+          <div class="unit"><div class="digits" data-u="d"></div><span class="mono">Days</span></div>
+          <div class="unit"><div class="digits" data-u="h"></div><span class="mono">Hrs</span></div>
+          <div class="unit"><div class="digits" data-u="m"></div><span class="mono">Min</span></div>
+          <div class="unit"><div class="digits" data-u="s"></div><span class="mono">Sec</span></div>
+        </div>
+        <div class="wait">
+          <div class="wait-bar"><i id="waitFill"></i><span id="waitPlane" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 13.5l8-2.2V5.5c0-1 .7-2.5 2-2.5s2 1.5 2 2.5v5.8l8 2.2v2l-8-1.6v4.4l2.4 1.8V22L12 21l-4.4 1v-1.9L10 18.3v-4.4L2 15.5z" fill="currentColor"/></svg></span></div>
+          <span class="mono" id="waitTxt">Counting down</span>
+        </div>
       </div>
-      <p>It is the first time I found demand before building anything, which was mostly an accident at the time and is now the part I try to repeat on purpose.</p>
+      <div class="likes">
+        <span class="mono" style="color:var(--acc)">Usually doing one of these</span>
+        <ul>
+          <li>Skiing</li><li>Golf</li><li>Chess</li><li>Soccer</li><li>Running</li><li>Homemade pasta</li><li>Oysters</li><li>The NFL</li><li>Too many fantasy leagues</li>
+        </ul>
+        <p>I'm learning Italian on Duolingo before I go, mostly so I can talk to my cousins on Procida without Google Translate in the middle.</p>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="projects" class="alt">
-  <div class="wrap">
-    <div class="kicker reveal">Projects</div>
-    <h2 class="reveal">Research and code.</h2>
-
-    <div class="feature reveal" style="margin-top:44px;">
-      <h3>Complexity Is Not an Edge</h3>
-      <div class="role">ML research <span class="dot">&middot;</span> Boston University, DS340</div>
-      <p>We asked whether more model complexity buys more predictive edge on prediction-market price gaps, and trained four tiers to find out: linear regression and XGBoost, then GRU/LSTM/TFT, then PPO, then PPO with an autoencoder.</p>
-      <p>It does not. <strong>Linear regression won.</strong> It reached a 0.501 per-trade Sharpe at +15.0 bps of alpha while the reinforcement-learning model collapsed to +0.5 bps, roughly thirty times less edge for a great deal more compute. We re-ran every claim on a leakage-free split before publishing rather than tuning until the result looked better, and wrote it up as a 29-page paper.</p>
-      <div class="links"><a href="https://github.com/Iansabia/DS340-Project">Read the paper and code</a></div>
+  <section class="block" id="contact">
+    <div class="head reveal"><h2>Say hello</h2><span class="num mono">05</span></div>
+    <div class="rule"></div>
+    <p class="sub reveal">I'm looking for a product management internship for Summer 2027, available from June 1. Always happy to talk about AI products, data, or golf.</p>
+    <div class="contact reveal">
+      <a href="mailto:iansabia@bu.edu"><span class="mono">Email</span><b>iansabia@bu.edu</b></a>
+      <a href="https://linkedin.com/in/iansabia"><span class="mono">LinkedIn</span><b>/in/iansabia</b></a>
+      <a href="https://github.com/Iansabia"><span class="mono">GitHub</span><b>@Iansabia</b></a>
     </div>
+  </section>
+  </main>
 
-    <div class="feature reveal">
-      <h3>An AI calculator</h3>
-      <div class="role">Open-source hardware <span class="dot">&middot;</span> 38 stars</div>
-      <p>A camera and an ESP32-S3 wired to a TI-Nspire graphing calculator, so it can photograph a handwritten problem and return a worked solution on the device. I wrote the firmware, the on-calculator client, and the local proxy that talks to the model.</p>
-      <div class="links"><a href="https://github.com/OtterCadGH/nternet-Link">See the build</a></div>
-    </div>
-
-    <div class="feature reveal">
-      <h3>Omi</h3>
-      <div class="role">Open-source contribution <span class="dot">&middot;</span> merged</div>
-      <p>Found and fixed a nested-transaction bug in the desktop agent runtime of Omi, an AI wearables company, and had the fix merged into their production codebase.</p>
-      <div class="links"><a href="https://github.com/BasedHardware/omi/pull/8443">See the pull request</a></div>
-    </div>
-  </div>
-</section>
-
-<section id="about">
-  <div class="wrap">
-    <div class="kicker reveal">About</div>
-    <h2 class="reveal">What I am actually interested in.</h2>
-    <div class="note reveal" style="margin-top:28px;">
-      <h3>Trust is the hard part, not intelligence.</h3>
-      <p>Every system I have built recently has been easy to make impressive in a demo and hard to make honest in production. The agent at Medtronic was accurate because of the rules around it, not the model inside it. The research project was worth something because we published the result we did not want.</p>
-      <p>So the questions I care about are the unglamorous ones. How do you know a system is right? What should it do when it is unsure? Who is accountable for the data underneath it? That is why I am studying data science and taking AI ethics and technology law alongside it, and why I want to work on data platforms rather than on top of them.</p>
-      <p>I am a junior at Boston University in the Faculty of Computing &amp; Data Sciences, graduating in Spring 2028, with a minor in philosophy. I spend the rest of my time on chess, skiing, and golf, which is how the startup started.</p>
-    </div>
-  </div>
-</section>
-
-<section id="contact" class="alt">
-  <div class="wrap">
-    <div class="kicker reveal">Contact</div>
-    <h2 class="reveal">Say hello.</h2>
-    <p class="sect-lede reveal">I am looking for a product management internship for summer 2027, and I am always happy to talk about data platforms, evaluation, or golf.</p>
-    <div class="contact-grid reveal">
-      <div class="ccard"><span class="k">Email</span><a class="v" href="mailto:iansabia@bu.edu">iansabia@bu.edu</a></div>
-      <div class="ccard"><span class="k">LinkedIn</span><a class="v" href="https://linkedin.com/in/iansabia">/in/iansabia</a></div>
-      <div class="ccard"><span class="k">GitHub</span><a class="v" href="https://github.com/Iansabia">@Iansabia</a></div>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="wrap">Ian Xavier Sabia &middot; Boston, MA</div>
-</footer>
+  <footer>
+    <p>Made in Boston. No trackers.</p>
+    <div class="stamp mono"><span>Revised<b>2026-10-22</b></span><span>Shots hit<b id="shotCount">0</b></span></div>
+  </footer>
+</div>
 
 <script>
-(function(){
-  var nav = document.getElementById('nav');
-  var onScroll = function(){ nav.classList.toggle('stuck', window.scrollY > 8); };
-  window.addEventListener('scroll', onScroll, {passive:true});
-  onScroll();
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.documentElement;
+  const css = (n) => getComputedStyle(root).getPropertyValue(n).trim();
 
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var els = document.querySelectorAll('.reveal');
-  if (reduce || !('IntersectionObserver' in window)) {
-    els.forEach(function(el){ el.classList.add('in'); });
-    return;
-  }
-  // Hero is above the fold: reveal immediately, staggered.
-  var hero = document.querySelectorAll('header .reveal');
-  hero.forEach(function(el, i){
-    el.style.transitionDelay = (i * 90) + 'ms';
-    requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('in'); }); });
+  /* theme toggle, remembered per visitor when storage works (applied in <head> so there's no flash) */
+  const themeBtn = document.getElementById('theme');
+  themeBtn.setAttribute('aria-pressed', root.dataset.theme === 'dark');
+  themeBtn.addEventListener('click', () => {
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+    themeBtn.setAttribute('aria-pressed', root.dataset.theme === 'dark');
+    drawRange(); paint(performance.now());
   });
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  /* phones get "tap", everyone else gets "click" and "hover" */
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  if (coarse) {
+    document.querySelectorAll('[data-touch]').forEach((n) => { n.textContent = n.dataset.touch; });
+  }
+
+  /* scroll reveals */
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('in');
+    if (e.target.dataset.onIn) handlers[e.target.dataset.onIn]();
+    io.unobserve(e.target);
+  }), { threshold: 0.18 });
+  const handlers = {};
+  document.querySelectorAll('.reveal,.rule').forEach((el) => io.observe(el));
+  const watch = (el, name, fn) => { handlers[name] = fn; el.dataset.onIn = name; io.observe(el); };
+
+  const fillBars = (wrap) => wrap.querySelectorAll('.t i').forEach((i) => { i.style.width = i.dataset.w + '%'; });
+  watch(document.getElementById('samBars'), 'sam', () => fillBars(document.getElementById('samBars')));
+  watch(document.getElementById('alphaBars'), 'alpha', () => fillBars(document.getElementById('alphaBars')));
+  watch(document.getElementById('board'), 'board', () => {
+    const b = document.getElementById('board');
+    fillBars(b);
+    b.querySelectorAll('[data-num]').forEach((v) => tween(0, +v.dataset.num, 1400, (x) => { v.textContent = x.toFixed(3); }));
+  });
+  const stats = document.querySelector('.stats');
+  watch(stats, 'stats', () => stats.querySelectorAll('b[data-count]').forEach((b) => {
+    const end = +b.dataset.count, pre = b.dataset.prefix || '', suf = b.dataset.suffix || '';
+    tween(0, end, 1500, (x) => { b.innerHTML = pre + Math.round(x).toLocaleString('en-US') + suf; });
+  }));
+
+  function tween(a, b, ms, cb) {
+    if (reduce) return cb(b);
+    const t0 = performance.now();
+    const step = (t) => { const p = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - p, 3); cb(a + (b - a) * e); if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+
+  /* hero shot tracer: a down-the-line 3D view, like a TV tracer. World units are yards: x right, y up, z downrange.
+     The camera sits low behind the tee. A reference drive sets how far back it sits, so every shot stays in frame. */
+  const hero = document.getElementById('heroMain'), cv = document.getElementById('tracer'), ctx = cv.getContext('2d');
+  const read = document.getElementById('shotread'), hint = document.getElementById('hint'), countEl = document.getElementById('shotCount');
+  const h1 = hero.querySelector('h1'), tagEl = hero.querySelector('.tag');
+  const CAM_Y = 6, REF = { x0: 0, aim: 0, curve: 0, carry: 295, apex: 36 };
+  let shots = [], W = 0, H = 0, dpr = 1, hit = 0, cam = {}, ground = null;
+  const lift = (u) => u * Math.pow(1 - u, 0.6) / 0.347; // 0..1, peaks 62% downrange and falls steeper than it climbs
+  const at = (s, u) => ({ x: s.x0 + (s.aim - s.x0) * u + s.curve * u * u, y: s.apex * lift(u), z: s.carry * u });
+  const proj = (p) => { const k = cam.f / (p.z + cam.d); return { x: cam.cx + p.x * k, y: cam.hy + (CAM_Y - p.y) * k, z: p.z }; };
+  const near = (z) => Math.sqrt(cam.d / (z + cam.d)); // 1 at the tee, toward 0 at the horizon
+  function size() {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    const r = hero.getBoundingClientRect();
+    if (Math.abs(r.width - W) > 1) shots = []; // old shots were laid out for the old width; a phone's URL bar only changes the height
+    W = r.width; H = r.height;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // phones: the text fills the width, so the whole scene lives in the open space above the name
+    const narrow = W < 700, textRight = Math.max(h1.querySelector('em').getBoundingClientRect().right, tagEl.getBoundingClientRect().right) - r.left;
+    // the camera stands a little left of the ball, like a TV tracer, so the flight sweeps toward the horizon point
+    cam.cx = narrow ? W * 0.5 : textRight + (W - textRight) * 0.4;
+    cam.teeY = narrow ? h1.offsetTop - 12 : H - 22;
+    cam.hy = narrow ? cam.teeY - (cam.teeY - 44) * 0.42 : H * 0.56;
+    cam.minX = narrow ? W * 0.12 : textRight + 24;
+    cam.teeX = narrow ? W * 0.8 : textRight + (W - textRight) * 0.84;
+    const G = cam.teeY - cam.hy, S = cam.hy - (narrow ? 40 : 26); // tee sits G px below the horizon; the highest point may rise S px above it
+    const reach = (d) => { let m = 0; for (let i = 1; i < 80; i++) { const p = at(REF, i / 80); m = Math.max(m, d * (p.y - CAM_Y) / (p.z + d)); } return G / CAM_Y * m; };
+    let lo = 0.3, hi = 400; for (let i = 0; i < 32; i++) { const mid = (lo + hi) / 2; if (reach(mid) > S) hi = mid; else lo = mid; }
+    cam.d = lo; cam.f = G * lo / CAM_Y;
+    drawGround(); paint(performance.now());
+  }
+  function drawGround() {
+    const g = document.createElement('canvas'); g.width = cv.width; g.height = cv.height;
+    const c = g.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const quad = (z1, z2, w) => { const a = proj({ x: -w, y: 0, z: z1 }), b = proj({ x: w, y: 0, z: z1 }), b2 = proj({ x: w, y: 0, z: z2 }), a2 = proj({ x: -w, y: 0, z: z2 }); c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.lineTo(b2.x, b2.y); c.lineTo(a2.x, a2.y); c.closePath(); };
+    // mowing stripes, 12 yards each: wide by the tee, paper thin at the horizon
+    c.fillStyle = 'rgba(167,159,191,.055)';
+    for (let z = 0, i = 0; z < 480; z += 12, i++) if (i % 2 === 0) { quad(z, z + 12, 28); c.fill(); }
+    c.strokeStyle = 'rgba(167,159,191,.18)'; c.lineWidth = 1;
+    [-28, 28].forEach((x) => { const p = proj({ x, y: 0, z: 0 }), q = proj({ x, y: 0, z: 900 }); c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(q.x, q.y); c.stroke(); });
+    c.strokeStyle = 'rgba(167,159,191,.14)'; c.beginPath(); c.moveTo(0, cam.hy); c.lineTo(W, cam.hy); c.stroke();
+    // fade it out toward the words so they stay clean, and toward the bottom so the near grass doesn't read as a box
+    c.globalCompositeOperation = 'destination-in';
+    const fade = c.createLinearGradient(cam.minX - 150, 0, cam.minX + 10, 0);
+    fade.addColorStop(0, 'rgba(0,0,0,0)'); fade.addColorStop(1, 'rgba(0,0,0,1)');
+    c.fillStyle = fade; c.fillRect(0, 0, W, H);
+    const low = c.createLinearGradient(0, cam.hy, 0, H);
+    low.addColorStop(0, 'rgba(0,0,0,1)'); low.addColorStop(0.35, 'rgba(0,0,0,.6)'); low.addColorStop(1, 'rgba(0,0,0,.15)');
+    c.fillStyle = low; c.fillRect(0, 0, W, H);
+    ground = g;
+  }
+  function shoot(px, demo) {
+    const carry = 255 + Math.random() * 35, apex = 27 + Math.random() * 8;
+    const curve = (Math.random() < 0.5 ? -1 : 1) * (1 + Math.random() * 13); // + fades right, - draws left
+    const zL = carry + cam.d, xMin = (cam.minX - cam.cx) * zL / cam.f, xMax = (W - 20 - cam.cx) * zL / cam.f;
+    const land = Math.max(xMin, Math.min(xMax, (px - cam.cx) * zL / cam.f));
+    shots.push({ x0: (cam.teeX - cam.cx) * cam.d / cam.f, aim: land - curve, curve, carry, apex, roll: 8 + Math.random() * 14, t0: performance.now(), dur: reduce ? 1 : 3600 });
+    if (shots.length > 7) shots.shift();
+    if (!demo) {
+      const bend = Math.abs(curve) < 3 ? 'Dead straight' : Math.round(Math.abs(curve)) + ' yd ' + (curve > 0 ? 'fade' : 'draw');
+      read.innerHTML = 'Carry <span>' + Math.round(carry) + ' yd</span><br>Apex <span>' + Math.round(apex) + ' yd</span><br><small>' + bend + ' &middot; yours, a toy</small>';
+      countEl.textContent = ++hit; hint.style.opacity = 0;
+    }
+    requestAnimationFrame(paint);
+  }
+  function paint(now) {
+    ctx.clearRect(0, 0, W, H);
+    if (!cam.f) return;
+    if (ground) ctx.drawImage(ground, 0, 0, W, H);
+    const acc = css('--nacc') || '#9B85FF', warm = css('--nwarm') || '#e08a55';
+    ctx.fillStyle = 'rgba(167,159,191,.55)'; ctx.fillRect(cam.teeX - 10, cam.teeY + 1, 20, 2);
+    let live = false;
+    shots.forEach((s, idx) => {
+      const t = Math.min(1, (now - s.t0) / s.dur), fly = Math.min(1, t / 0.78), roll = Math.max(0, (t - 0.78) / 0.22);
+      const u = (1 - Math.exp(-1.6 * fly)) / (1 - Math.exp(-1.6)); // the ball slows as it flies
+      const age = shots.length - 1 - idx, alpha = Math.max(0.14, 1 - age * 0.18);
+      const N = 120, w = [], pts = [];
+      for (let i = 0; i <= N; i++) { const p = at(s, u * i / N); w.push(p); pts.push(proj(p)); }
+      ctx.globalAlpha = alpha;
+      // shadow track on the grass, so you can read how high the ball is
+      ctx.setLineDash([2, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(167,159,191,.4)'; ctx.beginPath();
+      for (let i = 0; i <= N; i += 3) { const g = proj({ x: w[i].x, y: 0, z: w[i].z }); i ? ctx.lineTo(g.x, g.y) : ctx.moveTo(g.x, g.y); }
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = acc;
+      if (!age) { ctx.globalAlpha = alpha * 0.2; ctx.lineWidth = 10; ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); ctx.globalAlpha = alpha; }
+      // the line thins as the ball gets farther away
+      for (let i = 1; i <= N; i++) { ctx.lineWidth = 1.3 + 3.7 * near(w[i].z); ctx.beginPath(); ctx.moveTo(pts[i - 1].x, pts[i - 1].y); ctx.lineTo(pts[i].x, pts[i].y); ctx.stroke(); }
+      let ball = w[N];
+      if (fly >= 1) {
+        // bounce and roll out, with a ring where it first landed
+        const e = 1 - Math.pow(1 - roll, 2.5), land = proj(w[N]);
+        ball = { x: w[N].x + s.curve * 0.12 * e, y: 2.2 * Math.abs(Math.sin(Math.PI * 2.2 * roll)) * Math.pow(1 - roll, 2), z: s.carry + s.roll * e };
+        const g = proj({ x: ball.x, y: 0, z: ball.z });
+        ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(land.x, land.y); ctx.lineTo(g.x, g.y); ctx.stroke();
+        if (!age && roll < 1) { const rx = 6 + 22 * roll; ctx.globalAlpha = alpha * (1 - roll) * 0.8; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(land.x, land.y, rx, rx * 0.2, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = alpha; }
+      }
+      const b = proj(ball), r = 1.4 + 3.6 * near(ball.z);
+      ctx.fillStyle = warm; if (!age) { ctx.shadowColor = warm; ctx.shadowBlur = 10; }
+      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+      if (t < 1) live = true;
     });
-  }, {rootMargin: '0px 0px -12% 0px', threshold: 0.05});
-  els.forEach(function(el){ if (!el.closest('header')) io.observe(el); });
+    if (live) requestAnimationFrame(paint);
+  }
+  hero.addEventListener('click', (e) => { if (e.target.closest('a')) return; shoot(e.clientX - hero.getBoundingClientRect().left); });
+  addEventListener('resize', size);
+  size();
+  if (document.fonts) document.fonts.ready.then(size); // the text width changes once the web fonts arrive
+  setTimeout(() => { if (!hit) shoot(cam.cx + 12, true); }, reduce ? 0 : 600);
+
+  /* lookup race: 15 min in each of 5 systems by hand vs about 60 s for the agent, both at 300x */
+  const raceBtn = document.getElementById('raceBtn');
+  const chipsA = [...document.querySelectorAll('#chipsA .chip')], chipB = document.getElementById('chipB');
+  const clockA = document.getElementById('clockA'), clockB = document.getElementById('clockB');
+  const trackA = document.getElementById('trackA'), trackB = document.getElementById('trackB'), verdict = document.getElementById('verdict');
+  const fmt = (s) => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  let racing = false;
+  raceBtn.addEventListener('click', () => {
+    if (racing) return; racing = true; raceBtn.textContent = 'Running';
+    chipsA.forEach((c) => c.className = 'chip'); chipB.className = 'chip agent';
+    verdict.textContent = 'Same question, two ways.';
+    const A = 4500, B = 60, speed = reduce ? 1e6 : 300, t0 = performance.now();
+    const step = (now) => {
+      const sim = (now - t0) / 1000 * speed;
+      const a = Math.min(A, sim), b = Math.min(B, sim);
+      clockA.textContent = fmt(a); clockB.textContent = fmt(b);
+      trackA.style.transform = 'scaleX(' + a / A + ')'; trackB.style.transform = 'scaleX(' + b / B + ')';
+      const idx = Math.min(4, Math.floor(a / (A / 5)));
+      chipsA.forEach((c, i) => c.className = 'chip' + (i < idx || a >= A ? ' done' : i === idx ? ' on' : ''));
+      chipB.className = 'chip agent' + (b >= B ? ' done' : ' on');
+      if (b >= B && a < A) verdict.textContent = 'The agent is done. The person is still on system ' + (idx + 1) + ' of 5.';
+      if (a < A) requestAnimationFrame(step);
+      else { racing = false; raceBtn.textContent = 'Run it again'; verdict.textContent = 'By hand: 50 to 75 minutes across five systems. With the agent: about a minute.'; }
+    };
+    requestAnimationFrame(step);
+  });
+
+  /* range: the caddy learns your miss */
+  const svg = document.getElementById('rangeSvg'), rangeEl = document.getElementById('range'), caddy = document.getElementById('caddyTxt');
+  const NS = 'http://www.w3.org/2000/svg', FLAG = { x: 200, y: 70 }, TEE = { x: 200, y: 318 }, YD = 248 / 150; // px per yard along the line
+  let bias, balls, advised;
+  function newGolfer() {
+    const side = Math.random() < 0.5 ? -1 : 1;
+    bias = { x: side * (9 + Math.random() * 8), y: -(3 + Math.random() * 8) }; // yards: + right, - short
+    balls = []; advised = false;
+    caddy.innerHTML = (coarse ? 'Tap' : 'Click') + " where you want to aim. Hit three and I'll tell you what you're doing.<small>150 yards to the flag.</small>";
+    drawRange();
+  }
+  const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); (parent || svg).appendChild(n); return n; };
+  function drawRange() {
+    if (!svg) return;
+    svg.innerHTML = '';
+    const tile = css('--tile'), ghost = css('--ghost'), rule = css('--rule'), body = css('--body'), acc = css('--acc'), warm = css('--warm'), ink = css('--ink');
+    for (let i = 0; i < 9; i++) el('rect', { x: 0, y: i * 38, width: 400, height: 38, fill: i % 2 ? tile : ghost, opacity: .9 });
+    [50, 100, 150].forEach((yd) => {
+      const y = TEE.y - yd * YD;
+      el('line', { x1: 0, x2: 400, y1: y, y2: y, stroke: rule, 'stroke-dasharray': '3 6' });
+      const t = el('text', { x: 8, y: y - 5, fill: body, 'font-family': 'JetBrains Mono, monospace', 'font-size': 10 }); t.textContent = yd + ' YD';
+    });
+    el('circle', { cx: FLAG.x, cy: FLAG.y, r: 26, fill: 'none', stroke: rule, 'stroke-width': 1.5 });
+    el('circle', { cx: FLAG.x, cy: FLAG.y, r: 12, fill: 'none', stroke: rule, 'stroke-width': 1.5 });
+    el('line', { x1: FLAG.x, y1: FLAG.y, x2: FLAG.x, y2: FLAG.y - 30, stroke: ink, 'stroke-width': 2 });
+    el('path', { d: `M${FLAG.x} ${FLAG.y - 30} l18 6 l-18 6 z`, fill: warm });
+    el('rect', { x: TEE.x - 14, y: TEE.y - 4, width: 28, height: 8, fill: body, rx: 2 });
+    (balls || []).forEach((b, i) => {
+      const last = i === balls.length - 1;
+      if (last) el('path', { d: `M${TEE.x} ${TEE.y} Q ${(TEE.x + b.x) / 2} ${b.y - 60} ${b.x} ${b.y}`, fill: 'none', stroke: acc, 'stroke-width': 2, opacity: .7, class: 'arc' });
+      el('line', { x1: b.ax - 4, y1: b.ay - 4, x2: b.ax + 4, y2: b.ay + 4, stroke: body, 'stroke-width': 1.2, opacity: last ? .9 : .35 });
+      el('line', { x1: b.ax - 4, y1: b.ay + 4, x2: b.ax + 4, y2: b.ay - 4, stroke: body, 'stroke-width': 1.2, opacity: last ? .9 : .35 });
+      el('circle', { cx: b.x, cy: b.y, r: last ? 6 : 4.5, fill: b.good ? acc : warm, stroke: css('--bg'), 'stroke-width': 1.5, opacity: last ? 1 : .75 });
+    });
+    hoverG = el('g', { 'pointer-events': 'none' }); drawHover();
+  }
+  /* a faint dotted line from your pointer to the pin, with the yardage */
+  let hoverG = null, hoverAt = null;
+  function drawHover() {
+    if (!hoverG) return;
+    hoverG.innerHTML = '';
+    if (!hoverAt) return;
+    const a = hoverAt, yd = Math.hypot(a.x - FLAG.x, a.y - FLAG.y) / YD, body = css('--body'), ink = css('--ink');
+    el('line', { x1: a.x, y1: a.y, x2: FLAG.x, y2: FLAG.y, stroke: body, 'stroke-width': 1.2, 'stroke-dasharray': '1.5 4', 'stroke-linecap': 'round', opacity: .8 }, hoverG);
+    el('circle', { cx: a.x, cy: a.y, r: 3, fill: 'none', stroke: ink, 'stroke-width': 1.2 }, hoverG);
+    const label = yd < 1.5 ? 'On the pin' : Math.round(yd) + ' yd from the pin';
+    const lx = Math.max(6, Math.min(394, a.x + (a.x > 300 ? -10 : 10))), ly = Math.max(14, a.y - 10);
+    const bg = el('rect', { y: ly - 11, height: 15, rx: 2, fill: css('--bg'), opacity: .92 }, hoverG);
+    const t = el('text', { x: lx, y: ly, fill: ink, 'font-family': 'JetBrains Mono, monospace', 'font-size': 10.5, 'text-anchor': a.x > 300 ? 'end' : 'start' }, hoverG);
+    t.textContent = label;
+    const tw = t.getComputedTextLength();
+    bg.setAttribute('x', (a.x > 300 ? lx - tw : lx) - 4); bg.setAttribute('width', tw + 8);
+  }
+  rangeEl.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const a = toSvg(e);
+    hoverAt = a.y > TEE.y - 20 || a.x < 0 || a.x > 400 ? null : a; drawHover();
+  });
+  rangeEl.addEventListener('pointerleave', () => { hoverAt = null; drawHover(); });
+  function toSvg(e) {
+    const r = svg.getBoundingClientRect(), s = Math.min(r.width / 400, r.height / 340);
+    const ox = (r.width - 400 * s) / 2, oy = (r.height - 340 * s) / 2;
+    return { x: (e.clientX - r.left - ox) / s, y: (e.clientY - r.top - oy) / s };
+  }
+  rangeEl.addEventListener('click', (e) => {
+    const a = toSvg(e); if (a.y > TEE.y - 20 || a.x < 0 || a.x > 400) return;
+    const g = () => (Math.random() + Math.random() + Math.random() - 1.5) * 4.5; // yards of scatter
+    const lx = a.x + (bias.x + g()) * YD, ly = a.y - (bias.y + g()) * YD;
+    const missX = (lx - FLAG.x) / YD, missY = (FLAG.y - ly) / YD; // + right, + long
+    const good = Math.hypot(missX, missY) < 7;
+    balls.push({ x: lx, y: ly, ax: a.x, ay: a.y, good, mx: (lx - a.x) / YD, my: (a.y - ly) / YD });
+    drawRange();
+    const arc = svg.querySelector('.arc');
+    if (arc && !reduce) { const L = arc.getTotalLength(); arc.style.strokeDasharray = L; arc.style.strokeDashoffset = L; arc.getBoundingClientRect(); arc.style.transition = 'stroke-dashoffset .7s cubic-bezier(.22,1,.36,1)'; arc.style.strokeDashoffset = 0; }
+    const side = (v) => Math.abs(v) < 1.5 ? 'on line' : Math.round(Math.abs(v)) + ' yd ' + (v > 0 ? 'right' : 'left');
+    const depth = (v) => Math.abs(v) < 1.5 ? 'pin high' : Math.round(Math.abs(v)) + ' yd ' + (v > 0 ? 'long' : 'short');
+    const n = balls.length;
+    if (n < 3) { caddy.innerHTML = 'That one finished ' + side(missX) + ', ' + depth(missY) + '.<small>' + (3 - n) + ' more and I\'ll read your miss.</small>'; return; }
+    const avg = balls.reduce((s, b) => ({ x: s.x + b.mx / n, y: s.y + b.my / n }), { x: 0, y: 0 });
+    if (good) { caddy.innerHTML = 'Flag hunting. That finished ' + Math.round(Math.hypot(missX, missY)) + ' yd from the pin.<small>' + (advised ? 'Aiming off your miss works.' : 'Nice.') + ' Reset to get a new golfer.</small>'; return; }
+    advised = true;
+    const aimX = Math.round(Math.abs(avg.x)), clubs = avg.y < -4 ? ' Take one more club.' : avg.y > 4 ? ' Take one less club.' : '';
+    caddy.innerHTML = 'You\'re missing ' + aimX + ' yd ' + (avg.x > 0 ? 'right' : 'left') + ' on average. Aim ' + aimX + ' yd ' + (avg.x > 0 ? 'left' : 'right') + ' of the flag.' + clubs + '<small>Based on your last ' + n + ' shots. That\'s the whole idea behind Continuum.</small>';
+  });
+  document.getElementById('rangeReset').addEventListener('click', newGolfer);
+  newGolfer();
+
+  /* fantasy records: snapshot pulled from ESPN by my fantasy-ai repo */
+  const FANTASY = {
+    updated: 'Oct 22, 2026', week: 7,
+    teams: [
+      { mine: true, label: 'Team 1', sub: '10-team league', w: 4, l: 2, pf: 780.4, pa: 755.1, rank: 4, n: 10,
+        hist: [[1,'W',141.2,138.86],[2,'L',94.56,131.08],[3,'L',143.44,149.88],[4,'W',142.8,132.62],[5,'W',132.04,95.8],[6,'W',126.38,106.9]] },
+      { mine: true, label: 'Team 2', sub: '12-team league', w: 4, l: 2, pf: 683.9, pa: 658.3, rank: 4, n: 12,
+        hist: [[1,'L',109.66,127.0],[2,'W',129.0,86.6],[3,'W',138.94,105.82],[4,'W',106.48,88.7],[5,'W',148.72,110.54],[6,'L',51.1,139.64]] },
+      { mine: true, label: 'Team 3', sub: '10-team league', w: 3, l: 3, pf: 715.4, pa: 722.5, rank: 4, n: 10,
+        hist: [[1,'W',125.4,109.3],[2,'L',103.95,162.35],[3,'L',109.1,119.1],[4,'W',161.2,100.8],[5,'L',97.45,146.15],[6,'W',118.3,84.8]] }
+    ]
+  };
+  const ord = (n) => n + (['th','st','nd','rd'][(n % 100 - 20) % 10] || ['th','st','nd','rd'][n % 100] || 'th');
+  document.getElementById('fUpdated').textContent = 'Updated ' + FANTASY.updated;
+  const fwrap = document.getElementById('fcards');
+  FANTASY.teams.forEach((t) => {
+    const diff = +(t.pf - t.pa).toFixed(1), last = t.hist[t.hist.length - 1];
+    let streak = 0; for (let i = t.hist.length - 1; i >= 0 && t.hist[i][1] === last[1]; i--) streak++;
+    const card = document.createElement('article');
+    card.className = 'fcard' + (t.mine ? ' mine' : '');
+    card.innerHTML =
+      '<div class="fband"><span class="mono">' + t.label + '</span><b>' + t.w + '&ndash;' + t.l + '</b></div>' +
+      '<div class="fbody"><span class="fsub">' + t.sub + '</span>' +
+      '<div class="fdiff"><strong class="' + (diff >= 0 ? 'up' : 'down') + '">' + (diff >= 0 ? '+' : '&minus;') + Math.abs(diff).toFixed(1) + '</strong><span>point<br>differential</span></div>' +
+      '<div class="weeks">' + t.hist.map((h) => '<button class="wk ' + h[1] + '" data-h=\'' + JSON.stringify(h) + '\' aria-label="Week ' + h[0] + ': ' + (h[1] === 'W' ? 'won' : 'lost') + ' ' + h[2] + ' to ' + h[3] + '">' + h[1] + '</button>').join('') + '</div>' +
+      '<div class="fread">Last: <b>' + last[1] + ' ' + last[2].toFixed(1) + '&ndash;' + last[3].toFixed(1) + '</b>' + (streak > 1 ? ' &middot; ' + (last[1] === 'W' ? 'won ' : 'lost ') + streak + ' straight' : '') + '</div>' +
+      '<div class="fline"><span>' + ord(t.rank) + ' of ' + t.n + '</span><span>PF <b>' + t.pf.toFixed(1) + '</b></span><span>PA <b>' + t.pa.toFixed(1) + '</b></span></div></div>';
+    const read = card.querySelector('.fread'), base = read.innerHTML;
+    card.querySelectorAll('.wk').forEach((b) => {
+      const h = JSON.parse(b.dataset.h);
+      const show = () => { read.innerHTML = 'Week ' + h[0] + ': <b>' + h[1] + ' ' + h[2].toFixed(1) + '&ndash;' + h[3].toFixed(1) + '</b>'; };
+      b.addEventListener('mouseenter', show); b.addEventListener('focus', show);
+      b.addEventListener('mouseleave', () => { read.innerHTML = base; }); b.addEventListener('blur', () => { read.innerHTML = base; });
+    });
+    fwrap.appendChild(card);
+  });
+
+  /* live rank from NVIDIA's public leaderboard (a Gradio Space that allows this origin). If it can't be reached, the dated #3 stays. */
+  (async () => {
+    const base = 'https://nvidia-physicalai-ood-leaderboard.hf.space/gradio_api/call/lambda';
+    let me = null;
+    try { me = JSON.parse(sessionStorage.getItem('lb:me')); } catch (e) {}
+    if (!me) {
+      try {
+        const ac = new AbortController(); setTimeout(() => ac.abort(), 9000);
+        const { event_id } = await (await fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"data":[]}', signal: ac.signal })).json();
+        const line = (await (await fetch(base + '/' + event_id, { signal: ac.signal })).text()).split('\n').find((l) => l.startsWith('data:'));
+        const row = JSON.parse(line.slice(5))[0].data.find((r) => r[1] === 'iansabia');
+        if (row) { me = { rank: +row[0], score: +row[3] }; try { sessionStorage.setItem('lb:me', JSON.stringify(me)); } catch (e) {} }
+      } catch (e) {}
+    }
+    if (!me || !(me.rank > 0) || !(me.score > 0)) return;
+    document.querySelectorAll('[data-rank]').forEach((n) => { n.textContent = '#' + me.rank; });
+    document.getElementById('rankLine').textContent = 'Currently #' + me.rank + ' on the public leaderboard';
+    const src = document.getElementById('rankSrc'); src.textContent = 'Live from the leaderboard.'; src.className = 'live';
+    const mine = document.querySelector('#board .bar.me'), v = mine.querySelector('.v');
+    v.dataset.num = me.score; mine.querySelector('.t i').dataset.w = me.score * 100;
+    const apply = () => { v.textContent = me.score.toFixed(3); mine.querySelector('.t i').style.width = me.score * 100 + '%'; };
+    if (document.getElementById('board').classList.contains('in')) { apply(); setTimeout(apply, 1500); } // after any count-up already running
+  })();
+
+  /* live GitHub stars, cached for the session */
+  document.querySelectorAll('.stars[data-repo]').forEach(async (s) => {
+    const repo = s.dataset.repo; let n = null;
+    try { n = JSON.parse(sessionStorage.getItem('stars:' + repo)); } catch (e) {}
+    if (n == null) {
+      try { const r = await fetch('https://api.github.com/repos/' + repo); if (r.ok) { n = (await r.json()).stargazers_count; try { sessionStorage.setItem('stars:' + repo, n); } catch (e) {} } } catch (e) {}
+    }
+    if (typeof n === 'number' && n >= 5) { s.textContent = '★ ' + (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n); s.classList.add('ok'); }
+  });
+
+  /* Milan departures board: spring program starts Jan 23, 2027 (Milan time). Wait measured from the Sep 15 acceptance. */
+  const start = new Date('2027-01-23T00:00:00+01:00'), from = new Date('2026-09-15T00:00:00-04:00');
+  const units = {}; document.querySelectorAll('.digits').forEach((d) => { units[d.dataset.u] = d; });
+  const setFlaps = (el, str) => {
+    while (el.children.length < str.length) { const f = document.createElement('div'); f.className = 'flap'; f.innerHTML = '<span></span>'; el.appendChild(f); }
+    while (el.children.length > str.length) el.lastChild.remove();
+    [...el.children].forEach((f, i) => {
+      const sp = f.firstChild, ch = str[i];
+      if (sp.textContent === ch) return;
+      if (reduce || !sp.textContent) { sp.textContent = ch; return; }
+      f.className = 'flap out';
+      setTimeout(() => { sp.textContent = ch; f.className = 'flap in'; }, 140);
+    });
+  };
+  const milanFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+  function tick() {
+    let s = Math.max(0, Math.floor((start - Date.now()) / 1000));
+    const d = Math.floor(s / 86400); s -= d * 86400;
+    const h = Math.floor(s / 3600); s -= h * 3600;
+    const m = Math.floor(s / 60); s -= m * 60;
+    setFlaps(units.d, String(d).padStart(3, '0')); setFlaps(units.h, String(h).padStart(2, '0'));
+    setFlaps(units.m, String(m).padStart(2, '0')); setFlaps(units.s, String(s).padStart(2, '0'));
+    document.getElementById('milanTime').textContent = milanFmt.format(new Date());
+  }
+  tick(); setInterval(tick, 1000);
+  const prog = Math.min(1, Math.max(0, (Date.now() - from) / (start - from)));
+  document.getElementById('waitTxt').textContent = Date.now() >= start ? 'Landed. Ciao from Milan.' : Math.round(prog * 100) + '% of the wait done since I was selected';
+  watch(document.querySelector('.trip'), 'trip', () => {
+    document.getElementById('waitFill').style.width = prog * 100 + '%';
+    document.getElementById('waitPlane').style.left = prog * 100 + '%';
+  });
 })();
 </script>
-
 </body>
 </html>
