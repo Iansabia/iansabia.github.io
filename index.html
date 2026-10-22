@@ -155,7 +155,18 @@
 
   /* work entries */
   .work{display:grid;gap:clamp(56px,7vw,90px)}
-  .entry{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(24px,4vw,56px);align-items:start}
+  .entry{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:24px clamp(24px,4vw,56px);align-items:stretch}
+  /* both columns end on the same line: the left column's link sits at the bottom, and each panel's last box takes up any slack */
+  .entry > div:first-child{display:flex;flex-direction:column}
+  .entry .more{margin-top:auto;align-self:flex-start}
+  .entry > .panel{display:flex;flex-direction:column}
+  #medtronic .lanes,#nvidia .board{flex:1;align-content:space-evenly}
+  #continuum .caddy{flex:1}
+  .stats.band{grid-column:1/-1;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--rule);background:var(--tile)}
+  .stats.band div{border-top:0;border-right:1px solid var(--rule)}
+  .stats.band div:last-child{border-right:0}
+  .stats.mini3 div:nth-child(3n){border-right:0}
+  @media (max-width:1100px){.stats.band{grid-template-columns:repeat(3,minmax(0,1fr))}.stats.band div:nth-child(3n){border-right:0}.stats.band div:nth-child(n+4){border-top:1px solid var(--rule)}}
   .entry .kicker{color:var(--acc)}
   .entry h3{font-family:var(--serif);font-weight:700;font-size:clamp(28px,3.4vw,40px);line-height:1.05;letter-spacing:-.015em;margin:8px 0 14px}
   .entry h3 em{font-weight:500;color:var(--acc)}
@@ -189,8 +200,8 @@
   .verdict{padding:0 16px 14px;color:var(--body);font-size:14px;min-height:22px}
   .stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule)}
   .stats div{padding:14px 16px;border-right:1px solid var(--rule)}
-  .stats div:nth-child(3n){border-right:0}
-  .stats div:nth-child(n+4){border-top:1px solid var(--rule)}
+  .stats:not(.band) div:nth-child(3n){border-right:0}
+  .stats:not(.band) div:nth-child(n+4){border-top:1px solid var(--rule)}
   .stats b{display:block;font-family:var(--serif);font-weight:500;font-size:28px;line-height:1.05;letter-spacing:-.01em}
   .stats span{color:var(--body);font-size:13px}
 
@@ -238,6 +249,8 @@
   /* car game: you vs. my model */
   .drive .panel-h{flex-wrap:wrap;gap:4px 12px}
   .drive-reveal{display:flex;flex-direction:column;gap:12px}
+  .drive-wait{flex:1;min-height:90px;border:1px dashed var(--rule);display:grid;place-items:center;padding:16px;text-align:center;color:var(--body);font-size:14px}
+  .drive-wait[hidden]{display:none}
   .drive-reveal[hidden],.drive-note[hidden]{display:none}
   .drive-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
   .drive-left{display:flex;flex-direction:column;min-width:0}
@@ -364,6 +377,10 @@
     .panel-h{padding:10px 12px}
     .panel-h .mono{font-size:11px;letter-spacing:.05em}
     .board .bar{grid-template-columns:118px 1fr 44px;font-size:13px}
+    .stats.mini3{grid-template-columns:repeat(3,1fr)}
+    .stats.mini3 div{border-top:0!important;border-right:1px solid var(--rule)!important;padding:12px}
+    .stats.mini3 div:last-child{border-right:0!important}
+    .stats.mini3 b{font-size:22px}
     .contact a{padding:16px 18px}
     .hero-main{min-height:540px}
     .top nav{gap:14px}
@@ -487,14 +504,14 @@
             </div>
           </div>
           <p class="verdict" id="verdict">By hand, a question that touches all five systems is five separate lookups, 10 to 15 minutes each. With the agent, about a minute.</p>
-          <div class="stats">
-            <div><b data-count="38" data-suffix="M">0</b><span>rows of data in one place</span></div>
-            <div><b data-count="115">0</b><span>tables, all linked</span></div>
-            <div><b data-count="18">0</b><span>tools the AI can use</span></div>
-            <div><b data-count="16">0</b><span>views you can ask in plain English</span></div>
-            <div><b data-count="93700" data-prefix="~">0</b><span>documents it can search</span></div>
-            <div><b data-count="70" data-prefix="15&ndash;" data-suffix="&times;">0</b><span>faster answers after tuning</span></div>
-          </div>
+        </div>
+        <div class="stats band reveal" id="medStats">
+          <div><b data-count="38" data-suffix="M">0</b><span>rows of data in one place</span></div>
+          <div><b data-count="115">0</b><span>tables, all linked</span></div>
+          <div><b data-count="18">0</b><span>tools the AI can use</span></div>
+          <div><b data-count="16">0</b><span>views you can ask in plain English</span></div>
+          <div><b data-count="93700" data-prefix="~">0</b><span>documents it can search</span></div>
+          <div><b data-count="70" data-prefix="15&ndash;" data-suffix="&times;">0</b><span>faster answers after tuning</span></div>
         </div>
       </article>
 
@@ -526,7 +543,7 @@
           <span class="kicker mono">NVIDIA Physical AI challenge &middot; solo</span>
           <h3>Teaching a car <em>to explain itself</em></h3>
           <p>NVIDIA's challenge asks a self-driving model to explain why the car makes its decision in unusual scenes. A judge model grades each explanation against human labels.</p>
-          <p>I took NVIDIA's own driving model, <b>Alpamayo 1.5</b> (10 billion parameters), and trained it further on the task. I got the full model running on a MacBook and rewrote one piece of it so it writes its answers <b>4 to 7&times; faster</b>. Total spent out of pocket: <b>$0</b>.</p>
+          <p>I took NVIDIA's own driving model, <b>Alpamayo 1.5</b>, trained it further on the task, and got it running on a MacBook with a rewrite that makes it answer <b>4 to 7&times; faster</b>.</p>
           <p>Try it below: make the call on four real dashcam clips, then see what my model said. The code goes public after the contest ends on Oct 31.</p>
           <a class="more" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026">See the challenge <span aria-hidden="true">&rarr;</span></a>
         </div>
@@ -536,6 +553,11 @@
             <div class="bar me"><span>My fine-tune</span><div class="t"><i data-w="77.4"></i></div><span class="v" data-num="0.774">0.000</span></div>
             <div class="bar"><span>GPT-5.5</span><div class="t"><i data-w="50.2"></i></div><span class="v" data-num="0.502">0.000</span></div>
             <div class="bar"><span>Base Alpamayo 1.5</span><div class="t"><i data-w="41.4"></i></div><span class="v" data-num="0.414">0.000</span></div>
+          </div>
+          <div class="stats mini3">
+            <div><b>10B</b><span>parameters</span></div>
+            <div><b>4&ndash;7&times;</b><span>faster answers</span></div>
+            <div><b>$0</b><span>spent out of pocket</span></div>
           </div>
           <div class="rank"><b data-rank>#3</b><span><strong id="rankLine">#3 on the public leaderboard</strong><em id="rankSrc">As of Oct 22, 2026.</em> Baselines are NVIDIA's published numbers.</span></div>
         </div>
@@ -555,6 +577,7 @@
             <div class="drive-side">
               <p class="drive-q">What should the car do next?</p>
               <div class="drive-opts" id="dOpts"></div>
+              <div class="drive-wait" id="dWait"><span>Pick one. Your call and my model's answer show up here.</span></div>
               <div class="drive-reveal" id="dReveal" hidden>
                 <span class="agree" id="dAgree"></span>
                 <div class="vsrow">
@@ -702,7 +725,7 @@
     fillBars(b);
     b.querySelectorAll('[data-num]').forEach((v) => tween(0, +v.dataset.num, 1400, (x) => { v.textContent = x.toFixed(3); }));
   });
-  const stats = document.querySelector('.stats');
+  const stats = document.getElementById('medStats');
   watch(stats, 'stats', () => stats.querySelectorAll('b[data-count]').forEach((b) => {
     const end = +b.dataset.count, pre = b.dataset.prefix || '', suf = b.dataset.suffix || '';
     tween(0, end, 1500, (x) => { b.innerHTML = pre + Math.round(x).toLocaleString('en-US') + suf; });
@@ -1007,7 +1030,7 @@
     $('dYou').textContent = OPTS[you]; $('dModel').textContent = OPTS[s.model]; $('dVotes').textContent = s.votes;
     $('dQuote').textContent = '“' + s.quote + '”';
     $('dNote').textContent = s.note; $('dNote').hidden = !s.note;
-    dReveal.hidden = false;
+    dReveal.hidden = false; $('dWait').hidden = true;
   }
   function show(i) {
     scene = i;
@@ -1024,7 +1047,7 @@
       b.addEventListener('click', () => { picks[i] = o; reveal(i); tally(); });
       dOpts.appendChild(b);
     });
-    dReveal.hidden = true;
+    dReveal.hidden = true; $('dWait').hidden = false;
     if (i in picks) reveal(i);
     $('dNext').textContent = i === SCENES.length - 1 ? 'Back to scene 1' : 'Next scene';
   }
