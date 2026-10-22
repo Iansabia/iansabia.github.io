@@ -205,6 +205,44 @@
   .rank em{font-style:normal}
   .rank em.live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:6px;vertical-align:1px;animation:pulse 2.4s infinite}
 
+  /* car game: you vs. my model */
+  .drive .panel-h{flex-wrap:wrap;gap:4px 12px}
+  .drive-reveal{display:flex;flex-direction:column;gap:12px}
+  .drive-reveal[hidden],.drive-note[hidden]{display:none}
+  .drive-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+  .drive-left{display:flex;flex-direction:column;min-width:0}
+  .drive-view{position:relative;margin:0;background:#000;aspect-ratio:16/9;overflow:hidden}
+  .drive-view img,.drive-view video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .drive-view video{opacity:0;transition:opacity .35s}
+  .drive-view.playing video{opacity:1}
+  .drive-tag{position:absolute;left:12px;top:12px;background:rgba(11,8,23,.74);color:#EFEAF8;padding:5px 8px;font-size:10.5px}
+  .drive-credit{padding:8px 16px;font-size:12px;color:var(--body);border-top:1px solid var(--rule)}
+  .drive-credit a{color:var(--body)}
+  .drive-side{padding:18px;display:flex;flex-direction:column;gap:14px;border-left:1px solid var(--rule);min-width:0}
+  .drive-q{font-family:var(--serif);font-size:clamp(22px,2.4vw,28px);font-weight:700;line-height:1.1;letter-spacing:-.01em}
+  .drive-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .opt{position:relative;font:600 15px var(--sans);padding:12px 12px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer;text-align:left;transition:border-color .2s,background .2s,color .2s,transform .2s var(--ease)}
+  .opt:hover:not([disabled]){border-color:var(--ink);transform:translateY(-1px)}
+  .opt[disabled]{cursor:default;opacity:.55}
+  .opt.you,.opt.model{opacity:1}
+  .opt.you{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .opt.model{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+  .opt small{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
+  .opt.you small{color:var(--bg)}
+  .vsrow{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--rule)}
+  .vsrow > div{padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+  .vsrow > div + div{border-left:1px solid var(--rule)}
+  .vsrow .mono{color:var(--body);font-size:11px}
+  .vsrow b{font-family:var(--serif);font-size:22px;font-weight:700;line-height:1.1}
+  .vsrow small{color:var(--body);font-size:12px}
+  .agree{align-self:flex-start;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;color:#fff;background:var(--acc)}
+  .agree.no{background:var(--warm)}
+  .drive blockquote{font-family:var(--mono);font-size:13px;line-height:1.55;color:var(--ink);border-left:3px solid var(--acc);padding:4px 0 4px 12px}
+  .drive-note{color:var(--body);font-size:14px}
+  .drive-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
+  .drive-foot{padding:12px 16px;border-top:1px solid var(--rule);color:var(--body);font-size:13px}
+  @media (max-width:900px){.drive-body{grid-template-columns:1fr}.drive-side{border-left:0;border-top:1px solid var(--rule)}}
+
   /* projects */
   .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
   .card{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:24px 22px 22px;text-decoration:none;display:flex;flex-direction:column;gap:10px;position:relative;transition:background .3s;min-height:230px}
@@ -426,7 +464,7 @@
           <h3>Teaching a car <em>to explain itself</em></h3>
           <p>NVIDIA's challenge asks a self-driving model to explain why the car makes its decision in unusual scenes. A judge model grades each explanation against human labels.</p>
           <p>I took NVIDIA's own driving model, <b>Alpamayo 1.5</b> (10 billion parameters), and trained it further on the task. I got the full model running on a MacBook and rewrote one piece of it so it writes its answers <b>4 to 7&times; faster</b>. Total spent out of pocket: <b>$0</b>.</p>
-          <p>The code goes public after the contest ends on Oct 31.</p>
+          <p>Try it below: make the call on four real dashcam clips, then see what my model said. The code goes public after the contest ends on Oct 31.</p>
           <a class="more" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026">See the challenge <span aria-hidden="true">&rarr;</span></a>
         </div>
         <div class="panel reveal" aria-label="Test set scores">
@@ -439,6 +477,37 @@
           <div class="rank"><b data-rank>#3</b><span><strong id="rankLine">#3 on the public leaderboard</strong><em id="rankSrc">As of Oct 22, 2026.</em> Baselines are NVIDIA's published numbers.</span></div>
         </div>
       </article>
+
+      <div class="drive reveal" id="drive">
+        <div class="panel">
+          <div class="panel-h"><span class="mono">Your call vs. my model &middot; scene <b id="dStep">1</b> of 4</span><span class="mono" id="dScore">4 real dashcam clips</span></div>
+          <div class="drive-body">
+            <div class="drive-left">
+              <figure class="drive-view" id="dView">
+                <img id="dImg" alt="" loading="lazy">
+                <video id="dVid" muted playsinline preload="none"></video>
+                <span class="drive-tag mono" id="dTag">Paused at the moment of decision</span>
+              </figure>
+              <p class="drive-credit" id="dCredit"></p>
+            </div>
+            <div class="drive-side">
+              <p class="drive-q">What should the car do next?</p>
+              <div class="drive-opts" id="dOpts"></div>
+              <div class="drive-reveal" id="dReveal" hidden>
+                <span class="agree" id="dAgree"></span>
+                <div class="vsrow">
+                  <div><span class="mono">You</span><b id="dYou"></b></div>
+                  <div><span class="mono">My model</span><b id="dModel"></b><small id="dVotes"></small></div>
+                </div>
+                <blockquote id="dQuote"></blockquote>
+                <p class="drive-note" id="dNote"></p>
+              </div>
+              <div class="drive-actions"><button class="btn ghost" id="dPlay">Watch what happened</button><button class="btn" id="dNext">Next scene</button></div>
+            </div>
+          </div>
+          <p class="drive-foot">These are real answers from my fine-tuned Alpamayo 1.5, run on public dashcam clips, not on the contest's data. It saw four frames from one front camera and assumed the car was driving straight at a steady speed. It wrote 8 answers per scene. I show its most common action and quote one typical answer word for word.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -806,6 +875,75 @@
   });
   document.getElementById('rangeReset').addEventListener('click', newGolfer);
   newGolfer();
+
+  /* car game: real answers from my fine-tuned Alpamayo 1.5 on four public dashcam clips (rt/public_clip.py) */
+  const OPTS = ['Keep going', 'Slow down', 'Stop', 'Steer around'];
+  const COMMONS = 'https://commons.wikimedia.org/wiki/File:';
+  const SCENES = [
+    { id: 'deer', alt: 'Dashcam view of a snowy forest road with a deer crossing ahead.', model: 1, votes: '7 of 8 answers',
+      quote: 'Decelerate to maintain a safe distance from the deer crossing the road.', note: '',
+      credit: 'Clip: Virgo Siil, <a href="' + COMMONS + 'Metskitsed_autoteel.webm">CC0, via Wikimedia Commons</a>' },
+    { id: 'cow', alt: 'Night dashcam view of a cow standing in the lane, lit by the headlights.', model: 1, votes: '6 of 8 answers',
+      quote: 'Decelerate to maintain a safe distance from the animal crossing the road.',
+      note: 'The other two answers kept going and called the cow a "lead vehicle." Night footage is hard.',
+      credit: 'Clip: Luke Byers, <a href="' + COMMONS + 'Cow_crosses_cattle_grid.webm">CC BY 3.0, via Wikimedia Commons</a>' },
+    { id: 'emergency', alt: 'Dashcam view of police cars and an ambulance stopped across the lanes, with a person on foot.', model: 1, votes: '6 of 8 answers',
+      quote: 'Decelerate to maintain a safe distance from the emergency vehicle ahead.',
+      note: 'The other two steered left around the police car.',
+      credit: 'Clip: Noah Wulf, <a href="' + COMMONS + 'Hughes_Park_Dr_Rear-Ending.webm">CC BY-SA 3.0, via Wikimedia Commons</a>. My cut is shared under the same license.' },
+    { id: 'fire', alt: 'Dashcam view of a highway with thick black smoke from a vehicle fire ahead.', model: 1, votes: '5 of 8 answers',
+      quote: 'Gentle deceleration to maintain a safe distance from the black car ahead.',
+      note: 'Right call, but most answers blamed a black car ahead. Only one mentioned the fire. Getting the reason right, not just the action, is what I\'m working on next.',
+      credit: 'Clip: Sillerkiil, <a href="' + COMMONS + 'Veok_p6leng_pikk.webm">CC0, via Wikimedia Commons</a>' },
+  ];
+  const $ = (id) => document.getElementById(id);
+  const dView = $('dView'), dImg = $('dImg'), dVid = $('dVid'), dOpts = $('dOpts'), dReveal = $('dReveal');
+  const picks = {};
+  let scene = 0;
+  function tally() {
+    const n = Object.keys(picks).length, m = Object.entries(picks).filter(([i, o]) => SCENES[i].model === o).length;
+    $('dScore').textContent = n ? 'You matched my model on ' + m + ' of ' + n : '4 real dashcam clips';
+  }
+  function reveal(i) {
+    const s = SCENES[i], you = picks[i], same = you === s.model;
+    [...dOpts.children].forEach((b, o) => {
+      b.disabled = true;
+      b.classList.toggle('you', o === you); b.classList.toggle('model', o === s.model);
+      b.querySelector('small').textContent = o === s.model ? (o === you ? 'both' : 'model') : '';
+    });
+    $('dAgree').textContent = same ? 'Same call' : 'Different call';
+    $('dAgree').className = 'agree' + (same ? '' : ' no');
+    $('dYou').textContent = OPTS[you]; $('dModel').textContent = OPTS[s.model]; $('dVotes').textContent = s.votes;
+    $('dQuote').textContent = '“' + s.quote + '”';
+    $('dNote').textContent = s.note; $('dNote').hidden = !s.note;
+    dReveal.hidden = false;
+  }
+  function show(i) {
+    scene = i;
+    const s = SCENES[i];
+    $('dStep').textContent = i + 1;
+    dView.classList.remove('playing'); dVid.pause(); dVid.removeAttribute('src'); dVid.load();
+    dImg.src = 'drive/' + s.id + '.jpg'; dImg.alt = s.alt;
+    $('dTag').textContent = 'Paused at the moment of decision';
+    $('dCredit').innerHTML = s.credit;
+    dOpts.innerHTML = '';
+    OPTS.forEach((label, o) => {
+      const b = document.createElement('button');
+      b.className = 'opt'; b.innerHTML = label + '<small></small>';
+      b.addEventListener('click', () => { picks[i] = o; reveal(i); tally(); });
+      dOpts.appendChild(b);
+    });
+    dReveal.hidden = true;
+    if (i in picks) reveal(i);
+    $('dNext').textContent = i === SCENES.length - 1 ? 'Back to scene 1' : 'Next scene';
+  }
+  $('dPlay').addEventListener('click', () => {
+    if (!dVid.getAttribute('src')) dVid.src = 'drive/' + SCENES[scene].id + '.mp4';
+    dVid.currentTime = 0;
+    dVid.play().then(() => { dView.classList.add('playing'); $('dTag').textContent = 'What happened next'; }).catch(() => {});
+  });
+  $('dNext').addEventListener('click', () => show((scene + 1) % SCENES.length));
+  show(0);
 
   /* fantasy records: snapshot pulled from ESPN by my fantasy-ai repo */
   const FANTASY = {
