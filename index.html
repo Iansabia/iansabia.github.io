@@ -38,7 +38,7 @@
     --nbg:#2A2733; --ntile:#33303D; --nghost:#3B3846; --nink:#F4F2F7; --nbody:#C3BECF; --nrule:#46424F; --nacc:#B9A9FF; --nwarm:#F0A06C; color-scheme:dark;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:smooth;scroll-padding-top:74px}
   body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;transition:background-color .35s,color .35s;overflow-x:hidden}
   a{color:inherit}
   ::selection{background:var(--acc);color:#fff}
@@ -49,12 +49,31 @@
   :focus-visible{outline:2px solid var(--acc);outline-offset:3px}
 
   /* top bar */
-  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0}
-  .top nav{display:flex;gap:22px;align-items:center}
+  /* the bar stays pinned while you scroll, with a link to every section (a menu on phones) */
+  .top{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;padding:10px 0}
+  .top::before{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);right:calc(50% - 50vw);z-index:-1;background:color-mix(in srgb,var(--bg) 84%,transparent);-webkit-backdrop-filter:saturate(1.3) blur(14px);backdrop-filter:saturate(1.3) blur(14px);border-bottom:1px solid transparent;transition:border-color .3s,background-color .35s}
+  .top.stuck::before{border-bottom-color:var(--rule)}
+  .top nav{display:flex;gap:20px;align-items:center}
+  .top nav .links{display:contents}
   .top a{text-decoration:none;font-weight:500;font-size:15px}
-  .top nav a{position:relative;padding:4px 0}
+  .top nav a{position:relative;padding:4px 0;white-space:nowrap}
   .top nav a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .35s var(--ease)}
-  .top nav a:hover::after{transform:scaleX(1)}
+  .top nav a:hover::after,.top nav a[aria-current="true"]::after{transform:scaleX(1)}
+  .top nav a[aria-current="true"]::after{background:var(--acc)}
+  .menu-btn{display:none;align-items:center;gap:8px;background:none;border:1.5px solid var(--rule);border-radius:999px;color:var(--ink);height:30px;padding:0 12px;cursor:pointer;font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+  .menu-btn i{display:block;width:14px;height:8px;border-top:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transition:transform .3s var(--ease)}
+  .menu-btn[aria-expanded="true"] i{transform:scaleY(.25)}
+  .menu{display:none}
+  @media (max-width:860px){
+    .top nav .links{display:none}
+    .menu-btn{display:inline-flex}
+    .menu{position:absolute;top:100%;left:calc(var(--gut) * -1);right:calc(var(--gut) * -1);background:var(--bg);border-bottom:1px solid var(--rule);padding:6px var(--gut) 14px;box-shadow:0 18px 30px -24px rgba(11,8,23,.5)}
+    .menu.open{display:grid}
+    .menu a{display:flex;justify-content:space-between;align-items:baseline;padding:12px 2px;border-bottom:1px solid var(--rule);font-family:var(--serif);font-weight:700;font-size:24px;letter-spacing:-.01em}
+    .menu a:last-child{border-bottom:0}
+    .menu a .mono{color:var(--acc)}
+    .menu a[aria-current="true"]{color:var(--acc)}
+  }
   .brand{display:flex;align-items:center;gap:10px}
   .brand svg{width:26px;height:26px}
   .brand span{white-space:nowrap}
@@ -258,7 +277,16 @@
   .drive-view img,.drive-view video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .drive-view video{opacity:0;transition:opacity .35s}
   .drive-view.playing video{opacity:1}
-  .drive-tag{position:absolute;left:12px;top:12px;background:rgba(11,8,23,.74);color:#EFEAF8;padding:5px 8px;font-size:10.5px}
+  .drive-tag{position:absolute;left:12px;top:12px;z-index:3;background:rgba(11,8,23,.74);color:#EFEAF8;padding:5px 8px;font-size:10.5px}
+  /* vision layer: an open-source detector's boxes drawn over the clip */
+  .drive-cv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+  .cv-btn{position:absolute;right:10px;top:10px;z-index:3;display:flex;align-items:center;gap:6px;background:rgba(11,8,23,.74);color:#EFEAF8;border:1px solid rgba(239,234,248,.22);padding:5px 8px;font-size:10.5px;cursor:pointer}
+  .cv-btn::before{content:"";width:7px;height:7px;border-radius:50%;background:#5FE0B0;box-shadow:0 0 8px #5FE0B0}
+  .cv-btn[aria-pressed="false"]{color:#A79FBF}
+  .cv-btn[aria-pressed="false"]::before{background:#6b6480;box-shadow:none}
+  .cv-hud{position:absolute;left:10px;bottom:10px;z-index:3;background:rgba(11,8,23,.74);color:#EFEAF8;padding:5px 8px;font-size:10.5px;max-width:calc(100% - 20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cv-hud:empty{display:none}
+  .cv-hud b{color:#5FE0B0;font-weight:500;margin-right:4px}
   .drive-credit{padding:8px 16px;font-size:12px;color:var(--body);border-top:1px solid var(--rule)}
   .drive-credit a{color:var(--body)}
   .drive-side{padding:18px;display:flex;flex-direction:column;gap:14px;border-left:1px solid var(--rule);min-width:0}
@@ -337,6 +365,9 @@
   .likes li{border:1px solid var(--rule);padding:7px 12px;font-size:14px;cursor:default;transition:background .25s,color .25s,border-color .25s,transform .25s var(--ease)}
   .likes li:hover{background:var(--ink);color:var(--bg);border-color:var(--ink);transform:translateY(-2px) rotate(-1.5deg)}
   .likes p{color:var(--body);font-size:15px}
+  .off:has(> .aco-slot:empty){grid-template-columns:1fr}
+  .aco-slot:empty{display:none}
+  .likes p.big-p{font-family:var(--serif);font-size:clamp(20px,2.2vw,26px);line-height:1.3;letter-spacing:-.01em;color:var(--ink)}
 
   /* contact + footer */
   .contact{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
@@ -383,9 +414,8 @@
     .stats.mini3 b{font-size:22px}
     .contact a{padding:16px 18px}
     .hero-main{min-height:540px}
-    .top nav{gap:14px}
+    .top nav{gap:12px}
     .brand span{display:none}
-    .top nav a.hide-sm{display:none}
     section.block{padding-top:52px}
     .sub{margin:8px 0 22px}
     .case-tab{padding:12px 12px 14px}
@@ -416,17 +446,30 @@
 <a class="skip" href="#main">Skip to content</a>
 <div class="wrap">
   <header class="top">
-    <a class="brand" href="#" aria-label="Ian Sabia, home">
+    <a class="brand" href="#main" aria-label="Ian Sabia, back to top">
       <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
       <span class="mono" style="font-size:13px">Ian Sabia</span>
     </a>
     <nav aria-label="Main">
-      <a href="#work">Work</a>
-      <a href="#projects">Projects</a>
-      <a class="hide-sm" href="#off">Off the clock</a>
-      <a href="#contact">Contact</a>
+      <span class="links">
+        <a href="#currently">Currently</a>
+        <a href="#work">Work</a>
+        <a href="#projects">Projects</a>
+        <a href="#milan">Milan</a>
+        <a href="#off">Off the clock</a>
+        <a href="#contact">Contact</a>
+      </span>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu <i aria-hidden="true"></i></button>
       <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
     </nav>
+    <div class="menu" id="menu">
+      <a href="#currently">Currently <span class="mono">01</span></a>
+      <a href="#work">Work <span class="mono">02</span></a>
+      <a href="#projects">Projects <span class="mono">03</span></a>
+      <a href="#milan">Milan <span class="mono">04</span></a>
+      <a href="#off">Off the clock <span class="mono">05</span></a>
+      <a href="#contact">Contact <span class="mono">06</span></a>
+    </div>
   </header>
 
   <main id="main">
@@ -446,7 +489,7 @@
       <div><dt class="mono">Now</dt><dd>Looking for a Summer 2027 product management internship</dd></div>
       <div><dt class="mono">Next</dt><dd>Spring 2027 on exchange at Bocconi, Milan</dd></div>
       <div><dt class="mono">Last shot</dt><dd class="shotread" id="shotread">About <span>269 yd</span><br><small>mine, for real</small></dd></div>
-      <div><dt class="mono">Revised</dt><dd>Oct 22, 2026</dd></div>
+      <div><dt class="mono">Revised</dt><dd>Oct 23, 2026</dd></div>
     </dl>
   </section>
 
@@ -564,13 +607,16 @@
 
       <div class="drive reveal" id="drive">
         <div class="panel">
-          <div class="panel-h"><span class="mono">Your call vs. my model &middot; scene <b id="dStep">1</b> of 4</span><span class="mono" id="dScore">4 real dashcam clips</span></div>
+          <div class="panel-h"><span class="mono">Your call vs. my model &middot; scene <b id="dStep">1</b> of <span id="dTotal">4</span></span><span class="mono" id="dScore">4 real dashcam clips</span></div>
           <div class="drive-body">
             <div class="drive-left">
               <figure class="drive-view" id="dView">
                 <img id="dImg" alt="" loading="lazy">
                 <video id="dVid" muted playsinline preload="none"></video>
+                <canvas class="drive-cv" id="dCv" aria-hidden="true"></canvas>
                 <span class="drive-tag mono" id="dTag">Paused at the moment of decision</span>
+                <button class="cv-btn mono" id="dCvBtn" aria-pressed="true" title="Show or hide the object detector's boxes">Boxes on</button>
+                <span class="cv-hud mono" id="dHud"></span>
               </figure>
               <p class="drive-credit" id="dCredit"></p>
             </div>
@@ -590,7 +636,7 @@
               <div class="drive-actions"><button class="btn ghost" id="dPlay">Watch what happened</button><button class="btn" id="dNext">Next scene</button></div>
             </div>
           </div>
-          <p class="drive-foot">These are real answers from my fine-tuned Alpamayo 1.5, run on public dashcam clips, not on the contest's data. It saw four frames from one front camera and assumed the car was driving straight at a steady speed. It wrote 8 answers per scene. I show its most common action and quote one typical answer word for word.</p>
+          <p class="drive-foot">These are real answers from my fine-tuned Alpamayo 1.5, run on public dashcam clips, not on the contest's data. It saw four frames from one front camera and assumed the car was driving straight at a steady speed. It wrote 8 answers per scene. I show its most common action and quote one typical answer word for word. The boxes come from Grounding DINO, a free open-source object detector, run on the same frames. My model never sees them, and the detector makes mistakes too.</p>
         </div>
       </div>
       </article>
@@ -633,10 +679,10 @@
     </div>
   </section>
 
-  <section class="block" id="off">
-    <div class="head reveal"><h2>Off the clock</h2><span class="num mono">04</span></div>
+  <section class="block" id="milan">
+    <div class="head reveal"><h2>Where to next</h2><span class="num mono">04</span></div>
     <div class="rule"></div>
-    <p class="sub reveal">Before any of this, I co-founded KoalaACO in high school. It grew to 300+ paying customers.</p>
+    <p class="sub reveal">Milan. I was selected for BU's exchange program at Bocconi for Spring 2027.</p>
     <div class="off reveal">
       <div class="trip" aria-label="Countdown to Milan">
         <div class="board-top"><span class="mono">Departures</span><span class="mono">Milan <b id="milanTime">--:--</b></span></div>
@@ -658,17 +704,29 @@
         </div>
       </div>
       <div class="likes">
+        <span class="mono" style="color:var(--acc)">Getting ready</span>
+        <p class="big-p">I'm learning Italian on Duolingo before I go, mostly so I can talk to my cousins on Procida without Google Translate in the middle.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="off">
+    <div class="head reveal"><h2>Off the clock</h2><span class="num mono">05</span></div>
+    <div class="rule"></div>
+    <p class="sub reveal">Before any of this, I co-founded KoalaACO in high school: a checkout service that ran sneaker bots for our members. It grew to 300+ paying customers.</p>
+    <div class="off reveal">
+      <div class="aco-slot" id="acoSlot"></div>
+      <div class="likes">
         <span class="mono" style="color:var(--acc)">Usually doing one of these</span>
         <ul>
           <li>Skiing</li><li>Golf</li><li>Chess</li><li>Soccer</li><li>Running</li><li>Homemade pasta</li><li>Oysters</li><li>The NFL</li><li>Too many fantasy leagues</li>
         </ul>
-        <p>I'm learning Italian on Duolingo before I go, mostly so I can talk to my cousins on Procida without Google Translate in the middle.</p>
       </div>
     </div>
   </section>
 
   <section class="block" id="contact">
-    <div class="head reveal"><h2>Say hello</h2><span class="num mono">05</span></div>
+    <div class="head reveal"><h2>Say hello</h2><span class="num mono">06</span></div>
     <div class="rule"></div>
     <p class="sub reveal">I'm looking for a product management internship for Summer 2027, available from June 1. Always happy to talk about AI products, data, or golf.</p>
     <div class="contact reveal">
@@ -681,7 +739,7 @@
 
   <footer>
     <p>Made in Boston. No trackers.</p>
-    <div class="stamp mono"><span>Revised<b>2026-10-22</b></span><span>Shots hit<b id="shotCount">0</b></span></div>
+    <div class="stamp mono"><span>Revised<b>2026-10-23</b></span><span>Shots hit<b id="shotCount">0</b></span></div>
   </footer>
 </div>
 
@@ -700,6 +758,20 @@
     themeBtn.setAttribute('aria-pressed', root.dataset.theme === 'dark');
     drawRange(); paint(performance.now());
   });
+  /* pinned header: a hairline once you scroll, a menu on phones, and the section you're in underlined */
+  const topBar = document.querySelector('.top'), menuBtn = document.getElementById('menuBtn'), menu = document.getElementById('menu');
+  const navLinks = [...document.querySelectorAll('.top nav a[href^="#"], .menu a')];
+  const mark = (id) => navLinks.forEach((a) => (a.getAttribute('href') === '#' + id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+  const stick = () => { topBar.classList.toggle('stuck', scrollY > 4); if (scrollY < 200) mark(''); };
+  addEventListener('scroll', stick, { passive: true }); stick();
+  const setMenu = (open) => { menu.classList.toggle('open', open); menuBtn.setAttribute('aria-expanded', open); };
+  menuBtn.addEventListener('click', (e) => { e.stopPropagation(); setMenu(!menu.classList.contains('open')); });
+  menu.addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
+  document.addEventListener('click', (e) => { if (!menu.contains(e.target)) setMenu(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.classList.contains('open')) { setMenu(false); menuBtn.focus(); } });
+  const spy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) mark(e.target.id); }), { rootMargin: '-45% 0px -50% 0px' });
+  ['currently', 'work', 'projects', 'milan', 'off', 'contact'].forEach((id) => { const sec = document.getElementById(id); if (sec) spy.observe(sec); });
+
   /* phones get "tap", everyone else gets "click" and "hover" */
   const coarse = matchMedia('(pointer: coarse)').matches;
   if (coarse) {
@@ -996,17 +1068,21 @@
   const SCENES = [
     { id: 'deer', alt: 'Dashcam view of a snowy forest road with a deer crossing ahead.', model: 1, votes: '7 of 8 answers',
       quote: 'Decelerate to maintain a safe distance from the deer crossing the road.', note: '',
+      focus: { c: ['deer'], pick: 'size', say: 'the deer' },
       credit: 'Clip: Virgo Siil, <a href="' + COMMONS + 'Metskitsed_autoteel.webm">CC0, via Wikimedia Commons</a>' },
     { id: 'cow', alt: 'Night dashcam view of a cow standing in the lane, lit by the headlights.', model: 1, votes: '6 of 8 answers',
       quote: 'Decelerate to maintain a safe distance from the animal crossing the road.',
+      focus: { c: ['cow', 'deer', 'dog'], pick: 'size', say: 'the animal' },
       note: 'The other two answers kept going and called the cow a "lead vehicle." Night footage is hard.',
       credit: 'Clip: Luke Byers, <a href="' + COMMONS + 'Cow_crosses_cattle_grid.webm">CC BY 3.0, via Wikimedia Commons</a>' },
     { id: 'emergency', alt: 'Dashcam view of police cars and an ambulance stopped across the lanes, with a person on foot.', model: 1, votes: '6 of 8 answers',
       quote: 'Decelerate to maintain a safe distance from the emergency vehicle ahead.',
+      focus: { c: ['car', 'truck', 'bus'], pick: 'center', say: 'the emergency vehicle' },
       note: 'The other two steered left around the police car.',
       credit: 'Clip: Noah Wulf, <a href="' + COMMONS + 'Hughes_Park_Dr_Rear-Ending.webm">CC BY-SA 3.0, via Wikimedia Commons</a>. My cut is shared under the same license.' },
     { id: 'fire', alt: 'Dashcam view of a highway with thick black smoke from a vehicle fire ahead.', model: 1, votes: '5 of 8 answers',
       quote: 'Gentle deceleration to maintain a safe distance from the black car ahead.',
+      focus: { c: ['car'], pick: 'center', say: 'the black car ahead' },
       note: 'Right call, but most answers blamed a black car ahead. Only one mentioned the fire. Getting the reason right, not just the action, is what I\'m working on next.',
       credit: 'Clip: Sillerkiil, <a href="' + COMMONS + 'Veok_p6leng_pikk.webm">CC0, via Wikimedia Commons</a>' },
   ];
@@ -1014,9 +1090,155 @@
   const dView = $('dView'), dImg = $('dImg'), dVid = $('dVid'), dOpts = $('dOpts'), dReveal = $('dReveal');
   const picks = {};
   let scene = 0;
+  $('dTotal').textContent = SCENES.length;
+
+  /* vision layer: boxes from Grounding DINO, an open-source object detector, run on the same frames (rt/site_detect.py).
+     My model never sees them. Still = the frame at the decision; video = 10 detector frames a second, eased in between. */
+  const CVC = { vehicle: '#9B85FF', vru: '#FF6F91', animal: '#F5C84B', control: '#5FE0B0', hazard: '#FF8A3D' };
+  const CVG = { car: 'vehicle', truck: 'vehicle', bus: 'vehicle', motorcycle: 'vehicle', bicycle: 'vru', person: 'vru', deer: 'animal', cow: 'animal',
+    dog: 'animal', 'traffic light': 'control', 'stop sign': 'control', 'traffic cone': 'control', fire: 'hazard', smoke: 'hazard' };
+  const PLURAL = { person: 'people', bus: 'buses', deer: 'deer', smoke: 'smoke', fire: 'fire' };
+  const dCv = $('dCv'), dCx = dCv.getContext('2d'), dHud = $('dHud'), dCvBtn = $('dCvBtn');
+  const boxCache = {};
+  let cvData = null, cvOn = true, cvRaf = 0, cvSeen = false, scanStart = 0, focus = null, focusBox = null;
+  const loadBoxes = (id) => boxCache[id] || (boxCache[id] = fetch('drive/' + id + '.boxes.json').then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  const iou = (a, b) => {
+    const iw = Math.max(0, Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0])), ih = Math.max(0, Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1]));
+    return iw * ih / (a[2] * a[3] + b[2] * b[3] - iw * ih + 1e-9);
+  };
+  function cvSize() {
+    const r = dCv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1), w = Math.round(r.width * d), h = Math.round(r.height * d);
+    if (dCv.width !== w || dCv.height !== h) { dCv.width = w; dCv.height = h; }
+    dCx.setTransform(d, 0, 0, d, 0, 0);
+    return [r.width, r.height];
+  }
+  function cvAt(t) {
+    const F = cvData.frames, k = Math.max(0, Math.min(F.length - 1, t * cvData.fps)), a = Math.floor(k), b = Math.min(F.length - 1, a + 1), u = k - a;
+    const next = new Map(F[b].map((d) => [d.id, d]));
+    return F[a].map((d) => { const e = next.get(d.id); return e ? { ...d, b: d.b.map((v, i) => v + (e.b[i] - v) * u) } : d; });
+  }
+  const FONT = '500 10px "JetBrains Mono", ui-monospace, monospace';
+  const overlaps = (r, placed) => placed.some((q) => r[0] < q[0] + q[2] && q[0] < r[0] + r[2] && r[1] < q[1] + q[3] && q[1] < r[1] + r[3]);
+  function cvTag(text, r, fill, ink, mark) {
+    dCx.font = FONT;
+    dCx.fillStyle = fill; dCx.fillRect(r[0], r[1], r[2], r[3]);
+    if (mark) { dCx.fillStyle = mark; dCx.fillRect(r[0], r[1], 3, r[3]); }
+    dCx.fillStyle = ink; dCx.fillText(text, r[0] + 7, r[1] + 11.5);
+  }
+  // a label goes above the box, else inside its top, else inside its bottom; never over another label,
+  // the tag and toggle along the top, or the count along the bottom. No room: the box keeps its brackets only.
+  function cvSpot(text, x, ys, W, H, placed) {
+    dCx.font = FONT;
+    const tw = dCx.measureText(text).width + 12, tx = Math.min(Math.max(2, x), W - tw - 2);
+    for (const ty of ys) {
+      const r = [tx, ty, tw, 16];
+      if (ty >= 36 && ty + 16 <= H - 34 && !overlaps(r, placed)) { placed.push(r); return r; }
+    }
+    return null;
+  }
+  function cvBox(d, W, H, p, placed) {
+    const c = CVC[CVG[d.c]] || '#fff', x = d.b[0] * W, y = d.b[1] * H, w = d.b[2] * W, h = d.b[3] * H, L = Math.max(4, Math.min(w, h) * .3) * p;
+    dCx.strokeStyle = c; dCx.lineWidth = 1.75;
+    dCx.globalAlpha = .25 * p; dCx.strokeRect(x, y, w, h); dCx.globalAlpha = 1;
+    dCx.beginPath();
+    dCx.moveTo(x, y + L); dCx.lineTo(x, y); dCx.lineTo(x + L, y);
+    dCx.moveTo(x + w - L, y); dCx.lineTo(x + w, y); dCx.lineTo(x + w, y + L);
+    dCx.moveTo(x + w, y + h - L); dCx.lineTo(x + w, y + h); dCx.lineTo(x + w - L, y + h);
+    dCx.moveTo(x + L, y + h); dCx.lineTo(x, y + h); dCx.lineTo(x, y + h - L);
+    dCx.stroke();
+    if (p < .7 || (W < 480 && d.b[2] * d.b[3] < .002)) return;  // phones: tiny far-off boxes keep their brackets only
+    const text = d.c.toUpperCase() + ' ' + Math.round(d.s * 100), r = cvSpot(text, x, [y - 18, y + 2, y + h - 18], W, H, placed);
+    if (!r) return;
+    dCx.globalAlpha = Math.min(1, (p - .7) / .3);
+    cvTag(text, r, 'rgba(11,8,23,.8)', '#EFEAF8', c);
+    dCx.globalAlpha = 1;
+  }
+  function cvFocusRing(f, W, H, now) {
+    const x = f.b[0] * W, y = f.b[1] * H, w = f.b[2] * W, h = f.b[3] * H, k = reduce ? .5 : (Math.sin(now / 240) + 1) / 2, g = 4 + 4 * k;
+    dCx.strokeStyle = '#EFEAF8'; dCx.lineWidth = 1.5; dCx.setLineDash([4, 4]);
+    dCx.strokeRect(x - g, y - g, w + 2 * g, h + 2 * g); dCx.setLineDash([]);
+  }
+  function cvHud(list) {
+    if (!cvOn || !list) { dHud.textContent = ''; return; }
+    const n = {};
+    list.forEach((d) => { n[d.c] = (n[d.c] || 0) + 1; });
+    const parts = Object.entries(n).sort((a, b) => b[1] - a[1]).map(([c, k]) => k + ' ' + (k > 1 ? (PLURAL[c] || c + 's') : c));
+    dHud.innerHTML = '<b>Detector</b>' + (parts.length ? parts.join(' &middot; ') : 'nothing found');
+  }
+  function pickFocus(list) {
+    const c = focus ? list.filter((d) => focus.c.includes(d.c)) : [];
+    if (!c.length) return null;
+    const score = focus.pick === 'center' ? (d) => -Math.abs(d.b[0] + d.b[2] / 2 - .5) : (d) => d.b[2] * d.b[3];
+    return c.reduce((a, b) => (score(b) > score(a) ? b : a));
+  }
+  function cvFrame(now) {
+    cvRaf = 0;
+    const [W, H] = cvSize();
+    dCx.clearRect(0, 0, W, H);
+    if (!cvOn || !cvData || !cvSeen) { cvHud(cvOn && cvData ? cvData.still : null); return; }
+    const playing = dView.classList.contains('playing') && cvData.frames;
+    const list = (playing ? cvAt(dVid.currentTime) : cvData.still).slice().sort((a, b) => b.b[2] * b.b[3] - a.b[2] * a.b[3]);
+    const placed = [];
+    let again = false, ftag = null;
+    if (focus && focus.shown && focusBox && (playing || reduce || now - scanStart >= 1300)) {
+      if (playing) { // follow the same object from frame to frame
+        let best = .05, hit = null;
+        list.forEach((d) => { const v = CVG[d.c] === CVG[focusBox.c] ? iou(d.b, focusBox.b) : 0; if (v > best) { best = v; hit = d; } });
+        if (hit) focusBox = hit;
+      }
+      const t = 'MY MODEL: ' + focus.say.toUpperCase(), fy = focusBox.b[1] * H, fh = focusBox.b[3] * H;
+      ftag = [t, cvSpot(t, focusBox.b[0] * W - 8, [fy + fh + 10, fy - 28, fy + fh - 20], W, H, placed)];
+    }
+    if (!playing && !reduce && now - scanStart < 1300) { // a scan line sweeps down and "finds" each box as it passes
+      const sy = (now - scanStart) / 1100 * H, grad = dCx.createLinearGradient(0, sy - 46, 0, sy);
+      grad.addColorStop(0, 'rgba(95,224,176,0)'); grad.addColorStop(1, 'rgba(95,224,176,.26)');
+      dCx.fillStyle = grad; dCx.fillRect(0, sy - 46, W, 46);
+      dCx.fillStyle = 'rgba(95,224,176,.9)'; dCx.fillRect(0, sy, W, 1.5);
+      list.forEach((d) => { const p = Math.max(0, Math.min(1, (sy - d.b[1] * H) / (.16 * H))); if (p > 0) cvBox(d, W, H, p, placed); });
+      again = true;
+    } else {
+      list.forEach((d) => cvBox(d, W, H, 1, placed));
+    }
+    if (ftag) {
+      cvFocusRing(focusBox, W, H, now);
+      if (ftag[1]) cvTag(ftag[0], ftag[1], '#6D4FE8', '#fff');
+      again = again || !reduce;
+    }
+    cvHud(list);
+    if (again || (playing && !dVid.paused && !dVid.ended)) cvRaf = requestAnimationFrame(cvFrame);
+  }
+  const cvKick = () => { if (!cvRaf) cvRaf = requestAnimationFrame(cvFrame); };
+  function cvScene(i) {
+    cvData = null; focusBox = null;
+    focus = SCENES[i].focus ? { ...SCENES[i].focus, shown: false } : null;
+    cvKick();
+    loadBoxes(SCENES[i].id).then((d) => {
+      if (scene !== i) return;
+      cvData = d; scanStart = performance.now();
+      if (d && focus && focus.shown) focusBox = pickFocus(d.still);
+      cvKick();
+    });
+  }
+  function cvShowFocus() {
+    if (!focus) return;
+    focus.shown = true;
+    if (cvData) focusBox = pickFocus(cvData.still);
+    cvKick();
+  }
+  new IntersectionObserver(([e]) => { // only animate while the clip is on screen; the scan plays the first time you see it
+    if (e.isIntersecting && !cvSeen) { cvSeen = true; scanStart = performance.now(); }
+    if (e.isIntersecting) cvKick(); else if (cvRaf) { cancelAnimationFrame(cvRaf); cvRaf = 0; }
+  }).observe(dView);
+  dCvBtn.addEventListener('click', () => {
+    cvOn = !cvOn;
+    dCvBtn.setAttribute('aria-pressed', cvOn); dCvBtn.textContent = cvOn ? 'Boxes on' : 'Boxes off';
+    scanStart = performance.now(); cvKick();
+  });
+  ['play', 'seeked', 'ended'].forEach((ev) => dVid.addEventListener(ev, cvKick));
+  addEventListener('resize', cvKick);
   function tally() {
     const n = Object.keys(picks).length, m = Object.entries(picks).filter(([i, o]) => SCENES[i].model === o).length;
-    $('dScore').textContent = n ? 'You matched my model on ' + m + ' of ' + n : '4 real dashcam clips';
+    $('dScore').textContent = n ? 'You matched my model on ' + m + ' of ' + n : SCENES.length + ' real dashcam clips';
   }
   function reveal(i) {
     const s = SCENES[i], you = picks[i], same = you === s.model;
@@ -1031,6 +1253,7 @@
     $('dQuote').textContent = '“' + s.quote + '”';
     $('dNote').textContent = s.note; $('dNote').hidden = !s.note;
     dReveal.hidden = false; $('dWait').hidden = true;
+    cvShowFocus();
   }
   function show(i) {
     scene = i;
@@ -1038,6 +1261,7 @@
     $('dStep').textContent = i + 1;
     dView.classList.remove('playing'); dVid.pause(); dVid.removeAttribute('src'); dVid.load();
     dImg.src = 'drive/' + s.id + '.jpg'; dImg.alt = s.alt;
+    cvScene(i);
     $('dTag').textContent = 'Paused at the moment of decision';
     $('dCredit').innerHTML = s.credit;
     dOpts.innerHTML = '';
