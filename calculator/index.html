@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>An AI graphing calculator · Ian Sabia</title>
+<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<meta name="description" content="A TI-Nspire with a camera. Point it at a handwritten problem, press enter, and a worked solution shows up on the calculator. Try the demo.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iansabia.github.io/calculator/">
+<meta property="og:title" content="An AI graphing calculator · Ian Sabia">
+<meta property="og:description" content="A TI-Nspire with a camera. Point it at a handwritten problem, press enter, and a worked solution shows up on the calculator. Try the demo.">
+<meta property="og:image" content="https://iansabia.github.io/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<!-- handwriting for the sample problems: only the letters they use -->
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&text=%20%28%29%2B-.%2C%3A%2F0123456789%3D%3FEPRSabcdefghilmnorstuvwxy&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .btn{white-space:nowrap;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;background:var(--ink);color:var(--bg);border:0;padding:9px 14px;cursor:pointer;transition:background .2s,transform .15s}
+  .btn:hover{background:var(--acc);color:#fff}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+  .btn.ghost:hover{border-color:var(--ink);background:transparent;color:var(--ink)}
+
+  /* ---------- demo panel ---------- */
+  .demo .panel-h{flex-wrap:wrap}
+  .demo .panel-h .mono{color:var(--body)}
+  .demo-body{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);grid-template-areas:"calc papers" "calc strip" "calc wire";grid-template-rows:auto auto 1fr}
+  .run{display:contents}
+  .lbl{display:block;color:var(--acc);margin-bottom:12px}
+  .papers-area{grid-area:papers;padding:20px 22px 22px;border-bottom:1px solid var(--rule)}
+  .calc-area{grid-area:calc;padding:22px 20px 20px;border-right:1px solid var(--rule);
+    background:radial-gradient(120% 60% at 50% 32%,color-mix(in srgb,var(--acc) 10%,var(--tile)),var(--tile) 72%)}
+  .strip{grid-area:strip;padding:18px 22px 20px;border-bottom:1px solid var(--rule);background:var(--bg)}
+  .wire-area{grid-area:wire;padding:18px 22px 22px}
+  .hint{margin-top:14px;color:var(--body);font-size:14px}
+  .hint b{color:var(--ink);font-weight:600}
+
+  /* sample problems on graph paper */
+  .papers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .paper{display:flex;flex-direction:column;background:none;border:0;padding:0;margin:0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-width:0}
+  .sheet{position:relative;display:block;aspect-ratio:240/150;background-color:#FFFDF7;
+    background-image:linear-gradient(rgba(70,90,170,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(70,90,170,.12) 1px,transparent 1px);
+    background-size:12px 12px;background-position:-1px -1px;box-shadow:0 1px 0 rgba(11,8,23,.06),0 12px 22px -16px rgba(11,8,23,.5);
+    transform:rotate(var(--tilt,0deg));transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
+  .paper:nth-child(1){--tilt:-1.4deg}.paper:nth-child(2){--tilt:1deg}.paper:nth-child(3){--tilt:-.7deg}
+  .paper:hover .sheet{transform:rotate(0deg) translateY(-2px)}
+  .paper[aria-pressed="true"] .sheet{transform:none;box-shadow:0 1px 0 rgba(11,8,23,.06),0 16px 28px -16px rgba(11,8,23,.6)}
+  :root[data-theme="dark"] .sheet{background-color:#ECE8DE}
+  .sheet svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .sheet svg.write{animation:write 1s var(--ease) both}
+  @keyframes write{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+  .hw{font-family:"Caveat","Bradley Hand","Segoe Print",cursive;font-weight:600;fill:#25306A}
+  .pen{fill:none;stroke:#25306A;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .vf{position:absolute;inset:-7px;pointer-events:none;opacity:0;transition:opacity .3s}
+  .vf i{position:absolute;width:13px;height:13px;border:2px solid var(--acc)}
+  .vf i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}
+  .vf i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+  .vf i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}
+  .vf i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+  .paper[aria-pressed="true"] .vf{opacity:1}
+  .paper.focusing .vf{animation:focus 1.1s var(--ease)}
+  @keyframes focus{0%{transform:scale(1.14)}45%{transform:scale(.96)}70%{transform:scale(1.03)}100%{transform:none}}
+  .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+  .paper.shot .flash{animation:flash .6s ease-out}
+  @keyframes flash{0%{opacity:0}12%{opacity:.95}100%{opacity:0}}
+  .plabel{display:flex;align-items:center;gap:7px;margin-top:12px;color:var(--body)}
+  .plabel::before{content:"";width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;flex:none}
+  .paper[aria-pressed="true"] .plabel{color:var(--acc)}
+  .paper[aria-pressed="true"] .plabel::before{background:currentColor}
+
+  /* the handheld (a drawing; sizes are in k = 1/400 of its width) */
+  .calc-wrap{container-type:inline-size;width:100%;max-width:400px;margin:0 auto}
+  .calc{--k:calc(100cqw / 400);position:relative;padding-top:calc(36 * var(--k));-webkit-user-select:none;user-select:none}
+  .module{position:absolute;z-index:1;top:0;left:50%;transform:translateX(-50%);width:calc(178 * var(--k));height:calc(50 * var(--k));
+    display:flex;align-items:center;gap:calc(11 * var(--k));padding:0 calc(14 * var(--k)) calc(6 * var(--k));
+    border-radius:calc(12 * var(--k)) calc(12 * var(--k)) calc(6 * var(--k)) calc(6 * var(--k));
+    background:linear-gradient(180deg,#36323f,#1c1a24);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 calc(6 * var(--k)) calc(14 * var(--k)) rgba(0,0,0,.28)}
+  .lens{position:relative;flex:none;width:calc(28 * var(--k));height:calc(28 * var(--k));border-radius:50%;
+    background:radial-gradient(circle at 36% 34%,#9a9fc0 0 7%,#2b2e48 23%,#09090f 60%);
+    box-shadow:0 0 0 calc(3 * var(--k)) #4c4859,inset 0 0 0 calc(4 * var(--k)) #121118}
+  .lens::after{content:"";position:absolute;inset:calc(-16 * var(--k));border-radius:50%;background:radial-gradient(circle,#fff 0,rgba(255,255,255,.85) 25%,rgba(255,255,255,0) 62%);opacity:0;pointer-events:none}
+  .lens.shot::after{animation:lens .7s ease-out}
+  @keyframes lens{0%{opacity:0;transform:scale(.3)}14%{opacity:1}100%{opacity:0;transform:scale(1.5)}}
+  .mod-txt{font:500 calc(9.5 * var(--k))/1.3 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:#bcb5d6}
+  .cbody{position:relative;padding:calc(26 * var(--k)) calc(16 * var(--k)) calc(32 * var(--k));
+    border-radius:calc(34 * var(--k)) calc(34 * var(--k)) calc(60 * var(--k)) calc(60 * var(--k));
+    background:linear-gradient(180deg,#2d2a3a 0%,#1e1c28 36%,#17151f 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.13),inset 0 0 0 1px rgba(255,255,255,.07),0 calc(30 * var(--k)) calc(50 * var(--k)) calc(-24 * var(--k)) rgba(11,8,23,.6)}
+  .bezel{padding:calc(8 * var(--k));border-radius:calc(10 * var(--k));background:#0b0a10;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+  .pad{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:calc(16 * var(--k));margin-top:calc(20 * var(--k))}
+  .side{display:grid;gap:calc(10 * var(--k))}
+  .key{position:relative;display:flex;align-items:center;justify-content:center;gap:calc(5 * var(--k));height:calc(34 * var(--k));min-width:0;border:0;padding:0;
+    border-radius:calc(8 * var(--k));background:linear-gradient(180deg,#3d3a4a,#2c2a37);color:#ECEBF3;font:500 calc(14 * var(--k))/1 var(--sans);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 calc(2.5 * var(--k)) 0 #0d0c12;transition:transform .08s,box-shadow .08s,filter .2s}
+  .key.fn{background:linear-gradient(180deg,#4c4863,#3a3650);font-size:calc(12.5 * var(--k))}
+  button.key{cursor:pointer}
+  button.key:hover{filter:brightness(1.15)}
+  .key:active,.key.down{transform:translateY(calc(2 * var(--k)));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 calc(.5 * var(--k)) 0 #0d0c12}
+  .np{position:relative;width:calc(112 * var(--k));height:calc(112 * var(--k));border-radius:50%;
+    background:radial-gradient(circle at 50% 36%,#47435c,#2a2836 72%);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 calc(3 * var(--k)) 0 #0d0c12}
+  .np-b{position:absolute;display:grid;place-items:center;border:0;padding:0;background:none;border-radius:calc(8 * var(--k))}
+  .np-b.up,.np-b.down{left:50%;transform:translateX(-50%);width:calc(46 * var(--k));height:calc(34 * var(--k))}
+  .np-b.up{top:calc(3 * var(--k))}.np-b.down{bottom:calc(3 * var(--k))}
+  .np-b.left,.np-b.right{top:50%;transform:translateY(-50%);width:calc(34 * var(--k));height:calc(46 * var(--k))}
+  .np-b.left{left:calc(3 * var(--k))}.np-b.right{right:calc(3 * var(--k))}
+  .np-b::before{content:"";width:0;height:0;border:calc(6 * var(--k)) solid transparent}
+  .np-b.up::before{border-top:0;border-bottom:calc(8 * var(--k)) solid #d2cee2}
+  .np-b.down::before{border-bottom:0;border-top:calc(8 * var(--k)) solid #d2cee2}
+  .np-b.left::before{border-left:0;border-right:calc(8 * var(--k)) solid #7f7b95}
+  .np-b.right::before{border-right:0;border-left:calc(8 * var(--k)) solid #7f7b95}
+  button.np-b{cursor:pointer}
+  button.np-b:hover{background:rgba(255,255,255,.07)}
+  button.np-b:active::before,button.np-b.down-now::before{transform:scale(.85)}
+  .np-c{position:absolute;inset:calc(38 * var(--k));border-radius:50%;background:radial-gradient(circle at 50% 40%,#3c394d,#26242f);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  .keys{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:calc(10 * var(--k)) calc(9 * var(--k));margin-top:calc(20 * var(--k))}
+  .key.enter{background:linear-gradient(180deg,#7d62f0,#5a3fd6);color:#fff;font-size:calc(12.5 * var(--k));font-weight:600;letter-spacing:.01em}
+  .key.enter svg{width:calc(15 * var(--k));height:calc(15 * var(--k));flex:none}
+  .key.enter.invite{animation:invite 2.4s ease-in-out infinite}
+  @keyframes invite{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 calc(2.5 * var(--k)) 0 #2a1d70,0 0 0 0 rgba(155,133,255,.6)}
+    55%{box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 calc(2.5 * var(--k)) 0 #2a1d70,0 0 0 calc(9 * var(--k)) rgba(155,133,255,0)}}
+  .key.enter:not(.invite){box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 calc(2.5 * var(--k)) 0 #2a1d70}
+  .key.enter:active{box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 calc(.5 * var(--k)) 0 #2a1d70}
+  .calc .key:focus-visible,.calc .np-b:focus-visible{outline:2px solid #B9A9FF;outline-offset:2px}
+  @container (max-width:380px){
+    .cbody{padding-left:calc(11 * var(--k));padding-right:calc(11 * var(--k))}
+    .bezel{padding:calc(6 * var(--k))}
+    .keys .r1{display:none}
+  }
+  .calc-note{margin:18px auto 0;max-width:400px;color:var(--body);font-size:13px;text-align:center}
+
+  /* the calculator screen, laid out like the Lua app draws it on the 318 x 212 window (u = one of its pixels) */
+  .screen-wrap{container-type:inline-size}
+  .screen{--u:calc(100cqw / 318);position:relative;aspect-ratio:318/212;background:#fff;color:#000;overflow:hidden;font-family:var(--sans);border-radius:calc(2 * var(--u))}
+  .screen:focus-visible{outline:2px solid #B9A9FF;outline-offset:calc(5 * var(--u))}
+  :root[data-theme="dark"] .screen{filter:brightness(.93)}
+  .s-head{position:absolute;left:0;right:0;top:0;height:calc(30 * var(--u));background:#036}
+  .s-title{position:absolute;left:calc(8 * var(--u));top:calc(3 * var(--u));font-weight:600;font-size:calc(12 * var(--u));line-height:calc(14 * var(--u));color:#fff}
+  .s-mode{position:absolute;right:calc(8 * var(--u));top:calc(5 * var(--u));font-weight:600;font-size:calc(10 * var(--u));line-height:calc(12 * var(--u))}
+  .s-mode.ok{color:#009600}.s-mode.busy{color:#C89600}
+  .s-box{position:absolute;left:calc(6 * var(--u));top:calc(33 * var(--u));width:calc(306 * var(--u));height:calc(151 * var(--u));border:1px solid #C8C8C8}
+  .s-hint{position:absolute;left:calc(13 * var(--u));top:calc(45 * var(--u));font-size:calc(13 * var(--u));line-height:calc(14 * var(--u));color:#808080;white-space:nowrap}
+  .s-lines{position:absolute;left:calc(13 * var(--u));top:calc(39 * var(--u));font-size:calc(13 * var(--u));line-height:calc(14 * var(--u));white-space:pre}
+  .s-lines div{height:calc(14 * var(--u))}
+  .s-track{position:absolute;left:calc(304 * var(--u));top:calc(35 * var(--u));width:calc(4 * var(--u));height:calc(147 * var(--u));background:#DCDCDC}
+  .s-track i{position:absolute;left:0;right:0;background:#969696}
+  .s-foot{position:absolute;left:0;right:0;top:calc(187 * var(--u));height:calc(25 * var(--u));background:#F0F0F0}
+  .s-status{position:absolute;left:calc(8 * var(--u));top:calc(2 * var(--u));font-size:calc(10 * var(--u));line-height:calc(12 * var(--u));white-space:pre}
+  .s-status.ok{color:#009600}.s-status.err{color:#C80000}.s-status.warn{color:#C89600}.s-status.info{color:#0064C8}
+  .s-keys{position:absolute;left:calc(8 * var(--u));top:calc(13 * var(--u));font-size:calc(9 * var(--u));line-height:calc(11 * var(--u));color:#646464;white-space:nowrap}
+
+  /* pipeline diagram */
+  .pipe{display:flex;align-items:stretch}
+  .node{position:relative;flex:0 1 128px;min-width:0;display:flex;flex-direction:column;gap:1px;padding:11px 11px 10px;border:1px solid var(--rule);background:var(--bg);
+    transition:border-color .3s,box-shadow .3s}
+  .node svg{width:26px;height:26px;color:var(--body);margin-bottom:6px;transition:color .3s}
+  .node b{font-weight:600;font-size:14.5px;line-height:1.2}
+  .node span{font-size:12.5px;color:var(--body);line-height:1.3}
+  .node.done svg{color:var(--ink)}
+  .node.on{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 20%,transparent)}
+  .node.on svg,.node.on b{color:var(--acc)}
+  .node .dots{position:absolute;right:9px;top:11px;display:none;gap:3px}
+  .node .dots i{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:dot 1s ease-in-out infinite}
+  .node .dots i:nth-child(2){animation-delay:.15s}.node .dots i:nth-child(3){animation-delay:.3s}
+  .node.think .dots{display:flex}
+  @keyframes dot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+  .node.busy svg{animation:busy 1.1s ease-in-out}
+  @keyframes busy{0%,100%{transform:none}50%{transform:scale(1.18)}}
+  .link{position:relative;flex:1 1 0;min-width:30px}
+  .link .ln{position:absolute;left:3px;right:3px;top:38px;border-top:2px dashed var(--rule);transition:border-color .3s}
+  .link.done .ln{border-top-style:solid;border-top-color:color-mix(in srgb,var(--ink) 30%,transparent)}
+  .link.on .ln{border-top-style:solid;border-top-color:var(--acc)}
+  .link small{position:absolute;left:0;right:0;top:48px;text-align:center;font:500 10px/1.35 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--body);padding:0 3px}
+  .pkt{position:absolute;top:39px;left:0;transform:translate(-50%,-50%);font:500 10px/1 var(--mono);letter-spacing:.06em;background:var(--acc);color:#fff;padding:4px 6px;border-radius:3px;opacity:0;white-space:nowrap;pointer-events:none;z-index:1}
+  :root[data-theme="dark"] .pkt{color:#1C1B21}
+  .pkt.fwd{animation:pf var(--dur,900ms) var(--ease) forwards}
+  .pkt.back{animation:pb var(--dur,900ms) var(--ease) forwards}
+  @keyframes pf{0%{left:0;opacity:0}12%{opacity:1}86%{opacity:1}100%{left:100%;opacity:0}}
+  @keyframes pb{0%{left:100%;opacity:0}12%{opacity:1}86%{opacity:1}100%{left:0;opacity:0}}
+  .cap{margin-top:18px;min-height:104px}
+  .cap .mono{color:var(--acc)}
+  .cap b{display:block;font-family:var(--serif);font-weight:700;font-size:23px;line-height:1.15;letter-spacing:-.01em;margin:5px 0 5px}
+  .cap p{color:var(--body);font-size:15px;line-height:1.5;max-width:62ch}
+
+  /* every step, with what goes over the wire */
+  .wire{list-style:none;background:var(--nbg);color:var(--nink);transition:background-color .35s}
+  .wire li + li{border-top:1px solid var(--nrule)}
+  .wire button{display:flex;gap:10px;width:100%;padding:11px 14px;text-align:left;background:none;border:0;color:inherit;font:inherit;cursor:pointer;opacity:.64;transition:opacity .3s,background-color .2s}
+  .wire button:hover{background:color-mix(in srgb,var(--nink) 7%,transparent)}
+  .wire button:focus-visible{outline:2px solid var(--nacc);outline-offset:-2px}
+  .wire li.done button,.wire li.on button{opacity:1}
+  .wire li.on button{background:color-mix(in srgb,var(--nacc) 16%,transparent);box-shadow:inset 3px 0 0 var(--nacc)}
+  .wire .n{flex:none;width:26px;color:var(--nacc);padding-top:3px}
+  .wire .b{min-width:0;display:flex;flex-direction:column;gap:3px}
+  .wire .t{font-weight:600;font-size:15px}
+  .wire code{display:block;font-family:var(--mono);font-size:12.5px;line-height:1.55;color:var(--nbody);overflow-wrap:anywhere}
+  .wire code .d{color:var(--nwarm);margin-right:8px;white-space:nowrap}
+  .wire .say{display:none;color:var(--nbody);font-size:14px;line-height:1.45;margin:1px 0 3px}
+  .wire q{display:block;margin-top:6px;padding-left:10px;border-left:2px solid var(--nacc);font-size:13px;line-height:1.5;color:var(--nink);quotes:none}
+
+  @media (max-width:900px){
+    .demo-body{display:block}
+    .run{display:flex;flex-direction:column}
+    .strip{order:-1;z-index:5}
+    .calc-area{border-right:0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+    .papers-area{border-bottom:0}
+    .wire .say{display:block}
+    .strip{border-top:1px solid var(--rule);border-bottom:0}
+  }
+  @media (max-width:900px) and (min-height:740px){
+    .strip{position:sticky;top:var(--bar);box-shadow:0 10px 18px -16px rgba(11,8,23,.45)}
+    .strip .lbl,.strip .cap p{display:none}
+    .strip .cap{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;min-height:0}
+    .strip .cap b{margin:0}
+  }
+  @media (max-width:640px){
+    .papers-area{padding:16px 14px 18px}
+    .papers{gap:10px}
+    .plabel{margin-top:9px;font-size:10px;letter-spacing:.05em}
+    .strip{padding:14px 14px 14px}
+    .calc-area{padding:18px 8px 16px}
+    .wire-area{padding:16px 14px 18px}
+    .node{padding:8px 7px 7px;flex-basis:96px}
+    .node svg{width:20px;height:20px;margin-bottom:4px}
+    .node b{font-size:12.5px}
+    .node span{font-size:10.5px}
+    .link{min-width:22px}
+    .link .ln{top:27px}
+    .pkt{top:28px;font-size:0;padding:5px;border-radius:50%}
+    .link small{display:none}
+    .node .dots{right:6px;top:8px}
+    .cap{margin-top:12px;min-height:0}
+    .cap b{font-size:18px;margin:3px 0 3px}
+    .cap p{font-size:14px;line-height:1.45}
+    .wire button{padding:10px 12px}
+    .wire .n{width:22px}
+  }
+
+  /* ---------- how it works ---------- */
+  .versions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+  .ver{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:22px 22px 20px;display:flex;flex-direction:column;gap:10px}
+  .ver.mine{background:var(--tile)}
+  .ver-top{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--body)}
+  .ver-top .tag{color:var(--acc)}
+  .ver h3{font-family:var(--serif);font-weight:700;font-size:26px;line-height:1.1;letter-spacing:-.01em}
+  .ver h3 em{font-style:italic;font-weight:500;color:var(--acc)}
+  .ver p{color:var(--body);font-size:15px}
+  .ver .by{margin-top:auto;padding-top:6px;color:var(--ink)}
+  .ver .by a{color:var(--acc);text-decoration:none;border-bottom:1px solid currentColor}
+  .part-h{font-family:var(--serif);font-weight:700;font-size:clamp(26px,3vw,34px);line-height:1.1;letter-spacing:-.015em;margin:clamp(44px,6vw,64px) 0 4px}
+  .part-h em{font-style:italic;font-weight:500;color:var(--acc)}
+  .parts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px;margin-top:22px}
+  .part{border-top:3px solid var(--ink);padding-top:14px;display:flex;flex-direction:column;gap:8px}
+  .part .mono{color:var(--acc)}
+  .part h4{font-family:var(--serif);font-weight:700;font-size:22px;line-height:1.15;letter-spacing:-.01em}
+  .part p{color:var(--body);font-size:15px}
+  .part code,.models code{font-family:var(--mono);font-size:.84em;background:var(--tile);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+  .pr{margin-top:28px;color:var(--body);max-width:720px}
+  .pr a{color:var(--ink);text-underline-offset:3px;text-decoration-color:var(--acc)}
+  .pr a:hover{color:var(--acc)}
+  .more2{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:0;margin-top:34px;border:1px solid var(--rule)}
+  .models{padding:20px 22px}
+  .models .mono,.note .mono{color:var(--acc);display:block;margin-bottom:12px}
+  .models dl{display:grid;gap:12px}
+  .models dt{font-weight:600}
+  .models dd{color:var(--body);font-size:15px}
+  .models p{color:var(--body);font-size:14px;margin-top:14px}
+  .note{padding:20px 22px;background:var(--nbg);color:var(--nink);transition:background-color .35s}
+  .note .mono{color:var(--nwarm)}
+  .note p{color:var(--nbody);font-size:15px}
+  .note p b{color:var(--nink);font-weight:600}
+  details.cmds{margin-top:18px;border:1px solid var(--rule)}
+  details.cmds summary{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;font-weight:600;list-style:none}
+  details.cmds summary::-webkit-details-marker{display:none}
+  details.cmds summary .mono{color:var(--acc);transition:transform .3s var(--ease)}
+  details.cmds[open] summary .mono{transform:rotate(45deg)}
+  details.cmds summary:hover{background:var(--tile)}
+  .tbl{overflow-x:auto;border-top:1px solid var(--rule)}
+  .tbl table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.45}
+  .tbl th,.tbl td{padding:9px 18px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+  .tbl th{font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--body);background:var(--tile)}
+  .tbl td code{font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+  .tbl td:first-child code{color:var(--acc);white-space:nowrap}
+  .tbl td span{color:var(--body)}
+  .cmds-note{padding:12px 18px 16px;color:var(--body);font-size:14px}
+  .cmds-note code{font-family:var(--mono);font-size:12.5px}
+  @media (max-width:900px){
+    .versions{grid-template-columns:1fr}
+    .parts{grid-template-columns:1fr;gap:28px}
+    .more2{grid-template-columns:1fr}
+  }
+  @media (max-width:640px){
+    .ver{padding:18px 16px}
+    .models,.note{padding:18px 16px}
+    .tbl th,.tbl td{padding:8px 12px}
+    details.cmds summary{padding:13px 14px}
+    .cmds-note{padding:12px 14px 14px}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="../" aria-label="Ian Sabia, home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
+      <span class="mono" style="font-size:13px">Ian Sabia</span>
+    </a>
+    <nav aria-label="Main">
+      <span class="links">
+        <a href="../#currently">Currently</a>
+        <a href="../#work">Work</a>
+        <a href="../#projects" aria-current="true">Projects</a>
+        <a href="../#milan">Milan</a>
+        <a href="../#off">Off the clock</a>
+        <a href="../#contact">Contact</a>
+      </span>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu <i aria-hidden="true"></i></button>
+      <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
+    </nav>
+    <div class="menu" id="menu">
+      <a href="../#currently">Currently <span class="mono">01</span></a>
+      <a href="../#work">Work <span class="mono">02</span></a>
+      <a href="../#projects" aria-current="true">Projects <span class="mono">03</span></a>
+      <a href="../#milan">Milan <span class="mono">04</span></a>
+      <a href="../#off">Off the clock <span class="mono">05</span></a>
+      <a href="../#contact">Contact <span class="mono">06</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <header class="page-hero">
+      <div class="kicker mono"><a href="../#projects">Projects</a><span aria-hidden="true">/</span><span>C++ &middot; ESP32-S3</span></div>
+      <h1>An AI <em>graphing calculator</em></h1>
+      <p class="lede">A camera and an ESP32-S3 chip that plug into a TI-Nspire. Point it at a handwritten problem, press enter, and a worked solution shows up on the calculator. I wrote the firmware, the calculator app and the local proxy.</p>
+      <div class="facts mono"><span>Stack<b>C++ &middot; Lua &middot; Python</b></span><span>Hardware<b>OtterCad</b></span><span>My PR<b>#4, merged Feb 2026</b></span><span>Stars<b>about 47 (Oct 4)</b></span></div>
+      <div class="actions"><a class="more" href="#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="more quiet" href="https://github.com/OtterCadGH/nternet-Link">See the build on GitHub <span aria-hidden="true">&nearr;</span></a></div>
+    </header>
+
+    <section class="block" id="demo">
+      <div class="head reveal"><h2>Try it</h2><span class="num mono">01</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">Pick a problem, then press enter on the calculator. Each hop follows the real code. The answers are examples, written in the format the device uses.</p>
+
+      <div class="panel demo reveal">
+        <div class="panel-h"><span class="mono">Simulated demo</span><button class="btn ghost" id="resetBtn" type="button">Reset</button></div>
+        <div class="demo-body">
+          <div class="papers-area">
+            <span class="lbl mono">Pick a problem</span>
+            <div class="papers" role="group" aria-label="Pick a problem">
+              <button class="paper" type="button" aria-pressed="true" aria-label="Algebra: solve 2x squared minus 3x minus 5 equals 0">
+                <span class="sheet">
+                  <svg viewBox="0 0 240 150" aria-hidden="true">
+                    <text class="hw" x="18" y="46" font-size="27">Solve for x</text>
+                    <text class="hw" x="18" y="104" font-size="36">2x<tspan font-size="21" dy="-15">2</tspan><tspan dy="15"> - 3x - 5 = 0</tspan></text>
+                  </svg>
+                  <span class="vf" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="flash" aria-hidden="true"></span>
+                </span>
+                <span class="plabel mono">Algebra</span>
+              </button>
+              <button class="paper" type="button" aria-pressed="false" aria-label="Calculus: the integral from 0 to 2 of 3x squared plus 1, dx">
+                <span class="sheet">
+                  <svg viewBox="0 0 240 150" aria-hidden="true">
+                    <text class="hw" x="18" y="42" font-size="27">Evaluate</text>
+                    <path class="pen" d="M47 64 C 42 58, 35 62, 35 74 L 33 112 C 32 124, 25 127, 21 120"/>
+                    <text class="hw" x="47" y="72" font-size="19">2</text>
+                    <text class="hw" x="38" y="134" font-size="19">0</text>
+                    <text class="hw" x="58" y="106" font-size="34">(3x<tspan font-size="20" dy="-14">2</tspan><tspan dy="14"> + 1) dx</tspan></text>
+                  </svg>
+                  <span class="vf" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="flash" aria-hidden="true"></span>
+                </span>
+                <span class="plabel mono">Calculus</span>
+              </button>
+              <button class="paper" type="button" aria-pressed="false" aria-label="Probability: roll a fair die 4 times. What is the chance of at least one 6?">
+                <span class="sheet">
+                  <svg viewBox="0 0 240 150" aria-hidden="true">
+                    <text class="hw" x="18" y="46" font-size="25">Roll a fair die 4 times.</text>
+                    <text class="hw" x="18" y="100" font-size="30">P(at least one 6) = ?</text>
+                  </svg>
+                  <span class="vf" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="flash" aria-hidden="true"></span>
+                </span>
+                <span class="plabel mono">Probability</span>
+              </button>
+            </div>
+            <p class="hint">Then press <b>enter</b> on the calculator.</p>
+          </div>
+
+          <div class="run">
+            <div class="calc-area">
+              <span class="lbl mono">Press enter</span>
+              <div class="calc-wrap">
+                <div class="calc" id="calc">
+                  <div class="module" aria-hidden="true"><span class="lens" id="lens"></span><span class="mod-txt">ESP32-S3<br>+ camera</span></div>
+                  <div class="cbody">
+                    <div class="bezel">
+                      <div class="screen-wrap">
+                        <div class="screen" id="screen" tabindex="0" role="group" aria-label="Calculator screen. Enter takes a photo, the arrow keys scroll, Escape resets.">
+                          <div class="s-head"><span class="s-title">AI Camera Solver</span><span class="s-mode ok" id="sMode">[OK]</span></div>
+                          <div class="s-box" aria-hidden="true"></div>
+                          <div class="s-hint" id="sHint">W=WiFi | T=Type | ENTER=Photo</div>
+                          <div class="s-lines" id="sLines"></div>
+                          <div class="s-track" id="sTrack" aria-hidden="true" hidden><i id="sThumb"></i></div>
+                          <div class="s-foot"><span class="s-status ok" id="sStatus">[OK] Ready. H=help</span><span class="s-keys" aria-hidden="true">ENTER=Photo T=Chat H=Help Z=Reset</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="pad">
+                      <div class="side">
+                        <button class="key fn" id="kEsc" type="button" aria-label="esc: reset">esc</button>
+                        <span class="key fn" aria-hidden="true">tab</span>
+                      </div>
+                      <div class="np">
+                        <button class="np-b up" id="kUp" type="button" aria-label="Scroll up"></button>
+                        <span class="np-b left" aria-hidden="true"></span>
+                        <span class="np-b right" aria-hidden="true"></span>
+                        <button class="np-b down" id="kDown" type="button" aria-label="Scroll down"></button>
+                        <span class="np-c" aria-hidden="true"></span>
+                      </div>
+                      <div class="side">
+                        <span class="key fn" aria-hidden="true">menu</span>
+                        <span class="key fn" aria-hidden="true">del</span>
+                      </div>
+                    </div>
+                    <div class="keys">
+                      <span class="key r1" aria-hidden="true">^</span><span class="key r1" aria-hidden="true">7</span><span class="key r1" aria-hidden="true">8</span><span class="key r1" aria-hidden="true">9</span><span class="key r1" aria-hidden="true">&divide;</span>
+                      <span class="key" aria-hidden="true">x&sup2;</span><span class="key" aria-hidden="true">4</span><span class="key" aria-hidden="true">5</span><span class="key" aria-hidden="true">6</span><span class="key" aria-hidden="true">&times;</span>
+                      <span class="key" aria-hidden="true">&radic;</span><span class="key" aria-hidden="true">1</span><span class="key" aria-hidden="true">2</span><span class="key" aria-hidden="true">3</span><span class="key" aria-hidden="true">&minus;</span>
+                      <span class="key" aria-hidden="true">(&minus;)</span><span class="key" aria-hidden="true">0</span><span class="key" aria-hidden="true">.</span><span class="key" aria-hidden="true">+</span>
+                      <button class="key enter invite" id="kEnter" type="button" aria-label="enter: take a photo and solve"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8h3.2l1.7-2.6h7.2L17.3 8h3.2v11h-17z"/><circle cx="12" cy="13.3" r="3.4"/></svg>enter</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="calc-note">Example output, written in the format the device uses. Drawing, not to scale.</p>
+            </div>
+
+            <div class="strip">
+              <span class="lbl mono">The pipeline</span>
+              <div class="pipe" aria-hidden="true">
+                <div class="node" id="nCalc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="3"/><rect x="7.6" y="5.2" width="8.8" height="5.6" rx="1"/><path d="M8.6 14.4h.01M12 14.4h.01M15.4 14.4h.01M8.6 17.8h.01M12 17.8h.01M15.4 17.8h.01" stroke-width="2.3" stroke-linecap="round"/></svg><b>Calculator</b><span>Lua app</span></div>
+                <div class="link" id="lA"><i class="ln"></i><span class="pkt"></span><small><span class="long">USB serial<br>115200 baud</span></small></div>
+                <div class="node" id="nChip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><rect x="5" y="5" width="14" height="14" rx="2"/><circle cx="12" cy="12" r="3.3"/><path d="M9 2.5V5M15 2.5V5M9 19v2.5M15 19v2.5M2.5 9H5M2.5 15H5M19 9h2.5M19 15h2.5"/></svg><b>ESP32-S3</b><span>+ camera</span></div>
+                <div class="link" id="lB"><i class="ln"></i><span class="pkt"></span><small><span class="long">Wi-Fi<br>HTTPS</span></small></div>
+                <div class="node" id="nGroq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M7.2 18.5h10.3a4 4 0 0 0 .7-7.94 6 6 0 0 0-11.5-1.4A4.7 4.7 0 0 0 7.2 18.5z"/></svg><b>Groq API</b><span>Llama 4 Maverick</span><span class="dots"><i></i><i></i><i></i></span></div>
+              </div>
+              <div class="cap">
+                <span class="mono" id="capN">7 steps</span>
+                <b id="capT">Ready when you are</b>
+                <p id="capP">Press enter on the calculator to take the photo. Each step lights up here as it happens.</p>
+              </div>
+              <p class="sr-only" id="live" aria-live="polite"></p>
+            </div>
+
+            <div class="wire-area">
+              <span class="lbl mono">Every step, with what goes over the wire</span>
+              <ol class="wire" id="wire"></ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="how">
+      <div class="head reveal"><h2>How it works</h2><span class="num mono">02</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">nternet-Link is OtterCad's project. OtterCad started it, built the hardware and wrote the build guides. I wrote the software for V3, the camera version.</p>
+
+      <div class="versions reveal">
+        <article class="ver">
+          <div class="ver-top"><span class="mono tag">V1 &middot; Ti-GPT</span><span class="mono">Inside the case</span></div>
+          <h3>A chip <em>inside</em> the calculator</h3>
+          <p>An ESP32-C3 and a CP2102 USB-to-serial board go inside the case, soldered to the calculator's USB lines, with switches for power and host mode. You type a question and it asks ChatGPT. Opening the case is a big ask, so this one is kept as a reference.</p>
+          <p class="by mono">By OtterCad</p>
+        </article>
+        <article class="ver">
+          <div class="ver-top"><span class="mono tag">V2 &middot; nternet-Link</span><span class="mono">Plug-in</span></div>
+          <h3>A plug-in <em>adapter</em></h3>
+          <p>Everything moves outside. A XIAO ESP32-C3 and a CP2102 sit in a 3D-printed case that plugs into the USB mini port, so there's no mod. Its demos are a serial echo test and a ChatGPT chat app.</p>
+          <p class="by mono">By OtterCad &middot; <a href="https://youtube.com/shorts/zKWZ0URra5Q">Demo video <span aria-hidden="true">&nearr;</span></a></p>
+        </article>
+        <article class="ver mine">
+          <div class="ver-top"><span class="mono tag">V3 &middot; Camera</span><span class="mono">Now</span></div>
+          <h3>A camera that <em>solves</em></h3>
+          <p>A XIAO ESP32-S3 with an OV5640 autofocus camera. Snap a handwritten problem, get the steps. LoRa radio, for calculator-to-calculator messages without Wi-Fi, is in the works too.</p>
+          <p class="by mono">Hardware by OtterCad &middot; Software by me</p>
+        </article>
+      </div>
+
+      <h3 class="part-h reveal">My part: <em>the V3 software</em></h3>
+      <div class="parts reveal">
+        <div class="part">
+          <span class="mono">C++ &middot; ESP32-S3 &middot; 752 lines</span>
+          <h4>The firmware</h4>
+          <p>Camera setup and autofocus, the serial protocol, Wi-Fi setup driven from the calculator, and the calls to Groq. It also serves a small web page with a live camera view, so you can aim it from any browser on the same Wi-Fi.</p>
+        </div>
+        <div class="part">
+          <span class="mono">Lua &middot; TI-Nspire &middot; 1,314 lines</span>
+          <h4>The calculator app</h4>
+          <p>Finds the adapter over serial, sends commands, shows progress, then wraps and scrolls the answer. Press T to type a question instead, with Tab to autocomplete ML terms. Wi-Fi setup happens on the calculator too.</p>
+        </div>
+        <div class="part">
+          <span class="mono">Python &middot; Flask &middot; 138 lines</span>
+          <h4>The local proxy</h4>
+          <p>A small server for my Mac with the same two calls: <code>/vision</code> for photos and <code>/ask</code> for typed questions. The Groq key stays in a file on the laptop instead of in the firmware. An install script starts it at login, keeps the Mac awake while it's plugged in, and announces it on the network with mDNS. The firmware in the repo still calls Groq directly.</p>
+        </div>
+      </div>
+      <p class="pr reveal">My pull request <a href="https://github.com/OtterCadGH/nternet-Link/pull/4">#4, &ldquo;Add V3 camera software stack&rdquo;</a>, was merged in February 2026. In August I added the proxy and more updates to the firmware and the app.</p>
+
+      <div class="more2 reveal">
+        <div class="models">
+          <span class="mono">Models, both on Groq</span>
+          <dl>
+            <div><dt>Photos</dt><dd>Llama 4 Maverick, <code>meta-llama/llama-4-maverick-17b-128e-instruct</code></dd></div>
+            <div><dt>Typed questions</dt><dd>Llama 3.3 70B, <code>llama-3.3-70b-versatile</code>, with formatting rules and the last 10 messages</dd></div>
+          </dl>
+          <p>Each answer can run up to 4,096 tokens. A request gives up after 30 seconds.</p>
+        </div>
+        <aside class="note" aria-label="Not for tests">
+          <span class="mono">Not for tests</span>
+          <p>The repo is clear about this and so am I. It's a learning project about serial links, embedded networking and APIs. <b>Please don't bring it into an exam.</b></p>
+        </aside>
+      </div>
+
+      <details class="cmds reveal">
+        <summary>All 11 serial commands <span class="mono" aria-hidden="true">+</span></summary>
+        <div class="tbl">
+          <table>
+            <thead><tr><th scope="col">Calculator sends</th><th scope="col">ESP32-S3 answers</th></tr></thead>
+            <tbody>
+              <tr><td><code>PING</code></td><td><code>PONG</code></td></tr>
+              <tr><td><code>SNAP</code></td><td><code>OK:PROCESSING</code>, then <code>LEN:</code>, <code>RESULT:</code> and <code>&gt;&gt;&gt;END&lt;&lt;&lt;</code> <span>(photo to answer)</span></td></tr>
+              <tr><td><code>ASK:</code>question</td><td>Same as SNAP <span>(typed question to answer)</span></td></tr>
+              <tr><td><code>FOCUS</code></td><td><code>OK:FOCUSED</code> or <code>ERR:FOCUS_FAILED</code></td></tr>
+              <tr><td><code>SCAN</code></td><td><code>OK:SCANNING</code>, then <code>NETWORKS:</code> <span>(up to 10 names with signal strength)</span></td></tr>
+              <tr><td><code>WIFI:</code>name:password</td><td><code>OK:CONNECTING</code>, then <code>WIFI:OK:</code>address or <code>WIFI:FAIL</code></td></tr>
+              <tr><td><code>IP</code></td><td><code>IP:</code>address or <code>IP:NOT_CONNECTED</code></td></tr>
+              <tr><td><code>CLEAR</code></td><td><code>OK:CLEARED</code> <span>(forgets the chat history)</span></td></tr>
+              <tr><td><code>RESET</code></td><td><code>OK:RESET</code> <span>(clears the busy flag)</span></td></tr>
+              <tr><td><code>RESTART</code></td><td><code>OK:RESTARTED</code> <span>(soft restart)</span></td></tr>
+              <tr><td><code>HARDRESET</code></td><td><code>OK:REBOOTING</code> <span>(full reboot)</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="cmds-note">While it's busy, SNAP and ASK get <code>ERR:BUSY</code>. If a job runs past 2 minutes, a watchdog sends <code>ERR:TIMEOUT</code>. On boot the chip says <code>WIFI:NONE</code>, then <code>READY</code>.</p>
+      </details>
+    </section>
+
+    <div class="back"><a class="more" href="../#projects"><span aria-hidden="true">&larr;</span> All projects</a><a class="more quiet" href="https://github.com/OtterCadGH/nternet-Link">See the build on GitHub <span aria-hidden="true">&nearr;</span></a></div>
+  </main>
+
+  <footer>
+    <p>Made in Boston. No trackers.</p>
+    <div class="stamp mono"><span>Revised<b>2026-10-23</b></span></div>
+  </footer>
+</div>
+<script src="../assets/site.js"></script>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById(id);
+
+  /* Screen math from the Lua app (V3/nspire/nspire_ai_camera.lua) on the handheld's 318 x 212 Lua window:
+     it counts characters at 6 px each and draws a line every 14 px between a 30 px header and a 25 px footer. */
+  const MAX_CHARS = Math.floor((318 - 8 * 2 - 10) / 6); // 48
+  const VISIBLE = Math.floor((212 - 30 - 25 - 10) / 14); // 10
+
+  /* same as the app's wordWrap(): blank lines drop out, a word is never split */
+  function wordWrap(text) {
+    const lines = [];
+    text.split('\n').filter((p) => p.length).forEach((para) => {
+      let cur = '';
+      para.split(/\s+/).filter(Boolean).forEach((w) => {
+        const test = cur === '' ? w : cur + ' ' + w;
+        if (test.length > MAX_CHARS && cur !== '') { lines.push(cur); cur = w; } else cur = test;
+      });
+      if (cur !== '') lines.push(cur);
+    });
+    return lines;
+  }
+
+  /* The prompt the firmware sends with every photo, word for word. */
+  const PROMPT = 'Read this image and solve the math problem. Output in PLAIN TEXT only. No LaTeX, no markdown. Use x^2 for powers, sqrt() for roots, a/b for fractions. Show steps. Be concise.';
+
+  /* Example answers I wrote in the format that prompt asks for. Not real device output. */
+  const SAMPLES = [
+    'Solve 2x^2 - 3x - 5 = 0\nStep 1: This is ax^2 + bx + c = 0 with a = 2, b = -3, c = -5.\nStep 2: Discriminant: b^2 - 4ac = (-3)^2 - 4(2)(-5) = 9 + 40 = 49\nStep 3: sqrt(49) = 7\nStep 4: x = (-b + sqrt(49))/(2a) = (3 + 7)/4 = 10/4 = 5/2\nStep 5: x = (-b - sqrt(49))/(2a) = (3 - 7)/4 = -4/4 = -1\nCheck: 2(5/2)^2 - 3(5/2) - 5 = 25/2 - 15/2 - 10/2 = 0\nAnswer: x = 5/2 or x = -1',
+    'Integral from 0 to 2 of (3x^2 + 1) dx\nStep 1: Antiderivative of 3x^2 + 1 is x^3 + x\nStep 2: At x = 2: 2^3 + 2 = 8 + 2 = 10\nStep 3: At x = 0: 0^3 + 0 = 0\nStep 4: 10 - 0 = 10\nAnswer: 10',
+    'P(at least one 6 in 4 rolls of a fair die)\nStep 1: Use the complement: 1 - P(no 6 in 4 rolls)\nStep 2: P(no 6 on one roll) = 5/6\nStep 3: P(no 6 in 4 rolls) = (5/6)^4 = 625/1296\nStep 4: 1 - 625/1296 = 671/1296\nAnswer: 671/1296, about 0.518',
+  ];
+
+  const progress = (pct) => { const f = Math.floor(10 * pct / 100); return '[' + '='.repeat(f) + '>' + ' '.repeat(10 - f) + '] ' + pct + '%'; };
+
+  /* n = who is acting, l = which link carries a message (a: calculator to chip, b: chip to Groq), d = direction */
+  const STEPS = [
+    { t: 'Enter pressed', n: 'calc', l: 'a', d: 'fwd', status: '[*] SNAP sent. Waiting...',
+      say: 'The calculator app writes one line, SNAP, to the serial port. A small USB-to-serial chip in the adapter (a CP2102) carries it to the ESP32-S3 at 115200 baud.',
+      wire: () => [['calc → ESP32', 'SNAP']] },
+    { t: 'The chip says OK', n: 'chip', l: 'a', d: 'back', status: '[*] Processing...',
+      say: 'The ESP32-S3 marks itself busy and answers OK:PROCESSING. If it were still working on the last photo, it would answer ERR:BUSY.',
+      wire: () => [['ESP32 → calc', 'OK:PROCESSING']] },
+    { t: 'Focus and shoot', n: 'chip', status: '[*] Processing...',
+      say: "It runs the camera's autofocus and gives it up to 3 seconds to lock. Then it drops a stale frame and grabs one 640 x 480 JPEG.",
+      wire: () => [['ESP32', 'autofocus, then one 640 x 480 JPEG']] },
+    { t: 'Photo to the model', n: 'chip', l: 'b', d: 'fwd', status: '[*] Processing...',
+      say: 'The JPEG becomes base64 text and goes out over Wi-Fi in one HTTPS request to Groq, with a short prompt. The prompt is quoted word for word in step 04 of the log.',
+      wire: () => [['ESP32 → Groq', 'POST api.groq.com/openai/v1/chat/completions'], ['', 'model: meta-llama/llama-4-maverick-17b-128e-instruct'], ['', 'image: data:image/jpeg;base64,/9j/...']], quote: PROMPT },
+    { t: 'The model solves it', n: 'groq', l: 'b', d: 'back', status: '[*] Processing...',
+      say: 'Groq runs Llama 4 Maverick, which can read images, and sends back JSON. The chip pulls out the answer and saves it, so a typed follow-up (T on the calculator) can build on it.',
+      wire: () => [['Groq → ESP32', '200 OK, JSON'], ['', 'choices[0].message.content']] },
+    { t: 'Back over the cable', n: 'chip', l: 'a', d: 'back', status: progress(60),
+      say: 'The chip sends LEN with the size, then RESULT: and the text in 512-byte pieces, then >>>END<<<. The app turns the size into a progress bar.',
+      wire: (s) => [['ESP32 → calc', 'LEN:' + s.length], ['ESP32 → calc', 'RESULT:' + s.slice(0, 16) + '...'], ['ESP32 → calc', '>>>END<<<']] },
+    { t: 'On screen', n: 'calc', mode: 'OK', status: '[OK] Done! ENTER=new T=ask',
+      say: 'The app cuts the text at >>>END<<<, wraps it at about 48 characters a line and paints it. Ten lines fit on the screen. The arrow keys scroll.',
+      wire: () => [['calc', 'wrap at 48 characters, show 10 lines']] },
+  ];
+  const LAST = STEPS.length - 1;
+
+  const papers = [...document.querySelectorAll('.paper')];
+  const screen = $('screen'), sMode = $('sMode'), sStatus = $('sStatus'), sHint = $('sHint'), sLines = $('sLines'), sTrack = $('sTrack'), sThumb = $('sThumb');
+  const nodes = { calc: $('nCalc'), chip: $('nChip'), groq: $('nGroq') }, links = { a: $('lA'), b: $('lB') };
+  const capN = $('capN'), capT = $('capT'), capP = $('capP'), live = $('live'), wire = $('wire'), kEnter = $('kEnter'), lens = $('lens');
+
+  let cur = 0, lines = wordWrap(SAMPLES[0]), shown = 0, offset = 0, reached = -1, run = null;
+
+  /* ---- the log of steps ---- */
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  function buildWire() {
+    wire.innerHTML = STEPS.map((s, i) =>
+      '<li><button type="button" aria-label="Step ' + (i + 1) + ': ' + esc(s.t) + '"><span class="n mono">' + String(i + 1).padStart(2, '0') + '</span><span class="b"><span class="t">' + esc(s.t) + '</span><span class="say">' + esc(s.say) + '</span>' +
+      s.wire(SAMPLES[cur]).map(([d, m]) => '<code>' + (d ? '<span class="d">' + esc(d) + '</span>' : '') + esc(m) + '</code>').join('') +
+      (s.quote ? '<q>' + esc(s.quote) + '</q>' : '') + '</span></button></li>').join('');
+    [...wire.querySelectorAll('button')].forEach((b, i) => b.addEventListener('click', () => { stop(); reached = Math.max(reached, i); show(i); }));
+  }
+  const rows = () => [...wire.children];
+  function markRows(i) { rows().forEach((r, j) => { r.classList.toggle('on', j === i); r.classList.toggle('done', j !== i && j <= reached); }); }
+
+  /* ---- the calculator screen ---- */
+  function setMode(m) { sMode.textContent = '[' + m + ']'; sMode.className = 's-mode ' + (m === 'OK' ? 'ok' : 'busy'); }
+  function setStatus(t) {
+    sStatus.textContent = t;
+    sStatus.className = 's-status' + (/^\[OK\]/.test(t) ? ' ok' : /^\[ERR\]/.test(t) ? ' err' : /^\[!\]/.test(t) ? ' warn' : /^\[\*\]/.test(t) ? ' info' : '');
+  }
+  function paint() {
+    sHint.hidden = shown > 0;
+    sLines.textContent = '';
+    for (let j = offset; j < Math.min(shown, offset + VISIBLE); j++) { const d = document.createElement('div'); d.textContent = lines[j]; sLines.appendChild(d); }
+    const scrolls = shown >= lines.length && lines.length > VISIBLE;
+    sTrack.hidden = !scrolls;
+    if (scrolls) {
+      const h = 147, bar = Math.max(20, h * VISIBLE / lines.length), max = lines.length - VISIBLE;
+      sThumb.style.top = 'calc(' + ((h - bar) * offset / max).toFixed(2) + ' * var(--u))';
+      sThumb.style.height = 'calc(' + bar.toFixed(2) + ' * var(--u))';
+    }
+  }
+  function scroll(dir) {
+    if (shown < lines.length || lines.length <= VISIBLE) return;
+    offset = Math.max(0, Math.min(lines.length - VISIBLE, offset + dir));
+    paint();
+  }
+
+  /* ---- the diagram + caption ---- */
+  function diagram(i) {
+    const seenN = new Set(), seenL = new Set();
+    for (let j = 0; j < i; j++) { seenN.add(STEPS[j].n); if (STEPS[j].l) seenL.add(STEPS[j].l); }
+    const s = STEPS[i] || {};
+    for (const k in nodes) { nodes[k].classList.toggle('on', s.n === k); nodes[k].classList.toggle('done', s.n !== k && seenN.has(k)); nodes[k].classList.remove('think', 'busy'); }
+    for (const k in links) { links[k].classList.toggle('on', s.l === k); links[k].classList.toggle('done', s.l !== k && seenL.has(k)); }
+  }
+  function caption(i, extra) {
+    if (i < 0) { capN.textContent = STEPS.length + ' steps'; capT.textContent = extra || 'Ready when you are'; capP.textContent = 'Press enter on the calculator to take the photo. Each step lights up here as it happens.'; return; }
+    capN.textContent = 'Step ' + (i + 1) + ' of ' + STEPS.length;
+    capT.textContent = STEPS[i].t;
+    capP.textContent = STEPS[i].say + (extra ? ' ' + extra : '');
+    live.textContent = 'Step ' + (i + 1) + ' of ' + STEPS.length + ': ' + STEPS[i].t + '.' + (extra ? ' ' + extra : '');
+  }
+
+  /* the whole picture for one step, with no motion */
+  function show(i, extra) {
+    diagram(i); markRows(i); caption(i, extra);
+    const s = STEPS[i];
+    setMode(s.mode || 'BUSY'); setStatus(s.status);
+    shown = i === LAST ? lines.length : 0; offset = 0; paint();
+  }
+  function idle(title, status) {
+    diagram(-1); markRows(-1); caption(-1, title);
+    setMode('OK'); setStatus(status || '[OK] Ready. H=help');
+    shown = 0; offset = 0; paint();
+  }
+
+  /* ---- motion ---- */
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  function restart(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+  function packet(k, dir, label, ms) {
+    const p = links[k].querySelector('.pkt');
+    p.textContent = label; p.style.setProperty('--dur', ms + 'ms');
+    p.classList.remove('fwd', 'back'); void p.offsetWidth; p.classList.add(dir);
+    return wait(ms);
+  }
+  function stop() {
+    if (run) run.dead = true;
+    run = null;
+    document.querySelectorAll('.pkt').forEach((p) => p.classList.remove('fwd', 'back'));
+    papers.forEach((p) => p.classList.remove('shot', 'focusing'));
+    lens.classList.remove('shot');
+  }
+
+  const PLAY = [
+    async (r) => { setStatus('[*] Sending SNAP...'); await wait(300); if (r.dead) return; setStatus('[*] SNAP sent. Waiting...'); await packet('a', 'fwd', 'SNAP', 900); await wait(150); },
+    async () => { await packet('a', 'back', 'OK', 750); await wait(200); },
+    async (r) => {
+      restart(papers[cur], 'focusing'); nodes.chip.classList.add('busy');
+      await wait(1150); if (r.dead) return;
+      restart(papers[cur], 'shot'); restart(lens, 'shot');
+      await wait(700);
+    },
+    async () => { await packet('b', 'fwd', 'JPEG', 1150); await wait(150); },
+    async (r) => { nodes.groq.classList.add('think'); await wait(1500); if (r.dead) return; nodes.groq.classList.remove('think'); await packet('b', 'back', 'JSON', 900); },
+    async (r) => {
+      const go = packet('a', 'back', 'RESULT', 1000);
+      for (const pct of [0, 27, 61, 94]) { setStatus(progress(pct)); await wait(240); if (r.dead) return; }
+      await go; await wait(120);
+    },
+    async (r) => {
+      shown = 0; paint();
+      for (let k = 1; k <= lines.length; k++) { shown = k; paint(); await wait(k <= VISIBLE ? 90 : 25); if (r.dead) return; }
+    },
+  ];
+
+  /* on phones the diagram sticks under the header; if it is covering the screen, scroll the screen back out from under it */
+  const strip = document.querySelector('.strip');
+  function keepScreenInView() {
+    if (getComputedStyle(strip).position !== 'sticky') return;
+    const below = strip.getBoundingClientRect().bottom + 8, top = screen.getBoundingClientRect().top;
+    if (top < below) scrollBy({ top: top - below, behavior: reduce ? 'auto' : 'smooth' });
+  }
+
+  async function snap() {
+    kEnter.classList.remove('invite');
+    restart(kEnter, 'down'); setTimeout(() => kEnter.classList.remove('down'), 140);
+    if (run) { setStatus('[!] Already processing...'); return; }
+    keepScreenInView();
+    if (reduce) { reached = LAST; show(LAST, 'Motion is off, so the demo skips to the end. Pick any step below to see it.'); return; }
+    const r = run = { dead: false };
+    reached = -1;
+    for (let i = 0; i < STEPS.length; i++) {
+      reached = i; show(i);
+      if (i === LAST) { shown = 0; paint(); }
+      await PLAY[i](r);
+      if (r.dead) return;
+    }
+    run = null;
+    caption(LAST, 'Done. Press enter for a new photo, or pick a step below to look again.');
+  }
+
+  function pick(i) {
+    stop(); cur = i; reached = -1;
+    papers.forEach((p, j) => p.setAttribute('aria-pressed', String(j === i)));
+    lines = wordWrap(SAMPLES[i]);
+    buildWire(); idle();
+    if (!reduce) restart(papers[i].querySelector('svg'), 'write');
+  }
+
+  function reset() { stop(); reached = -1; idle('Reset', '[OK] Reset! H=help'); capP.textContent = 'Press enter to take a new photo.'; live.textContent = 'Reset.'; }
+
+  papers.forEach((p, i) => p.addEventListener('click', () => pick(i)));
+  kEnter.addEventListener('click', snap);
+  $('kEsc').addEventListener('click', reset);
+  $('resetBtn').addEventListener('click', reset);
+  $('kUp').addEventListener('click', () => scroll(-1));
+  $('kDown').addEventListener('click', () => scroll(1));
+  /* keyboard, like the handheld: enter on the screen takes a photo, arrows scroll, escape resets */
+  $('calc').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); scroll(e.key === 'ArrowUp' ? -1 : 1); restart(e.key === 'ArrowUp' ? $('kUp') : $('kDown'), 'down-now'); }
+    else if (e.key === 'Escape') { e.stopPropagation(); reset(); }
+    else if (e.key === 'Enter' && e.target === screen) { e.preventDefault(); snap(); }
+  });
+
+  buildWire(); idle();
+})();
+</script>
+</body>
+</html>

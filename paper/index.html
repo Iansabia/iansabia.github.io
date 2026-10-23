@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Complexity Is Not an Edge · Ian Sabia</title>
+<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {} document.documentElement.classList.add('js');</script>
+<meta name="description" content="My DS340 paper with Alvin Jang, readable in full. Does a fancier model make more money from price gaps between Kalshi and Polymarket? No. The simplest one won.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iansabia.github.io/paper/">
+<meta property="og:title" content="Complexity Is Not an Edge · Ian Sabia">
+<meta property="og:description" content="My DS340 paper with Alvin Jang, readable in full. Does a fancier model make more money from price gaps between Kalshi and Polymarket? No. The simplest one won.">
+<meta property="og:image" content="https://iansabia.github.io/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="citation_title" content="Complexity Is Not an Edge: An Empirical Study of Machine-Learning Arbitrage on Kalshi and Polymarket">
+<meta name="citation_author" content="Sabia, Ian">
+<meta name="citation_author" content="Jang, Alvin">
+<meta name="citation_publication_date" content="2026/04/27">
+<meta name="citation_pdf_url" content="https://iansabia.github.io/paper/Complexity_Is_Not_An_Edge.pdf">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  /* hero: the title block as printed, minus the student ID numbers */
+  .page-hero h1{max-width:15ch}
+  .subtitle{font-family:var(--serif);font-weight:500;font-size:clamp(20px,2.5vw,28px);line-height:1.22;letter-spacing:-.012em;color:var(--body);max-width:30ch}
+  .byline{margin-top:22px;color:var(--body);font-size:15px;line-height:1.5}
+  .byline .who{color:var(--ink);font-weight:600;font-size:17px}
+  .byline .sep{margin:0 .5em}
+
+  /* the short version: plain-words box + the headline result */
+  .brief{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,10fr);gap:clamp(18px,3vw,32px);margin-top:clamp(32px,5vw,56px);align-items:stretch}
+  .brief > .panel{display:flex;flex-direction:column}
+  .panel-h .mono{color:var(--body)}
+  .panel-h .mono.acc{color:var(--acc)}
+  .minute-body{padding:18px 20px 20px;display:grid;gap:12px;align-content:start}
+  .minute-body p{color:var(--body);font-size:16px;line-height:1.6}
+  .minute-body b{color:var(--ink);font-weight:600}
+  .ladder-body{padding:14px 18px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+  .seg{display:inline-flex;align-self:flex-start;border:1px solid var(--rule)}
+  .seg button{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:8px 11px;background:none;border:0;color:var(--body);cursor:pointer;transition:background .2s,color .2s}
+  .seg button + button{border-left:1px solid var(--rule)}
+  .seg button:hover{color:var(--ink)}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .rungs{display:grid}
+  .tier{font-size:10.5px;color:var(--acc);padding:9px 0 3px}
+  .tier:first-child{padding-top:2px}
+  .rung{display:grid;grid-template-columns:136px minmax(0,1fr) 78px;gap:12px;align-items:center;width:100%;padding:5px 6px;background:none;border:0;border-radius:3px;color:var(--ink);font:500 14px/1.25 var(--sans);text-align:left;cursor:default;transition:background .2s}
+  .rung:hover,.rung.on{background:var(--tile)}
+  .rung.me{font-weight:600}
+  .rung .t{height:10px;background:var(--ghost);position:relative}
+  .rung .t i{position:absolute;left:0;top:0;bottom:0;width:var(--w);background:color-mix(in srgb,var(--body) 58%,var(--bg));transition:width .9s var(--ease)}
+  .rung.me .t i{background:var(--acc)}
+  .rung .v{font-family:var(--mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .js .ladder:not(.in) .rung .t i{width:0}
+  .ladder-read{border-top:1px solid var(--rule);padding-top:10px;font-size:13.5px;line-height:1.5;color:var(--body);min-height:4.2em}
+  .ladder-read b{color:var(--ink);font-weight:600}
+  .ladder-read a{color:var(--ink)}
+  .gap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);margin-top:auto}
+  .gap div{padding:12px 16px;border-right:1px solid var(--rule)}
+  .gap div:last-child{border-right:0}
+  .gap b{display:block;font-family:var(--serif);font-weight:500;font-size:26px;line-height:1.05;letter-spacing:-.01em}
+  .gap div:first-child b{color:var(--acc)}
+  .gap span{color:var(--body);font-size:12.5px;line-height:1.35;display:block;margin-top:3px}
+  @media (max-width:900px){.brief{grid-template-columns:1fr}}
+  @media (max-width:640px){
+    .minute-body{padding:16px}
+    .ladder-body{padding:12px 14px 14px}
+    .gap div{padding:10px 10px}
+    .gap b{font-size:21px}
+    .gap span{font-size:11.5px}
+    .rung{grid-template-columns:118px minmax(0,1fr) 70px;gap:9px;font-size:13px;padding:5px 4px}
+    .rung .v{font-size:11.5px}
+  }
+
+  /* reading layout */
+  .read-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:clamp(52px,7vw,90px);padding-bottom:12px;border-bottom:3px solid var(--ink)}
+  .read-top .mono{color:var(--body)}
+  .read-top .mono:first-child{color:var(--acc)}
+  @media (min-width:961px){.read{grid-template-columns:236px minmax(0,1fr)}}
+  .toc a.l3{padding-left:22px;font-size:13px}
+  .toc .toc-pdf{margin-top:16px;border-left:0;padding-left:0;color:var(--ink);font-weight:600;text-decoration:underline;text-decoration-color:var(--acc);text-underline-offset:4px}
+  @media (max-width:960px){
+    .read{grid-template-columns:minmax(0,1fr)}
+    .toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0 18px}
+    .toc .mono,.toc .toc-pdf{grid-column:1/-1}
+    .toc a.l3{display:none}
+    .toc .toc-pdf{margin-top:10px}
+  }
+
+  /* the paper itself */
+  .prose h2 .no,.prose h3 .no{color:var(--acc)}
+  .prose h3{scroll-margin-top:calc(var(--bar) + 16px)}
+  .anchor{margin-left:.35em;font-family:var(--mono);font-weight:500;font-size:.55em;color:var(--body);text-decoration:none;opacity:0;transition:opacity .2s;vertical-align:.12em}
+  .prose h2:hover .anchor,.prose h3:hover .anchor{opacity:1}
+  .prose code{overflow-wrap:anywhere}
+  .prose a:has(code){text-decoration-color:var(--acc)}
+  .prose a code{color:var(--ink)}
+  .prose a.cite,.prose a.xref{text-decoration-thickness:1px;text-decoration-color:color-mix(in srgb,var(--acc) 55%,transparent)}
+  .prose blockquote{font-family:var(--serif);font-style:italic;font-weight:500;font-size:1.16em;line-height:1.45;color:var(--ink);padding:2px 0 2px 20px;margin:1.4em 0}
+  .tbl{margin:1.8em 0}
+  .prose .tbl figcaption{margin:0 0 10px;font-size:14.5px}
+  .prose .tbl .table{margin:0}
+  .prose .tbl th,.prose .tbl td{padding:8px 9px}
+  .prose .tbl table{font-size:14px}
+  .prose .tbl thead th{vertical-align:bottom;font-size:10.5px}
+  .prose .tbl .n{text-align:right}
+  .prose .tbl td.n{white-space:nowrap}
+  .prose .tbl thead th{font-size:10px;letter-spacing:.05em}
+  .prose .tbl tbody th{font-family:var(--sans);font-weight:500;font-size:14.5px;letter-spacing:0;text-transform:none;color:var(--ink);background:none;min-width:8.4em}
+  .prose .tbl tbody tr:hover > *{background:var(--tile)}
+  .prose .tbl tbody tr:last-child > *{border-bottom:0}
+  @media (max-width:760px){
+    .prose .tbl tr > :first-child{position:sticky;left:0;z-index:1;width:46px;min-width:46px;background:var(--bg)}
+    .prose .tbl tr > :nth-child(2){position:sticky;left:46px;z-index:1;background:var(--bg);box-shadow:1px 0 0 var(--rule)}
+    .prose .tbl thead tr > th:nth-child(n){background:var(--tile)}
+    .prose .tbl tbody th{min-width:8.4em}
+  }
+  .fig{margin:2.4em 0}
+  .fig .zoom-link{display:block;position:relative;cursor:zoom-in;text-decoration:none}
+  .fig .zoom-link::after{content:"Enlarge";position:absolute;right:10px;top:10px;font:500 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;background:var(--nbg);color:var(--nink);padding:6px 8px;opacity:0;transition:opacity .2s}
+  .fig .zoom-link:hover::after,.fig .zoom-link:focus-visible::after{opacity:1}
+  .prose .fig img{border-radius:3px}
+  .prose figcaption a{color:var(--ink)}
+  .fig:target figcaption b,.tbl:target figcaption b{background:color-mix(in srgb,var(--acc) 22%,transparent)}
+  .prose .refs{font-size:16px;line-height:1.55;padding-left:2.1em}
+  .refs li{padding-left:.25em}
+  .refs li:target{background:color-mix(in srgb,var(--acc) 14%,transparent)}
+  .ack{font-size:16px}
+  .back .right{display:flex;flex-wrap:wrap;gap:12px 22px}
+
+  /* full-size figure viewer */
+  .zoom{border:1px solid var(--rule);background:var(--bg);color:var(--ink);padding:0;width:min(1240px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;overflow:hidden;flex-direction:column}
+  .zoom[open]{display:flex}
+  .zoom::backdrop{background:rgba(11,8,23,.74)}
+  .zoom-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--rule);background:var(--tile)}
+  .zoom-bar .mono{color:var(--acc)}
+  .zoom-close{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:9px 14px;background:var(--ink);color:var(--bg);border:0;cursor:pointer}
+  .zoom-close:hover{background:var(--acc);color:#fff}
+  .zoom-img{overflow:auto;background:#fff;flex:1;min-height:0}
+  .zoom-img img{display:block;width:100%;height:auto;margin:0 auto}
+  .zoom-cap{padding:10px 14px 12px;border-top:1px solid var(--rule);color:var(--body);font-size:14px;line-height:1.5}
+  @media (max-width:640px){.zoom-img img{width:max(100%,780px);max-width:none}.zoom-cap{font-size:13px}}
+  @media (prefers-reduced-motion:reduce){.js .ladder:not(.in) .rung .t i{width:var(--w)}}
+</style>
+</head>
+<body>
+<div class="progress" aria-hidden="true"></div>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="../" aria-label="Ian Sabia, home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
+      <span class="mono" style="font-size:13px">Ian Sabia</span>
+    </a>
+    <nav aria-label="Main">
+      <span class="links">
+        <a href="../#currently">Currently</a>
+        <a href="../#work">Work</a>
+        <a href="../#projects" aria-current="true">Projects</a>
+        <a href="../#milan">Milan</a>
+        <a href="../#off">Off the clock</a>
+        <a href="../#contact">Contact</a>
+      </span>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu <i aria-hidden="true"></i></button>
+      <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
+    </nav>
+    <div class="menu" id="menu">
+      <a href="../#currently">Currently <span class="mono">01</span></a>
+      <a href="../#work">Work <span class="mono">02</span></a>
+      <a href="../#projects" aria-current="true">Projects <span class="mono">03</span></a>
+      <a href="../#milan">Milan <span class="mono">04</span></a>
+      <a href="../#off">Off the clock <span class="mono">05</span></a>
+      <a href="../#contact">Contact <span class="mono">06</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <header class="page-hero">
+      <div class="kicker mono"><a href="../#projects">Projects</a><span aria-hidden="true">/</span><span>Research paper &middot; DS340</span></div>
+      <h1 id="title">Complexity Is<br><em>Not an Edge</em></h1>
+      <p class="subtitle">An Empirical Study of Machine-Learning Arbitrage on Kalshi and Polymarket</p>
+      <p class="byline"><span class="who">Ian Sabia, Alvin Jang</span><br>Faculty of Computing and Data Sciences, Boston University<br>DS340, Spring 2026 Final Project<span class="sep" aria-hidden="true">&middot;</span>April 27, 2026</p>
+      <div class="facts mono"><span>Pages<b>12</b></span><span>Figures<b>11</b></span><span>Tables<b>1</b></span><span>Refs<b>13</b></span></div>
+      <div class="actions"><a class="more" href="Complexity_Is_Not_An_Edge.pdf" download>Download the PDF <span aria-hidden="true">&darr;</span></a><a class="more quiet" href="https://github.com/Iansabia/DS340-Project">View the code on GitHub <span aria-hidden="true">&nearr;</span></a></div>
+    </header>
+
+    <section class="brief" aria-label="The short version">
+      <div class="panel minute">
+        <div class="panel-h"><span class="mono acc">In one minute</span><span class="mono">Plain words</span></div>
+        <div class="minute-body">
+          <p>I liked Polymarket, but trading on it felt too close to betting. So I looked for a problem to solve instead. Kalshi and Polymarket often price the same event differently, so Alvin and I built a system that spots those gaps.</p>
+          <p>Then we asked one question: does a fancier model make more money from them? We tested four tiers, from simple baselines and linear regression up to reinforcement learning (PPO) with an autoencoder. Same 144 matched pairs, same rules.</p>
+          <p><b>The simplest model won.</b> Linear regression made <b>+15.0 basis points per trade</b>, about 15 cents on every $100 trade, with a per-trade Sharpe of 0.501. The fanciest, PPO with an autoencoder, made <b>+0.5</b>. That's 30 times less edge, and it takes 20 to 40 minutes to train instead of under 15 seconds.</p>
+          <p>We tried hard to break it. Every ML model made money in all 11 walk-forward windows, and the system stayed profitable with fees as high as 7 percentage points. An audit before we turned it in caught a leak in our train/test split. We re-split by pair, retrained, and the result barely moved: Sharpe 0.516, +15.7 bps.</p>
+          <p>The takeaway: at this data size, the edge comes from matching the right markets, and from oil contracts, not from the model.</p>
+        </div>
+      </div>
+
+      <div class="panel ladder" id="ladder">
+        <div class="panel-h"><span class="mono acc">The headline result</span><span class="mono">Simple on top</span></div>
+        <div class="ladder-body">
+          <div class="seg" role="group" aria-label="Measure to show">
+            <button type="button" data-m="alpha" aria-pressed="true">Edge per trade</button><button type="button" data-m="sharpe" aria-pressed="false">Sharpe</button><button type="button" data-m="pnl" aria-pressed="false">Total P&amp;L</button>
+          </div>
+          <div class="rungs" id="rungs">
+            <p class="tier mono">Tier 0 &middot; Naive baselines</p>
+            <button type="button" class="rung" data-name="Naive" data-full="Naive (closes)" data-tier="0" data-alpha="4.0" data-sharpe="0.125" data-pnl="58.12" data-win="47.9%" data-trades="1460" style="--w:26.67%"><span class="nm">Naive</span><span class="t"><i></i></span><span class="v">+4.0 bps</span></button>
+            <button type="button" class="rung" data-name="Volume" data-full="Volume (higher wins)" data-tier="0" data-alpha="4.2" data-sharpe="0.131" data-pnl="59.81" data-win="48.1%" data-trades="1440" style="--w:28.00%"><span class="nm">Volume</span><span class="t"><i></i></span><span class="v">+4.2 bps</span></button>
+            <p class="tier mono">Tier 1 &middot; Regression</p>
+            <button type="button" class="rung me" data-name="Linear regression" data-full="Linear Regression" data-tier="1" data-alpha="15.0" data-sharpe="0.501" data-pnl="232.67" data-win="57.8%" data-trades="1549" style="--w:100.00%"><span class="nm">Linear regression</span><span class="t"><i></i></span><span class="v">+15.0 bps</span></button>
+            <button type="button" class="rung" data-name="XGBoost" data-full="XGBoost (depth 3)" data-tier="1" data-alpha="14.9" data-sharpe="0.499" data-pnl="232.83" data-win="57.4%" data-trades="1559" style="--w:99.33%"><span class="nm">XGBoost</span><span class="t"><i></i></span><span class="v">+14.9 bps</span></button>
+            <p class="tier mono">Tier 2 &middot; Sequence models</p>
+            <button type="button" class="rung" data-name="LSTM" data-full="LSTM" data-tier="2" data-alpha="14.3" data-sharpe="0.473" data-pnl="221.84" data-win="56.5%" data-trades="1547" style="--w:95.33%"><span class="nm">LSTM</span><span class="t"><i></i></span><span class="v">+14.3 bps</span></button>
+            <button type="button" class="rung" data-name="GRU" data-full="GRU" data-tier="2" data-alpha="14.0" data-sharpe="0.459" data-pnl="212.50" data-win="55.8%" data-trades="1517" style="--w:93.33%"><span class="nm">GRU</span><span class="t"><i></i></span><span class="v">+14.0 bps</span></button>
+            <button type="button" class="rung" data-name="TFT" data-full="TFT" data-tier="2" data-alpha="5.5" data-sharpe="0.155" data-pnl="6.57" data-win="37.5%" data-trades="120" data-note="TFT did not converge at N=6,802 (30-epoch budget, hidden_size=8)." style="--w:36.67%"><span class="nm">TFT</span><span class="t"><i></i></span><span class="v">+5.5 bps</span></button>
+            <p class="tier mono">Tier 3 &middot; Reinforcement learning</p>
+            <button type="button" class="rung" data-name="PPO-Raw" data-full="PPO-Raw" data-tier="3" data-alpha="9.6" data-sharpe="0.306" data-pnl="158.15" data-win="52.2%" data-trades="1656" style="--w:64.00%"><span class="nm">PPO-Raw</span><span class="t"><i></i></span><span class="v">+9.6 bps</span></button>
+            <button type="button" class="rung" data-name="PPO + autoencoder" data-full="PPO + Autoencoder" data-tier="3" data-alpha="0.5" data-sharpe="0.014" data-pnl="4.61" data-win="43.2%" data-trades="899" style="--w:3.33%"><span class="nm">PPO + autoencoder</span><span class="t"><i></i></span><span class="v">+0.5 bps</span></button>
+          </div>
+          <p class="ladder-read" id="ladderRead" aria-live="polite"><span data-touch="Tap a model to see its full row.">Hover a model to see its full row.</span> Every number comes from <a href="#table-1">Table 1</a> in the paper. TFT did not converge at this data size.</p>
+        </div>
+        <div class="gap"><div><b>+15.0</b><span>bps per trade, linear regression</span></div><div><b>+0.5</b><span>bps per trade, PPO + autoencoder</span></div><div><b>30&times;</b><span>less edge for the fanciest model</span></div></div>
+      </div>
+    </section>
+
+    <div class="read-top" id="paper"><span class="mono">The full paper</span><span class="mono">12 pages &middot; about 25 min</span></div>
+    <div class="read">
+      <nav class="toc" aria-label="Paper contents">
+        <span class="mono">Contents</span>
+        <a href="#abstract">Abstract</a>
+        <a href="#s1">1. Introduction</a>
+        <a href="#s2">2. Methodology</a>
+        <a class="l3" href="#s2-1">2.1 Data Sources and Matching</a>
+        <a class="l3" href="#s2-2">2.2 Feature Engineering</a>
+        <a class="l3" href="#s2-3">2.3 Model Tiers</a>
+        <a class="l3" href="#s2-4">2.4 Evaluation Protocol</a>
+        <a class="l3" href="#s2-5">2.5 Infrastructure Lessons</a>
+        <a href="#s3">3. Results</a>
+        <a class="l3" href="#s3-1">3.1 Headline Model Comparison</a>
+        <a class="l3" href="#s3-2">3.2 Walk-Forward Validation</a>
+        <a class="l3" href="#s3-3">3.3 Parameter Searches (Proposal Experiments)</a>
+        <a class="l3" href="#s3-4">3.4 Other Findings</a>
+        <a class="l3" href="#s3-5">3.5 Adversarial Audit and Honest Sharpe Accounting</a>
+        <a class="l3" href="#s3-6">3.6 Live Paper Trading</a>
+        <a href="#s4">4. Conclusions</a>
+        <a href="#acknowledgments">Acknowledgments</a>
+        <a href="#references">References</a>
+        <a href="#appendix-b">Appendix B: Figures</a>
+        <a class="toc-pdf" href="Complexity_Is_Not_An_Edge.pdf" download>Download the PDF</a>
+      </nav>
+      <article class="prose" data-read aria-labelledby="title">
+<h2 id="abstract">Abstract<a class="anchor" href="#abstract" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>We analyzed cross-platform price discrepancies between Kalshi (CFTC-regulated event contracts) and Polymarket (on-chain prediction market), with the goal of determining whether more complex models improve arbitrage detection. To do this, we built an end-to-end system that matches contracts using sentence embeddings, applies a 10-rule structural quality filter, engineers 51 features in real time, and trains 4 model tiers. We used linear regression, XGBoost, sequence models (GRU, LSTM), and PPO models with and without an autoencoder anomaly filter. The evaluation uses a framework with 6,802 training rows and 1,673 test rows across 144 matched pairs, with a standardized $100 position size. Results show that simpler models perform the best. Linear regression achieves a per-trade Sharpe ratio of 0.501 with +15.0 bps alpha, roughly matching XGBoost’s ratio of 0.499 with +14.9 bps alpha. Conversely, more complex models underperformed. LSTM had a per-trade Sharpe ratio of (0.473 / +14.3 bps), GRU had (0.459 / +14.0 bps), PPO-Raw (+9.6 bps), and PPO with an autoencoder (+0.5 bps). However, all the models are profitable in every walk-forward window, with Sharpe ratios rising from 0.31 to 0.53 over time.</p>
+<p>A pre-submission adversarial audit (<a href="https://github.com/Iansabia/DS340-Project/blob/master/AUDIT_REPORT.md"><code>AUDIT_REPORT.md</code></a>) found that the original 80/20 row-index split bridged 142 of 144 pairs (an embargo violation). After correcting this with a pair-stratified retraining, performance remained stable: Sharpe of 0.516 and +15.7 bps alpha, with a minor drift of +2.99%, which remains within the bootstrap confidence interval.</p>
+<p>Overall, the per-trade edge is consistent and stable. The key takeaway is that at this scale, increasing model complexity doesn’t improve performance, and rather has the opposite effect. The alpha lives in the matching pipeline and the oil/commodities asset class, not in the models.</p>
+<h2 id="s1"><span class="no">1.</span> Introduction<a class="anchor" href="#s1" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>Prediction markets allow users to trade contracts that pay $1 if an event happens (e.g., “Will CPI inflation exceed 3.0% in May 2026?”) and $0 otherwise. Therefore, prices can be interpreted as probabilities. Two major platforms, Kalshi (CFTC-regulated, since 2021) and Polymarket (on-chain via Polygon, since 2020), often list contracts on the same events but at different prices. These price differences can persist for hours or even days, creating potential arbitrage opportunities if they can be identified, matched, and traded correctly before they close.</p>
+<p>The central research question is:</p>
+<blockquote>
+<p>Does increasing model complexity improve arbitrage detection in cross-platform prediction markets, and if so, when is that complexity justified?</p>
+</blockquote>
+<p>This question matters for two main reasons. Academically, <a class="cite" href="#ref-6">Kang (2026)</a> argues that in structured financial data, carefully designed features often outperform complex deep learning models. From a practical perspective, prediction markets are growing quickly (over $1 billion traded on Polymarket during the 2024 U.S. election), so understanding which modeling approach adds value is a relevant question for market participants.</p>
+<p>We approach this by building a full system that collects data, trades live, and compares multiple models under the same conditions.</p>
+<p>Some background helps frame what we are predicting. Each platform quotes a price for the same contract, and the gap between those two prices is what we call the <em>spread</em>. If both platforms list the same event, that spread should shrink to zero by the time the contract resolves, give or take fees. What we are trying to predict is whether the spread will widen or tighten over the next hour-long bar. Earlier work by <a class="cite" href="#ref-9">Manski (2006)</a> and <a class="cite" href="#ref-13">Wolfers &amp; Zitzewitz (2004)</a> established that prediction-market prices are reasonably efficient probability forecasts, but cross-platform price differences have not been studied as much. <a class="cite" href="#ref-3">Bürgi, Deng &amp; Whelan (2026)</a> document a <em>favorite-longshot bias</em> on Kalshi: low-priced contracts win less often than their price implies, and high-priced contracts win slightly more. If that bias shows up unevenly across the two platforms, it becomes one source of cross-platform spread.</p>
+<p>We also use a handful of well-known liquidity measures from the market microstructure literature: <a class="cite" href="#ref-1">Amihud’s (2002)</a> illiquidity ratio, the <a class="cite" href="#ref-4">Corwin–Schultz (2012)</a> high-low bid-ask spread, <a class="cite" href="#ref-7">Kyle’s (1985)</a> λ, and <a class="cite" href="#ref-11">Roll’s (1984)</a> implied spread. We do not need to spell out the full equations here. The intuition is enough: each measure produces a single number per platform that summarizes how easy it is to trade on that side. We compute these numbers separately for Kalshi and Polymarket, then feed the <em>difference</em> between the two into our models. These measures are standard in equity markets, but to our knowledge they have not been applied systematically to predicting spreads on prediction markets. Finally, a recurring finding in machine learning is that on tabular data of moderate size, gradient-boosted trees tend to match or beat deep neural networks (<a class="cite" href="#ref-5">Grinsztajn et al. 2022</a>). Our results are consistent with that pattern.</p>
+<p>This paper contributes the following: a working end-to-end arbitrage system covering data ingestion through live paper-trading on Boston University’s Shared Computing Cluster, monitoring up to 11,582 matched pairs at peak; a complexity-vs-performance benchmark across four model tiers using one shared evaluation protocol; an 11-window walk-forward validation that shows the edge is stable and improving over time; the parameter searches our proposal asked for, over lookback windows and minimum-spread thresholds; an honest Sharpe accounting that survived a pre-submission adversarial audit; and a negative result on PPO that we report transparently rather than hide.</p>
+<h2 id="s2"><span class="no">2.</span> Methodology<a class="anchor" href="#s2" aria-hidden="true" tabindex="-1">#</a></h2>
+<h3 id="s2-1"><span class="no">2.1</span> Data Sources and Matching<a class="anchor" href="#s2-1" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>Kalshi exposes a public REST API (<code>api.elections.kalshi.com/trade-api/v2</code>) that does not require authentication. We pull hourly OHLCV candlesticks. Kalshi splits its market history at roughly a three-month cutoff, so we query a <code>/historical/cutoff</code> endpoint to figure out which API to call for each market. Polymarket is more complicated: it has three separate APIs, Gamma for metadata, CLOB for live order books and prices, and a Data API for trades on resolved markets. Polymarket also uses opaque numeric token IDs, so we look up <code>clobTokenIds</code> via Gamma and use those to query CLOB. One non-obvious gotcha that cost us several days: Gamma’s singular <code>condition_id=</code> query parameter returns unrelated random markets instead of erroring out, while the plural <code>condition_ids=</code> returns the exact match. The <code>/prices-history</code> endpoint also returns empty data for resolved markets, so for those we have to reconstruct prices from individual trade records.</p>
+<p>Once we have the markets, we have to pair the same event across the two platforms. We do this in two steps. First, we embed each contract’s concatenated title and description using a sentence-transformer model (<code>all-MiniLM-L6-v2</code>, 384-dimensional; <a class="cite" href="#ref-10">Reimers &amp; Gurevych 2019</a>) and compute cosine similarity in one normalized matrix multiplication. This runs in about 80 seconds, compared to roughly 6.6 hours for the keyword-based approach we started with, a 300× speedup. But semantic similarity alone is not enough. “NBA Finals winner” and “NBA MVP” embed close together, even though they are different events. So we layer 10 structural quality-filter rules on top: a sports wins-vs-champion check, Fed meeting-month matching, cabinet confirmation-vs-nomination, state-specific versus national commodity guards, an exact match between CPI / PCE / core-CPI variants, a ±2-day expiry window, exact strike comparison for futures, numeric-threshold exactness (so “$50/bbl” never matches “$55/bbl”), event-key disambiguation (“Game 4” versus “Game 5”), and a category-consistency guard. The filter rejected 140 of 615 candidate pairs (22.8%). The impact was substantial. At the first large-scale backtest, Linear Regression P&amp;L went from −$5.28 to +$5.45, a +$10.73 swing purely from removing structurally bad matches, without changing the model. Data quality matters more than model choice at this scale.</p>
+<h3 id="s2-2"><span class="no">2.2</span> Feature Engineering<a class="anchor" href="#s2-2" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>We engineer 59 raw features and use 51 of them in the models, after dropping columns that contain NaNs or have no variance. They fall into five groups.</p>
+<p>The first group is the 18 raw OHLCV columns from each platform (open, high, low, close, volume, VWAP for both Kalshi and Polymarket). The second group is 6 simple cross-platform combinations: the spread, the mid-price, the dollar-volume ratio between the two sides, and so on. The third group is 9 rolling and momentum features that summarize how the spread has moved over the last few bars (for example, the 6-bar momentum and the z-score of the spread). The fourth group is 13 classical microstructure features. We compute Amihud’s illiquidity, Corwin–Schultz spread, Kyle’s λ, Roll’s implied spread, and Bekker–Parkinson volatility separately on each platform, and then take the difference between the two platforms as the feature. The intuition is that if Kalshi is suddenly less liquid than Polymarket, the more illiquid side is more likely to move toward the other. The fifth group is 13 prediction-market-specific features such as a favorite-longshot bias indicator and a near-expiry flag.</p>
+<p>These features are neutral or slightly positive on the historical dataset. Most contracts in our pair universe have only 47 bars on average, which is too short for rolling-window microstructure estimators to stabilize. We expect these features to become more useful as the live system collects longer histories.</p>
+<h3 id="s2-3"><span class="no">2.3</span> Model Tiers<a class="anchor" href="#s2-3" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>All models share the same train/test split (time-ordered 80/20, no shuffling), the same prediction target (the next-bar change in the spread), and the same feature set.</p>
+<ul>
+<li>Tier 0, Naive baselines. Naive-closes assumes the spread fully closes by the time the contract resolves. Volume-higher-wins assumes the higher-volume platform is the correct side.</li>
+<li>Tier 1, Regression. Linear Regression (scikit-learn). XGBoost, hyperparameter-searched across tree depth (3, 5, 7, 9), learning rate (0.01, 0.05, 0.1, 0.3), and number of estimators (100, 300, 500), for 48 total configurations.</li>
+<li>Tier 2, Sequence models. GRU with 64 hidden units, one layer, a 24-bar lookback, Adam optimizer at learning rate 1e-3, and early stopping. LSTM with the same architecture but using an <code>LSTMCell</code>. We also tried a Temporal Fusion Transformer (TFT) configured with small-data hyperparameters (hidden size 8, three-quantile loss); it did not converge (see <a class="xref" href="#s3-4">§3.4</a>).</li>
+<li>Tier 3, Reinforcement learning. PPO-Raw runs PPO (<a class="cite" href="#ref-12">Schulman et al. 2017</a>) on the 51-feature vector with three actions (buy the spread, sell the spread, or hold) and a mark-to-market reward, using <code>stable-baselines3</code>. PPO-Filtered prepends a 3-layer symmetric autoencoder with a bottleneck of 8 dimensions; the autoencoder flags anomaly windows, and PPO only trades during those windows.</li>
+</ul>
+<h3 id="s2-4"><span class="no">2.4</span> Evaluation Protocol<a class="anchor" href="#s2-4" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>We use five evaluation regimes, each looking at the same models from a different angle, so a result that survives all five is harder to dismiss as a coincidence of one particular setup. (a) Single-split backtest: chronological 80/20, reporting RMSE, MAE, directional accuracy, simulated P&amp;L at the 2 percentage-point (pp) signal threshold, win rate, and per-trade Sharpe (the headline numbers in <a class="xref" href="#s3-1">§3.1</a>). (b) Walk-forward backtest: we combine train and test for maximum time coverage, slice the timeline into 12 equal-length windows, and walk forward through them. Each window is tested using a model trained only on the windows before it (an expanding training window). The first window has no training data, leaving 11 evaluation windows. If the edge is real and stable, every window should be profitable; if it is improving with more data, per-trade Sharpe should trend upward. (c) Per-category breakdown: test rows stratified by contract category (sports, politics, crypto, oil, weather, and so on), using deterministic rules over Kalshi tickers and Polymarket slugs, to show where the edge actually concentrates. (d) Data-scaling curve: retrain on slices of 50, 100, 250, 500, 1000, and 2000 bars per pair and plot P&amp;L against training size, to test whether “simpler wins” holds as the dataset grows. (e) Live paper trading on BU SCC with a 15-minute trade cycle, a 3-hour market-discovery batch, and a 6-hour retrain batch, with redundant fallback workflows on GitHub Actions for SCC maintenance windows.</p>
+<p>Training cost is small enough to be a non-issue: Tier-1 models train in under 15 seconds on a single CPU core, Tier-2 takes about 3 minutes per epoch with early stopping at 10 to 15 epochs, and Tier-3 takes 20 to 40 minutes for PPO to converge. The live system uses an equal-weight ensemble of Linear Regression and XGBoost, plus a <em>concordance filter</em> that skips trades when the two models disagree on direction. We also use content-addressed pair IDs derived deterministically from the normalized Kalshi ticker and Polymarket token ID, which fixed an earlier bug where three different code paths disagreed on what a <code>live_NNNN</code> pair ID meant, causing 25 positions to track the wrong markets.</p>
+<h3 id="s2-5"><span class="no">2.5</span> Infrastructure Lessons<a class="anchor" href="#s2-5" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>Three infrastructure bugs materially shaped this project, and they are worth flagging because each one looks like a model problem on the surface.</p>
+<p>The first was that Kalshi’s <code>/events</code> endpoint silently returned HTTP 429 (“too many requests”) on roughly 40% of calls, dropping entire commodity series without any error visible in our logs. Adding exponential backoff and pacing requests at 250 ms per series took our commodity pair count from 65 to 506. The second was that Polymarket’s pagination defaulted too shallow: it stopped at 5,000 markets, but WTI oil markets started at offset 15,305 and were completely invisible until we raised the page limit from 10 to 60. The third was Gamma’s <code>condition_id=</code> parameter (singular), which returned unrelated random markets instead of erroring; the fix to <code>condition_ids=</code> (plural) was one character but cost several days of debugging.</p>
+<p>The pattern is consistent: APIs that fail silently in ways that look exactly like a broken model. Infrastructure monitoring has to come before model tuning, not after.</p>
+<h2 id="s3"><span class="no">3.</span> Results<a class="anchor" href="#s3" aria-hidden="true" tabindex="-1">#</a></h2>
+<h3 id="s3-1"><span class="no">3.1</span> Headline Model Comparison<a class="anchor" href="#s3-1" aria-hidden="true" tabindex="-1">#</a></h3>
+<p><a class="xref" href="#table-1">Table&nbsp;1</a> reports the single-split backtest at a 2 pp signal threshold on the full 1,673-row test set. All numbers come directly from a canonical results file (<a href="https://github.com/Iansabia/DS340-Project/blob/master/experiments/results/canonical/headline.json"><code>experiments/results/canonical/headline.json</code></a>) generated under a fixed seed (42), the 2 pp threshold, and a $100 position size. The two leading columns are per-trade Sharpe ratio and per-trade alpha in basis points; cumulative dollar P&amp;L follows.</p>
+<figure class="tbl" id="table-1">
+<figcaption id="table-1-cap"><b>Table&nbsp;1:</b> Single-split backtest (canonical, 2 pp signal threshold, 1,673-row test set).</figcaption>
+<div class="table" role="region" aria-labelledby="table-1-cap" tabindex="0">
+<table>
+<thead><tr>
+<th scope="col">Tier</th>
+<th scope="col">Model</th>
+<th scope="col" class="n">RMSE</th>
+<th scope="col" class="n">Dir. Acc.</th>
+<th scope="col" class="n">Sharpe (per-trade)</th>
+<th scope="col" class="n">Alpha (bps/trade)</th>
+<th scope="col" class="n">P&amp;L ($100 pos)</th>
+<th scope="col" class="n">Win Rate</th>
+<th scope="col" class="n"># trades</th>
+</tr></thead>
+<tbody>
+<tr><td>0</td><th scope="row">Naive (closes)</th><td class="n">0.499</td><td class="n">47.7%</td><td class="n">0.125</td><td class="n">+4.0</td><td class="n">+$58.12</td><td class="n">47.9%</td><td class="n">1460</td></tr>
+<tr><td>0</td><th scope="row">Volume (higher wins)</th><td class="n">0.457</td><td class="n">47.7%</td><td class="n">0.131</td><td class="n">+4.2</td><td class="n">+$59.81</td><td class="n">48.1%</td><td class="n">1440</td></tr>
+<tr><td>1</td><th scope="row">Linear Regression</th><td class="n">0.306</td><td class="n">56.9%</td><td class="n">0.501</td><td class="n">+15.0</td><td class="n">+$232.67</td><td class="n">57.8%</td><td class="n">1549</td></tr>
+<tr><td>1</td><th scope="row">XGBoost (depth 3)</th><td class="n">0.290</td><td class="n">56.6%</td><td class="n">0.499</td><td class="n">+14.9</td><td class="n">+$232.83</td><td class="n">57.4%</td><td class="n">1559</td></tr>
+<tr><td>2</td><th scope="row">LSTM</th><td class="n">0.291</td><td class="n">65.5%</td><td class="n">0.473</td><td class="n">+14.3</td><td class="n">+$221.84</td><td class="n">56.5%</td><td class="n">1547</td></tr>
+<tr><td>2</td><th scope="row">GRU</th><td class="n">0.293</td><td class="n">64.3%</td><td class="n">0.459</td><td class="n">+14.0</td><td class="n">+$212.50</td><td class="n">55.8%</td><td class="n">1517</td></tr>
+<tr><td>2</td><th scope="row">TFT</th><td class="n">0.326</td><td class="n">51.7%</td><td class="n">0.155</td><td class="n">+5.5</td><td class="n">+$6.57</td><td class="n">37.5%</td><td class="n">120</td></tr>
+<tr><td>3</td><th scope="row">PPO-Raw</th><td class="n">0.319</td><td class="n">60.5%</td><td class="n">0.306</td><td class="n">+9.6</td><td class="n">+$158.15</td><td class="n">52.2%</td><td class="n">1656</td></tr>
+<tr><td>3</td><th scope="row">PPO + Autoencoder</th><td class="n">0.327</td><td class="n">27.2%</td><td class="n">0.014</td><td class="n">+0.5</td><td class="n">+$4.61</td><td class="n">43.2%</td><td class="n">899</td></tr>
+</tbody></table></div></figure>
+<p>Note: TFT did not converge at N=6,802 (30-epoch budget, hidden_size=8); see <a class="xref" href="#s3-4">§3.4</a>.</p>
+<p>The ranking is unambiguous: Tier 1 beats Tier 2, which beats Tier 3. The gap from Tier 0 to Tier 1 is large (per-trade alpha jumps from about 4 bps to 15 bps, roughly a 4× improvement). The gap from Tier 1 to Tier 2 is small (0.7 to 1.0 bps). And PPO with the autoencoder collapses to essentially zero edge. Linear Regression and XGBoost are essentially tied (Sharpe 0.501 versus 0.499, +15.0 versus +14.9 bps), so within Tier 1 there is no statistically defensible reason to prefer one over the other on this dataset. The 95% bootstrap confidence intervals on RMSE (<a class="xref" href="#fig-7">Fig.&nbsp;7</a>) overlap heavily across LR, XGBoost, GRU, and LSTM, even though P&amp;L separates them cleanly. This tells us the P&amp;L gap is driven by which side of zero each model predicts (directional accuracy and trade selection), not by raw regression error.</p>
+<h3 id="s3-2"><span class="no">3.2</span> Walk-Forward Validation<a class="anchor" href="#s3-2" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>We evaluate each model across 11 expanding-window splits spanning January through April 2026. Per-window P&amp;L (<a class="xref" href="#fig-1">Fig.&nbsp;1</a>) is positive in every window for every ML model (11 of 11 windows times 4 of 4 models, with zero losing windows). This is strong evidence that the edge does not depend on a lucky train/test split. Per-trade Sharpe also trends upward across windows. Linear Regression rises from 0.307 in window 1 (357 training rows) to 0.530 in window 10 (8,012 training rows), an improvement of 73%. XGBoost shows the same pattern (0.383 to 0.540). Median per-trade Sharpe across all windows is 0.408 for LR, 0.424 for XGBoost, 0.410 for GRU, and 0.405 for LSTM, so all four ML models end up roughly tied. The comparison that matters economically is “any ML model” (median around $75 per window) versus “no ML” (median around $25 per window), not XGBoost versus GRU.</p>
+<h3 id="s3-3"><span class="no">3.3</span> Parameter Searches (Proposal Experiments)<a class="anchor" href="#s3-3" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>XGBoost hyperparameter sweep. Across 48 configurations, the best one is depth 3, learning rate 0.01, and 100 trees (RMSE 0.288, P&amp;L +$209.70). All ten of the best configurations use a tree depth of 3, 5, or 7, and depth-9 trees actually lost P&amp;L, evidence that the model overfits at 6,802 training rows when given too much capacity. Within a single model family, the same “simple wins” pattern shows up: the best XGBoost is essentially an ensemble of decision stumps.</p>
+<p>Lookback and threshold sweeps (Proposal Experiments 2 and 3). For both GRU and LSTM we swept the lookback through 2, 6, 12, and 18 bars (8 to 72 hours of hourly data) holding everything else fixed (<a class="xref" href="#fig-8">Fig.&nbsp;8</a>). For GRU, P&amp;L drops monotonically from +$226.42 at 2 bars to +$191.90 at 18 bars (a 15% decline) and per-trade Sharpe falls from 0.489 to 0.400. LSTM is flatter but trends the same way. Longer lookbacks do not help and at 72 hours they meaningfully hurt, because pairs only have 47 bars on average, so an 18-bar window covers nearly 40% of the contract’s lifetime and is dominated by stale pre-active-phase information. Sweeping the decision threshold through 0.00, 0.02, 0.05, and 0.10 across all eight models (<a class="xref" href="#fig-9">Fig.&nbsp;9</a>), ML-model P&amp;L peaks at 0.00 to 0.02 and declines at higher thresholds (XGBoost loses $36 going from 0.00 to 0.10), but per-trade Sharpe rises monotonically with the threshold (XGBoost climbs from 0.498 to 0.620, a 24% increase) because higher thresholds discard low-magnitude trades faster than they sacrifice profitable ones. The naive baselines show the opposite pattern. We use 0.02 as the consistent baseline throughout. Threshold selection is a second-order tuning knob compared to which model tier we pick.</p>
+<p>Robustness checks: transaction costs and feature ablation. The system is profitable at every fee level from 0 pp (gross +$245) to a worst case of 7 pp (+$135), with net P&amp;L compressing roughly linearly at about $18 per pp (<a class="xref" href="#fig-4">Fig.&nbsp;4</a>). Per-trade Sharpe is remarkably flat because higher fees filter out lower-confidence trades, partially offsetting the cost. Model rankings are invariant across the 0 to 10 pp fee range, and since Kalshi maker orders pay no fee and Polymarket charges roughly 1 pp in Polygon gas, our 2 pp simulation is conservative. To guard against p-hacking we pre-registered a Leave-One-Group-Out (LOGO) ablation protocol before any experiment script was written, with five non-overlapping feature groups and a load-bearing threshold (95% CI fully below zero and |ΔP&amp;L| &gt; $10 for both LR and XGBoost). Across 12 LOGO configurations on a 1,021-row holdout, no single group meets that threshold. The holdout is simply too small for paired-bootstrap CIs to detect group-level effects smaller than about $10, so we conservatively keep all 51 features and defer feature selection to a re-run at 250+ bars per pair where statistical power becomes sufficient. The final 1,673-row test set was not evaluated on any reduced-feature variant.</p>
+<h3 id="s3-4"><span class="no">3.4</span> Other Findings<a class="anchor" href="#s3-4" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>Per-category stratification: Linear Regression wins 5 of 7 categories that have enough trades to make the comparison meaningful, and XGBoost wins crypto by about $6 (its tree-based splits capture nonlinear volatility regimes that LR cannot). On the live April-11 dataset, oil near-expiry contracts dominated with a 76.5% win rate and +$0.41 per trade while sports and politics were essentially zero, because WTI-futures expiry dates settle on observable market prices and force Kalshi and Polymarket to converge mechanically. Data-scaling curve: P&amp;L plateaus by 100 bars per pair because the training set caps at 6,802 rows across 144 pairs (max 141 bars/pair), so slices at 250+ bars per pair are identical. Within the range we can measure, the ranking XGBoost &gt; LR &gt; GRU &gt; LSTM is invariant across a 5× growth in training data, refuting the hypothesis that deeper models would overtake regression with more data at scales we can reach. SHAP (<a class="cite" href="#ref-8">Lundberg &amp; Lee 2017</a>): Polymarket’s volume-weighted average price (<code>polymarket_vwap</code>) dominates the SHAP plot with a mean |SHAP| of about 0.14, roughly twice the next feature (<a class="xref" href="#fig-5">Fig.&nbsp;5</a>), suggesting Polymarket is the slower-reacting price-discovery side. Live ensemble: an 11-point sweep over the LR weight (0.0 to 1.0) shows P&amp;L varies by only $4.68, so the weight choice is immaterial; the concordance filter rejects 4.80% of trades and improves per-trade Sharpe from 0.437 to 0.455 at a measurable cost (rejected trades would have netted +$1.95). TFT non-convergence: TFT did not converge at 6,802 rows with small-data hyperparameters (RMSE 0.3262 vs 0.2928 for GRU, 120 trades vs 1,517). The variable-selection-network attention entropy of 2.656 (<a class="xref" href="#fig-10">Fig.&nbsp;10</a>) confirms attention is healthy rather than degenerate, so the bottleneck is data volume, not architecture. A larger TFT (hidden size 32+) becomes justifiable at 1,000+ bars per pair.</p>
+<h3 id="s3-5"><span class="no">3.5</span> Adversarial Audit and Honest Sharpe Accounting<a class="anchor" href="#s3-5" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>Per-trade Sharpe is the central headline of this paper, so we wanted to be sure it would survive scrutiny. Before submission, we ran an adversarial audit (Phase 18, summarized in <a href="https://github.com/Iansabia/DS340-Project/blob/master/AUDIT_REPORT.md"><code>AUDIT_REPORT.md</code></a>) consisting of six independent “kill-or-confirm” checks. Tier 1 verified the headline Sharpe number itself. Tier 2 looked for leakage and look-ahead bias. Tier 3 stress-tested our cost assumptions. Tier 4 looked for survivorship and selection effects. Tier 5 traced every number in this paper back to its canonical JSON output file. Tier 6 reconciled live versus backtest performance.</p>
+<p>The most important finding came from Tier 2. Our original 80/20 split was time-ordered by row index, which sounds clean, but it turned out that 142 of 144 pairs had rows on <em>both</em> sides of the split, often only 4 hours apart. This is what the literature calls an <em>embargo violation</em>: a single contract ends up appearing in both the training and test sets, so the model is partly being graded on the same markets it learned from. To fix this, we rebuilt the split <em>by pair</em> rather than by row. The 144 pairs were partitioned into 115 training pairs and 29 test pairs, with the two sets forced to be disjoint, and we retrained Linear Regression and XGBoost on this leakage-free version.</p>
+<p>The headline result barely moved. Per-trade Sharpe drifted by only +2.99%, from 0.501 to 0.516. Per-trade alpha drifted by +4.5%, from +15.0 to +15.7 bps. Both differences are well inside the bootstrap confidence interval based on 10,000 resamples. The per-trade edge survives the correction.</p>
+<p>The per-pair annualized Sharpe moved more, which is worth one sentence to explain. We use the <a class="cite" href="#ref-2">Bailey–López de Prado (2012)</a> correction, which discounts a Sharpe ratio when the trades inside it are correlated, on the principle that correlated trades give you fewer effectively independent observations. On the leaky split, the average pairwise correlation is slightly positive (+0.042), so the correction kicks in and compresses the per-pair Sharpe from 0.78 to 0.30. On the leakage-free split, the average correlation flips slightly negative (−0.199), and the correction short-circuits to the uncorrected value, because the formula does not apply a haircut when correlation is non-positive. The result is that per-pair annualized Sharpe ends up regime-dependent, so we demote it to a secondary statistic with a 95% bootstrap CI of [0.700, 1.067] on the leakage-free split. An earlier draft of the paper cited a per-pair annualized Sharpe of about 3.2 in the abstract; the audit could not trace that number to any derivation in the codebase, so we replaced it with the per-trade headline above.</p>
+<p>Of the six audit tiers, Tier 1, the canonical-split part of Tier 2, and Tier 3 returned non-PASS verdicts and were corrected in this revision. Tiers 4, 5, and 6 returned PASS without any paper changes.</p>
+<p>For context, equity stat-arb strategies typically run at 1 to 5 bps per trade with millions of trades, so our 15 bps reflects wider mispricings in immature cross-platform markets, with the flip side that the test set caps at about 1,500 trades, limiting how much capital this edge can absorb. PPO+autoencoder at +0.5 bps versus PPO-Raw at +9.6 bps means the autoencoder <em>destroys</em> roughly 9 bps of edge that PPO-Raw alone would have kept, which is a direct empirical answer to whether RL plus anomaly detection beats simpler regression on this dataset: no, it actively hurts. The cause is that the autoencoder, trained on the full spread distribution without a clean “normal regime” baseline, flags ordinary market behavior as anomalous, so PPO ends up trading disproportionately in high-volatility windows where its predictions are least reliable.</p>
+<h3 id="s3-6"><span class="no">3.6</span> Live Paper Trading<a class="anchor" href="#s3-6" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>The live system was deployed on BU SCC on April 11, 2026. Through April 22, it accumulated 10,154 closed positions across 8,421 pairs, with a 100% match rate to entry bars (our acceptance gate of at least 80% passed comfortably). Live realized P&amp;L was +$1.53 against −$1.53 in shadow simulation, exactly opposite numbers, which traces to a semantic mismatch between the model and the live trading strategy. The regression models predict the next-bar change in the spread, which is a mean-reversion signal. The live strategy, however, enters a short-spread position whenever the current spread is large, that is, it goes in the <em>opposite</em> direction of the prediction’s sign. Its edge therefore comes from filtering by how large the spread is, not from agreeing with the model’s predicted direction. Crypto sub-category P&amp;L flipped sign across snapshots (positive at 3 days, negative at 8 days, with −$19.87 across 915 trades), a stationarity caveat we flag explicitly for any per-category claim.</p>
+<p>WTI oil contracts were missing entirely from the April 14 to April 22 live window (zero closed positions), so the backtest oil edge could not be validated inside the original submission. The root cause was that a single tuple in our discovery code, <code>KALSHI_DISCOVERY_CATEGORIES</code>, did not include the string “Commodities”, and Kalshi had quietly migrated its daily WTI, Brent, grain, and metal series into that category, so the entire commodity universe was filtered out before matching. A one-line fix, combined with a small category-classifier extension and a 200-slot commodity reservation in the live collector, unblocked the pipeline. In the 12-hour window after the fix (April 24), the live system produced 1,224 closed commodity positions across five oil and grain series (KXBRENTW=486, KXWTI=409, KXWTIW=213, KXBRENTMON=76, plus four smaller series) with aggregate P&amp;L of +$1.96 and a 36.0% win rate. This is a proof-of-life result rather than a confirmed live edge measurement: 12 hours covers one regime, the per-trade economics of about $0.0016 sit far below the backtest oil near-expiry edge of +$0.41 per trade, and the live cohort includes full-lifecycle positions rather than only the near-expiry subset the backtest measured, so the lower live win rate is expected rather than contradictory. Future work can measure the live oil edge over longer windows.</p>
+<h2 id="s4"><span class="no">4.</span> Conclusions<a class="anchor" href="#s4" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>We built an end-to-end cross-platform prediction-market arbitrage system with four model tiers and evaluated it across five independent regimes. The central answer to our research question is clear:</p>
+<blockquote>
+<p>At this data scale, increasing model complexity does not improve arbitrage detection. The simplest models win.</p>
+</blockquote>
+<p>Specifically, Tier 1 (Linear Regression at +15.0 bps per trade and Sharpe 0.501; XGBoost at +14.9 bps and Sharpe 0.499) beats Tier 2 (LSTM at +14.3 bps, GRU at +14.0 bps) by roughly 0.7 to 1.0 bps and 5 to 10% in absolute P&amp;L. Tier 3 (PPO with autoencoder at +0.5 bps) has essentially zero alpha. This ordering holds across the single-split backtest, the walk-forward, and the data-scaling curve. The system also stays profitable at every fee level we tested, from 0 pp through 7 pp.</p>
+<p>Four reasons seem to be working together. Sample size: with 47 bars per pair and 6,802 total training rows, GRU and LSTM are well below the 200 to 1,000-timestep range where deeper models usually start to win, and the lookback ablation in <a class="xref" href="#s3-3">§3.3</a> confirms longer histories actually hurt on this dataset. Signal-to-noise: the one-step change in spread is noisy, and linear models do better in high-noise settings because they have fewer parameters to overfit. Features carry most of the signal: with the spread, Polymarket’s VWAP, the dollar-volume ratio, and 13 microstructure features, most of the exploitable information is already encoded, so a model only needs to combine them linearly and deeper models spend capacity rediscovering what the features expose. Overfitting on structural regularities: the deepest XGBoost configurations (depth 9, 500 trees) had higher training accuracy but lower test P&amp;L, and the deeper architectures memorize per-pair quirks that do not generalize. This pattern is consistent with the broader tabular-ML literature (<a class="cite" href="#ref-5">Grinsztajn et al. 2022</a>; <a class="cite" href="#ref-6">Kang 2026</a>).</p>
+<p>The alpha is in the matching pipeline and the asset class. The 10-rule structural quality filter in <a class="xref" href="#s2-1">§2.1</a> is direct empirical evidence that data quality dominates model choice at this scale, and <a class="xref" href="#s3-4">§3.4</a> shows oil near-expiry contracts carrying most of the edge.</p>
+<p>Three broader lessons stand out. First, infrastructure bugs masquerade as model problems (see <a class="xref" href="#s2-5">§2.5</a>): in every case we hit, the fix was a configuration change rather than a hyperparameter sweep. Second, evaluation regime matters more than model family: a single train/test split can tell a very different story than a walk-forward, a per-category breakdown, or a data-scaling curve, so running multiple regimes is not optional. Third, negative results are results: PPO failing catastrophically is the strongest piece of evidence we have for the main thesis, and we chose to publish it rather than quietly drop it.</p>
+<p>Future work. The live system has collected 233,484 bars over 19 days, roughly 34× the backtest training set, driven by a much larger active pair universe (up to 11,582 matched pairs at peak versus 144 in the backtest) and faster bar intervals on short-dated daily contracts. We did not retrain the model tiers on this expanded data before the submission deadline. This is the most important planned follow-up: at 34× more samples the data-starvation argument from <a class="xref" href="#s3">§3</a> substantially relaxes, and we expect LSTM, GRU, and possibly TFT to start closing the gap with or surpassing Linear Regression at least on the oil and crypto categories. If that happens, the central finding evolves from “complexity is not an edge” to “complexity is not justified at <em>our</em> scale, but becomes justified at roughly 10× more data.”</p>
+<p>Limitations. Our test window is short (two weeks out-of-sample, partly mitigated by the walk-forward analysis). Paper trading does not model market impact or partial fills. Survivorship bias is structural rather than retroactive (Phase 18 Tier 4 found zero retroactive drops in a random sample of 10). Settlement-divergence risk between Kalshi and Polymarket is real but unobserved in our universe. The live commodity-matching pipeline was incomplete at submission and only resolved post-submission, so the backtest oil edge has only a proof-of-life live validation. Other planned follow-ups include 500- and 1,000-bar scaling checkpoints, live-volume-aware microstructure features, a larger TFT once data permits, and re-running the LOGO feature ablation at 250+ bars per pair where bootstrap CIs become tight enough to classify groups as load-bearing or droppable.</p>
+<p>The project succeeded on its own terms. We answered the research question rigorously, built a working autonomous system, and documented honest limitations. The edge is real; the complexity is not.</p>
+<h2 id="acknowledgments">Acknowledgments<a class="anchor" href="#acknowledgments" aria-hidden="true" tabindex="-1">#</a></h2>
+<p class="ack">We thank Professor Kevin Gold for course instruction and for pivotal late-March feedback that pushed us to treat regression baselines as first-class and to add the PPO-without-autoencoder variant, which directly shaped the research question into something empirically answerable. We acknowledge use of Anthropic’s Claude as an AI pair-programming assistant throughout implementation; all design decisions, experimental choices, and interpretations are our own.</p>
+
+<h2 id="references">References<a class="anchor" href="#references" aria-hidden="true" tabindex="-1">#</a></h2>
+<ol class="refs">
+<li id="ref-1">Amihud, Y. (2002). Illiquidity and stock returns: cross-section and time-series effects. <em>Journal of Financial Markets</em> 5(1), 31–56.</li>
+<li id="ref-2">Bailey, D. H., &amp; López de Prado, M. (2012). The Sharpe ratio efficient frontier. <em>Journal of Risk</em> 15(2).</li>
+<li id="ref-3">Bürgi, C., Deng, W., &amp; Whelan, K. (2026). Makers and takers: the economics of the Kalshi prediction market. <em>CEPR Discussion Paper DP20631 / SSRN 5502658</em>.</li>
+<li id="ref-4">Corwin, S. A., &amp; Schultz, P. (2012). A simple way to estimate bid-ask spreads from daily high and low prices. <em>Journal of Finance</em> 67(2), 719–760.</li>
+<li id="ref-5">Grinsztajn, L., Oyallon, E., &amp; Varoquaux, G. (2022). Why do tree-based models still outperform deep learning on typical tabular data? <em>NeurIPS 2022 Datasets &amp; Benchmarks</em>.</li>
+<li id="ref-6">Kang, S. (2026). The limits of complexity: why feature engineering beats deep learning in investor flow prediction. <em>arXiv:2601.07131</em>.</li>
+<li id="ref-7">Kyle, A. S. (1985). Continuous auctions and insider trading. <em>Econometrica</em> 53(6), 1315–1335.</li>
+<li id="ref-8">Lundberg, S. M., &amp; Lee, S.-I. (2017). A unified approach to interpreting model predictions. <em>NeurIPS 2017</em>.</li>
+<li id="ref-9">Manski, C. F. (2006). Interpreting the predictions of prediction markets. <em>Economics Letters</em> 91(3), 425–429.</li>
+<li id="ref-10">Reimers, N., &amp; Gurevych, I. (2019). Sentence-BERT: sentence embeddings using Siamese BERT-networks. <em>EMNLP 2019</em>.</li>
+<li id="ref-11">Roll, R. (1984). A simple implicit measure of the effective bid-ask spread in an efficient market. <em>Journal of Finance</em> 39(4), 1127–1139.</li>
+<li id="ref-12">Schulman, J., Wolski, F., Dhariwal, P., Radford, A., &amp; Klimov, O. (2017). Proximal policy optimization algorithms. <em>arXiv:1707.06347</em>.</li>
+<li id="ref-13">Wolfers, J., &amp; Zitzewitz, E. (2004). Prediction markets. <em>Journal of Economic Perspectives</em> 18(2), 107–126.</li>
+</ol>
+
+<h2 id="appendix-b">Appendix B: Figures<a class="anchor" href="#appendix-b" aria-hidden="true" tabindex="-1">#</a></h2>
+<figure class="fig" id="fig-1"><a class="zoom-link" href="img/fig01-walk-forward-pnl.webp" data-zoom aria-label="Fig. 1, open full size"><img src="img/fig01-walk-forward-pnl.webp" width="956" height="750" alt="Line chart of out-of-sample P&amp;L at 2 pp fees across 11 walk-forward windows for LR, XGBoost, GRU and LSTM. The four lines move together and stay above zero in every window, peaking near $140 in windows 4 and 8 and ending near $10 in window 11." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;1.</b> Out-of-sample P&amp;L across 11 walk-forward windows (<a class="xref" href="#s3-2">§3.2</a>). Every ML model is profitable in every window. Per-trade Sharpe rises from 0.31 to 0.53.</figcaption></figure>
+<figure class="fig" id="fig-2"><a class="zoom-link" href="img/fig02-pnl-at-2pp-vs-data.webp" data-zoom aria-label="Fig. 2, open full size"><img src="img/fig02-pnl-at-2pp-vs-data.webp" width="1080" height="720" alt="Line chart of P&amp;L at the 2 pp threshold against training bars per pair on a log scale. XGBoost stays near $210 and linear regression near $200 at every size, GRU and LSTM sit between about $180 and $197 where they have points, and the naive and volume baselines stay flat near $30." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;2.</b> P&amp;L vs. training-set size at 2 pp threshold (<a class="xref" href="#s3-4">§3.4</a>). Plateau at N=6,802 reflects the fixed pair universe (144 pairs, ≤141 bars each).</figcaption></figure>
+<figure class="fig" id="fig-3"><a class="zoom-link" href="img/fig03-walk-forward-sharpe.webp" data-zoom aria-label="Fig. 3, open full size"><img src="img/fig03-walk-forward-sharpe.webp" width="964" height="750" alt="Line chart of per-trade Sharpe ratio across 11 walk-forward windows for LR, XGBoost, GRU and LSTM. Values climb from about 0.26 to 0.38 in window 1 to about 0.53 in window 10, then drop to about 0.27 to 0.35 in window 11." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;3.</b> Walk-forward per-trade Sharpe across 11 windows (<a class="xref" href="#s3-2">§3.2</a>). Confirms the rising-edge pattern in <a class="xref" href="#fig-1">Fig.&nbsp;1</a>.</figcaption></figure>
+<figure class="fig" id="fig-4"><a class="zoom-link" href="img/fig04-transaction-cost-sensitivity.webp" data-zoom aria-label="Fig. 4, open full size"><img src="img/fig04-transaction-cost-sensitivity.webp" width="978" height="750" alt="Line chart of P&amp;L against round-trip fee from 0 to 10 pp. The Linear and XGBoost lines overlap, falling from about $230 to about $80. The Naive and Volume lines start near $60, cross zero around 4 pp and end near minus $85." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;4.</b> P&amp;L vs. round-trip fee for the four ML models (<a class="xref" href="#s3-3">§3.3</a>). Model rank is invariant in the 0–10 pp range.</figcaption></figure>
+<figure class="fig" id="fig-5"><a class="zoom-link" href="img/fig05-shap-bar-plot.webp" data-zoom aria-label="Fig. 5, open full size"><img src="img/fig05-shap-bar-plot.webp" width="1142" height="912" alt="Horizontal bar chart of the top 20 features by mean absolute SHAP value. polymarket_vwap is far ahead at about 0.14; the next features, price_velocity and spread_volatility, are below 0.02." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;5.</b> Mean |SHAP| feature importance for XGBoost (<a class="xref" href="#s3-4">§3.4</a>). <code>polymarket_vwap</code> dominates at ≈0.14, twice the next feature.</figcaption></figure>
+<figure class="fig" id="fig-6"><a class="zoom-link" href="img/fig06-backtest-equity-curves.webp" data-zoom aria-label="Fig. 6, open full size"><img src="img/fig06-backtest-equity-curves.webp" width="1006" height="750" alt="Line chart of equity by bar index for LR, XGBoost, GRU and LSTM. All four rise together; LR and XGBoost finish highest, around 255,000 on the equity axis, with GRU and LSTM near 220,000." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;6.</b> Cumulative test-set P&amp;L by model (<a class="xref" href="#s3-1">§3.1</a>). Tier-1 vs. Tier-2 separation opens gradually, consistent with a stable per-trade edge.</figcaption></figure>
+<figure class="fig" id="fig-7"><a class="zoom-link" href="img/fig07-bootstrap-ci-rmse.webp" data-zoom aria-label="Fig. 7, open full size"><img src="img/fig07-bootstrap-ci-rmse.webp" width="964" height="809" alt="Dot and error-bar chart of bootstrap 95% confidence intervals on RMSE for eight models. Naive (about 0.50) and Volume (about 0.46) are highest; Linear, XGBoost, GRU and LSTM sit between about 0.28 and 0.31 with overlapping intervals; PPO-Raw and PPO-Filtered are around 0.32 to 0.33." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;7.</b> Bootstrap 95% CI on RMSE (1,000 resamples, <a class="xref" href="#s3-1">§3.1</a>). Intervals overlap heavily even though P&amp;L separates cleanly.</figcaption></figure>
+<figure class="fig" id="fig-8"><a class="zoom-link" href="img/fig08-experiment2-lookback-pnl.webp" data-zoom aria-label="Fig. 8, open full size"><img src="img/fig08-experiment2-lookback-pnl.webp" width="955" height="750" alt="Line chart of P&amp;L against lookback window in hours for GRU and LSTM. GRU falls from about $226 at 8 hours to about $192 at 72 hours. LSTM peaks near $220 at 24 hours and ends near $209 at 72 hours." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;8.</b> P&amp;L vs. lookback window for GRU and LSTM (<a class="xref" href="#s3-3">§3.3</a>). Flat across 2–18-bar lookbacks at this dataset scale.</figcaption></figure>
+<figure class="fig" id="fig-9"><a class="zoom-link" href="img/fig09-experiment3-threshold-heatmap.webp" data-zoom aria-label="Fig. 9, open full size"><img src="img/fig09-experiment3-threshold-heatmap.webp" width="1780" height="868" alt="Heatmap of P&amp;L in dollars by model and minimum spread threshold of 0, 2, 5 and 10 pp. LR, XGBoost, GRU and LSTM earn $184 to $243 in every column. Naive and Volume earn $58 to $83. PPO earns $172 at 0 and 2 pp and $0 above that. PPO+AE loses $29 at 0 and 2 pp and earns $0 above that." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;9.</b> P&amp;L heatmap by model × min-spread threshold (<a class="xref" href="#s3-3">§3.3</a>). 2 pp dominates for all ML models.</figcaption></figure>
+<figure class="fig" id="fig-10"><a class="zoom-link" href="img/fig10-tft-variable-importance.webp" data-zoom aria-label="Fig. 10, open full size"><img src="img/fig10-tft-variable-importance.webp" width="1141" height="982" alt="Horizontal bar chart of the top 15 TFT variable-selection weights. polymarket_amihud is highest at about 1,100, then polymarket_high at about 800 and kalshi_roll_spread at about 430; the rest are below about 250." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;10.</b> TFT VSN variable-selection weights (<a class="xref" href="#s3-4">§3.4</a>). Attention is healthy (entropy = 2.656); underperformance is a data-volume bottleneck.</figcaption></figure>
+<figure class="fig" id="fig-11"><a class="zoom-link" href="img/fig11-ensemble-weight-sweep.webp" data-zoom aria-label="Fig. 11, open full size"><img src="img/fig11-ensemble-weight-sweep.webp" width="956" height="751" alt="Line chart of P&amp;L at 2 pp fees against the linear-regression weight in the ensemble, from 0 to 1. The filtered (concordance) line stays between about $199.5 and $204.2; the unfiltered line ranges from about $201.6 to $207.2." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;11.</b> Walk-forward P&amp;L across the 11-point LR-weight sweep (<a class="xref" href="#s3-4">§3.4</a>). Spread of $4.68 is essentially flat.</figcaption></figure>
+      </article>
+    </div>
+
+    <div class="back"><a class="more" href="../#projects"><span aria-hidden="true">&larr;</span> All projects</a><span class="right"><a class="more quiet" href="Complexity_Is_Not_An_Edge.pdf" download>Download the PDF <span aria-hidden="true">&darr;</span></a><a class="more quiet" href="https://github.com/Iansabia/DS340-Project">View the code on GitHub <span aria-hidden="true">&nearr;</span></a></span></div>
+  </main>
+
+  <footer>
+    <p>Made in Boston. No trackers.</p>
+    <div class="stamp mono"><span>Revised<b>2026-10-23</b></span></div>
+  </footer>
+</div>
+
+<dialog class="zoom" id="zoom" aria-labelledby="zoomNum">
+  <div class="zoom-bar"><span class="mono" id="zoomNum">Figure</span><button class="zoom-close" type="button" id="zoomClose">Close</button></div>
+  <div class="zoom-img"><img id="zoomImg" alt="" src="data:," width="956" height="750"></div>
+  <p class="zoom-cap" id="zoomCap"></p>
+</dialog>
+
+<script src="../assets/site.js"></script>
+<script>
+(() => {
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  if (coarse) document.querySelectorAll('[data-touch]').forEach((n) => { n.textContent = n.dataset.touch; });
+
+  /* the headline ladder: one row per model in Table 1. The toggle swaps the measure; hover, focus or tap shows the whole row. */
+  const lad = document.getElementById('ladder');
+  if (lad) {
+    const rungs = [...lad.querySelectorAll('.rung')], seg = [...lad.querySelectorAll('.seg button')];
+    const read = document.getElementById('ladderRead'), intro = [...read.childNodes].map((n) => n.cloneNode(true));
+    const fmt = {
+      alpha: (v) => '+' + v.toFixed(1) + ' bps',
+      sharpe: (v) => v.toFixed(3),
+      pnl: (v) => '+$' + v.toFixed(2),
+    };
+    let metric = 'alpha';
+    const paint = () => {
+      const max = Math.max(...rungs.map((r) => +r.dataset[metric]));
+      rungs.forEach((r) => {
+        const v = +r.dataset[metric];
+        r.style.setProperty('--w', (v / max * 100).toFixed(2) + '%');
+        r.querySelector('.v').textContent = fmt[metric](v);
+        r.setAttribute('aria-label', r.dataset.name + ': ' + fmt[metric](v));
+      });
+    };
+    seg.forEach((b) => b.addEventListener('click', () => {
+      metric = b.dataset.m;
+      seg.forEach((x) => x.setAttribute('aria-pressed', x === b));
+      paint();
+    }));
+    const show = (r) => {
+      rungs.forEach((x) => x.classList.toggle('on', x === r));
+      const d = r.dataset, b = document.createElement('b');
+      b.textContent = d.full;
+      read.replaceChildren(b, document.createTextNode(
+        ' (Tier ' + d.tier + '): Sharpe ' + (+d.sharpe).toFixed(3) + ', ' + fmt.alpha(+d.alpha) + ' per trade, ' + fmt.pnl(+d.pnl) +
+        ' total, ' + d.win + ' win rate over ' + (+d.trades).toLocaleString('en-US') + ' trades.' + (d.note ? ' ' + d.note : '')));
+    };
+    const reset = () => { rungs.forEach((x) => x.classList.remove('on')); read.replaceChildren(...intro.map((n) => n.cloneNode(true))); };
+    rungs.forEach((r) => {
+      r.addEventListener('mouseenter', () => show(r));
+      r.addEventListener('focus', () => show(r));
+      r.addEventListener('click', () => show(r));
+    });
+    lad.querySelector('.rungs').addEventListener('mouseleave', () => { if (!lad.contains(document.activeElement) || !document.activeElement.classList.contains('rung')) reset(); });
+    lad.querySelector('.rungs').addEventListener('focusout', (e) => { if (!e.relatedTarget || !e.relatedTarget.classList.contains('rung')) reset(); });
+    paint();
+    const seen = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { lad.classList.add('in'); seen.disconnect(); } }, { threshold: 0.3 });
+    seen.observe(lad.querySelector('.rungs'));
+  }
+
+  /* figures open full size in a dialog; without JS the link opens the image itself */
+  const dlg = document.getElementById('zoom');
+  if (dlg && typeof dlg.showModal === 'function') {
+    const img = document.getElementById('zoomImg'), num = document.getElementById('zoomNum'), cap = document.getElementById('zoomCap');
+    let from = null;
+    document.querySelectorAll('a[data-zoom]').forEach((a) => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const fig = a.closest('figure'), small = a.querySelector('img'), text = fig.querySelector('figcaption').textContent.trim();
+      from = a;
+      img.src = a.getAttribute('href'); img.alt = small.alt; img.width = small.width; img.height = small.height;
+      num.textContent = text.slice(0, text.indexOf('.', 5) + 1);
+      cap.textContent = text.slice(text.indexOf('.', 5) + 1).trim();
+      dlg.showModal();
+    }));
+    document.getElementById('zoomClose').addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener('close', () => { if (from) from.focus(); });
+  }
+})();
+</script>
+</body>
+</html>

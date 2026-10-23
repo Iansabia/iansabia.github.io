@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fantasy AI Manager · Ian Sabia</title>
+<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<meta name="description" content="A week with my fantasy football bot. Plain code makes every decision, the AI only labels news and explains, and adds, drops and trades wait for my OK by text.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iansabia.github.io/fantasy/">
+<meta property="og:title" content="Fantasy AI Manager · Ian Sabia">
+<meta property="og:description" content="A week with my fantasy football bot. Plain code makes every decision, the AI only labels news and explains, and adds, drops and trades wait for my OK by text.">
+<meta property="og:image" content="https://iansabia.github.io/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  /* Fantasy AI page. Badge colors carry the design rule: violet = code decides, orange = AI writes, outline = waits for me. */
+  :root{--on-acc:#fff}
+  :root[data-theme="dark"]{--on-acc:#0B0817}
+
+  .badge{display:inline-flex;align-items:center;font:500 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:4px 7px 3px;border-radius:3px;white-space:nowrap;flex:none}
+  .badge.code{background:var(--acc);color:var(--on-acc)}
+  .badge.ai{background:var(--warm);color:#0B0817}
+  .badge.me{color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+  .badge.data{background:var(--ghost);color:var(--body)}
+  .night .badge.code{background:var(--nacc);color:#0B0817}
+  .night .badge.ai{background:var(--nwarm);color:#0B0817}
+  .night .badge.me{color:var(--nink);box-shadow:inset 0 0 0 1.5px var(--nink)}
+  .tag{display:inline-flex;align-items:center;gap:8px;font:500 11px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 9px;border:1px solid var(--rule);color:var(--body)}
+  .tag.real::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--acc);flex:none}
+  .tag.example{border:1px dashed var(--warm);color:var(--ink)}
+  .tag.example::before{content:"Example";color:var(--on-acc);background:var(--warm);color:#0B0817;padding:2px 5px;border-radius:2px;font-size:10px}
+
+  /* the rule band */
+  .band{margin-top:clamp(36px,5vw,56px);padding:clamp(24px,4vw,40px);display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px clamp(24px,4vw,56px);align-items:center;border:1px solid var(--nbg);transition:background-color .35s}
+  .band .mono{display:block;margin-bottom:12px}
+  .band .big{font-family:var(--serif);font-weight:500;font-size:clamp(22px,2.6vw,31px);line-height:1.22;letter-spacing:-.01em;color:var(--nink)}
+  .band .big b{font-weight:700}
+  .band .big em{font-style:italic;color:var(--nwarm)}
+  .legend{list-style:none;display:grid;gap:12px}
+  .legend li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;align-items:baseline;color:var(--nbody);font-size:15px;line-height:1.4}
+  .legend li .badge{justify-self:start}
+  .legend li b{color:var(--nink);font-weight:600}
+
+  /* demo: timeline of steps */
+  .steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-bottom:clamp(24px,3.5vw,36px)}
+  .step-tab{background:none;border:0;border-right:1px solid var(--rule);color:var(--body);text-align:left;padding:14px 14px 16px;cursor:pointer;display:flex;flex-direction:column;gap:6px;position:relative;font:inherit;min-width:0;transition:background .25s,color .25s}
+  .step-tab:last-child{border-right:0}
+  .step-tab::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--acc);transform:scaleX(0);transform-origin:left;transition:transform .45s var(--ease)}
+  .step-tab:hover{background:var(--tile)}
+  .step-tab[aria-selected="true"]{color:var(--ink)}
+  .step-tab[aria-selected="true"]::after{transform:scaleX(1)}
+  .step-tab .stp{color:var(--acc);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .step-tab b{font-family:var(--serif);font-weight:700;font-size:clamp(16px,1.6vw,19px);line-height:1.15;letter-spacing:-.01em}
+  .step-tab .short{display:none}
+  .step-tab .bd{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+  .step-tab .bd .badge{font-size:9.5px;padding:3px 5px 2px}
+  .step-tab.done .stp::after{content:" \2713";color:var(--acc)}
+
+  /* demo: one step on stage */
+  .stage{display:grid;grid-template-columns:minmax(0,1fr) 344px;grid-template-rows:auto auto 1fr;grid-template-areas:"head phone" "lanes phone" "nav phone";gap:0 clamp(28px,4vw,52px);align-items:start}
+  .stage-head{grid-area:head;padding-bottom:18px}
+  .stage-head h3{font-family:var(--serif);font-weight:700;font-size:clamp(26px,3vw,36px);line-height:1.08;letter-spacing:-.015em;margin:12px 0 10px}
+  .stage-head h3 em{font-weight:500;color:var(--acc)}
+  .stage-head p{color:var(--body);max-width:60ch}
+  .lanes{grid-area:lanes;border-top:1px solid var(--rule)}
+  .lane{display:grid;grid-template-columns:112px minmax(0,1fr);gap:8px 18px;padding:16px 0;border-bottom:1px solid var(--rule)}
+  .lane .lab{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding-top:2px}
+  .lane .lab .mono{color:var(--body);font-size:11px}
+  .lane .body{min-width:0}
+  .lane .body p{color:var(--body);font-size:15.5px;line-height:1.5}
+  .lane .body p + p,.lane .body p + .calc,.lane .body .calc + p,.lane .body pre + p,.lane .body p + pre,.lane .body p + blockquote{margin-top:10px}
+  .lane .body b{color:var(--ink);font-weight:600}
+  .calc{font-family:var(--mono);font-size:12.5px;line-height:1.55;background:var(--tile);border:1px solid var(--rule);padding:12px 14px;display:grid;gap:7px;color:var(--ink)}
+  .calc > div{padding-left:14px;text-indent:-14px}
+  .calc > div::before{content:"\203A";color:var(--acc);display:inline-block;width:14px;text-indent:0}
+  .calc span{color:var(--acc)}
+  .calc b{font-weight:500;color:var(--ink);background:color-mix(in srgb,var(--acc) 16%,transparent);padding:0 3px;border-radius:2px}
+  .worked{border-left:3px solid var(--acc);padding-left:12px}
+  .fine{font-size:13.5px!important}
+  pre.json{font-family:var(--mono);font-size:12.5px;line-height:1.55;background:var(--nbg);color:var(--nink);padding:12px 14px;border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+  pre.json .k{color:var(--nacc)}
+  pre.json .s{color:var(--nwarm)}
+  .lane blockquote{font-size:15px;line-height:1.5;color:var(--ink);border-left:3px solid var(--rule);padding:2px 0 2px 12px}
+  .real-out{margin-top:12px;padding:12px 14px;background:var(--tile);border:1px solid var(--rule);font-size:15px;color:var(--ink)}
+  .real-out .mono{display:block;color:var(--acc);font-size:11px;margin-bottom:4px}
+  .step-nav{grid-area:nav;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:20px}
+  .btn{white-space:nowrap;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;background:var(--ink);color:var(--bg);border:0;padding:10px 14px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
+  .btn:hover{background:var(--acc);color:var(--on-acc)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+  .btn.ghost:hover{border-color:var(--ink)}
+  .btn[hidden]{display:none}
+
+  /* number check (step 5) */
+  .guard{margin-top:18px;border:1px solid var(--rule);background:var(--bg)}
+  .guard .panel-h .mono{color:var(--body)}
+  .guard-body{padding:14px 16px 16px;display:grid;gap:12px}
+  .guard label{color:var(--body);font-size:11px}
+  .guard textarea{width:100%;min-height:118px;resize:vertical;font:16px/1.5 var(--sans);color:var(--ink);background:var(--tile);border:1px solid var(--rule);padding:10px 12px;border-radius:0}
+  .guard textarea:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+  .g-out{font-size:15px;line-height:1.6;color:var(--body)}
+  .g-out .n{font-family:var(--mono);font-size:13px;padding:1px 4px;border-radius:3px;white-space:nowrap}
+  .g-out .n.ok{background:color-mix(in srgb,var(--acc) 18%,transparent);color:var(--ink)}
+  .g-out .n.bad{background:var(--warm);color:#0B0817}
+  .g-verdict{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:15px;line-height:1.4}
+  .g-verdict .badge{margin-top:1px}
+  .g-actions{display:flex;flex-wrap:wrap;gap:8px}
+  .g-allowed{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:13px;color:var(--body)}
+  .g-allowed span{font-family:var(--mono);font-size:12px;border:1px solid var(--rule);padding:2px 6px;color:var(--ink)}
+
+  /* the phone */
+  .phone-wrap{grid-area:phone;position:sticky;top:calc(var(--bar) + 18px);display:flex;flex-direction:column;gap:10px}
+  .phone{background:#0B0817;border-radius:46px;padding:11px;box-shadow:0 34px 60px -34px rgba(11,8,23,.6),inset 0 0 0 1px rgba(255,255,255,.07)}
+  :root[data-theme="dark"] .phone{background:#0D0C11;box-shadow:0 34px 60px -34px rgba(0,0,0,.8),inset 0 0 0 1px var(--rule)}
+  .screen{background:var(--bg);border-radius:36px;overflow:hidden;display:flex;flex-direction:column;transition:background-color .35s}
+  .p-head{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 12px 10px;border-bottom:1px solid var(--rule);background:color-mix(in srgb,var(--tile) 70%,var(--bg))}
+  .p-head .notch{width:86px;height:22px;border-radius:999px;background:#0B0817;margin-bottom:6px}
+  .p-head .av{width:38px;height:38px;border-radius:50%;background:#0B0817;display:grid;place-items:center}
+  .p-head .av svg{width:24px;height:24px}
+  .p-head b{font-size:13px;font-weight:600}
+  .p-head small{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--body)}
+  .thread{height:448px;overflow-y:auto;padding:12px 10px 14px;display:flex;flex-direction:column;gap:4px;scroll-behavior:smooth;overscroll-behavior:contain}
+  .bub{max-width:88%;padding:8px 11px 9px;border-radius:17px;font-size:13.5px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:4px}
+  .bub.bot{align-self:flex-start;background:var(--ghost);color:var(--ink);border-bottom-left-radius:5px}
+  .bub.bot.ai{box-shadow:inset 0 0 0 1.5px var(--warm)}
+  .bub.me{align-self:flex-end;background:var(--acc);color:var(--on-acc);border-bottom-right-radius:5px}
+  .bub.in{animation:bubIn .35s var(--ease)}
+  @keyframes bubIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+  .meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 4px 4px;font:500 9.5px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--body)}
+  .meta .badge{font-size:9px;padding:2px 5px 2px}
+  .meta.r{align-self:flex-end}
+  .sys{align-self:center;text-align:center;font-size:12px;line-height:1.45;color:var(--body);max-width:92%;padding:6px 8px;margin-top:4px}
+  .sys .badge{margin-right:4px;vertical-align:1px;font-size:9px;padding:2px 5px 2px}
+  .sys code{font-family:var(--mono);font-size:11px;color:var(--ink)}
+  .divider{align-self:center;margin:12px 0 2px;font:500 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--body);display:flex;align-items:center;gap:8px}
+  .divider::before,.divider::after{content:"";width:28px;height:1px;background:var(--rule)}
+  .divider.real{color:var(--acc)}
+  .typing{align-self:flex-start;background:var(--ghost);border-radius:17px;border-bottom-left-radius:5px;padding:11px 13px;display:flex;gap:4px;margin-top:4px}
+  .typing i{width:7px;height:7px;border-radius:50%;background:var(--body);opacity:.35;animation:dot 1s infinite}
+  .typing i:nth-child(2){animation-delay:.15s}
+  .typing i:nth-child(3){animation-delay:.3s}
+  @keyframes dot{0%,100%{opacity:.25}50%{opacity:.85}}
+  .replies{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:10px 12px;border-top:1px solid var(--rule);min-height:57px;align-items:center}
+  .replies .hint{font-size:12px;color:var(--body);text-align:center}
+  .chip-btn{font:600 14px/1 var(--sans);padding:10px 16px;border-radius:999px;border:1.5px solid var(--acc);background:transparent;color:var(--ink);cursor:pointer;transition:background .2s,color .2s,transform .15s}
+  .chip-btn:hover{background:color-mix(in srgb,var(--acc) 14%,transparent)}
+  .chip-btn.yes{background:var(--acc);color:var(--on-acc)}
+  .chip-btn.yes:hover{background:color-mix(in srgb,var(--acc) 86%,var(--ink))}
+  .chip-btn:active{transform:translateY(1px)}
+  .inputbar{margin:0 12px 14px;height:34px;border:1px solid var(--rule);border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 14px;color:var(--body);font-size:13.5px}
+  .inputbar i{width:24px;height:24px;border-radius:50%;background:var(--ghost)}
+  .phone-note{font-size:12.5px;color:var(--body);text-align:center;line-height:1.45}
+
+  /* how it works */
+  .flow{display:grid;gap:14px}
+  .pipe{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:30px;counter-reset:node}
+  .node{position:relative;border:1px solid var(--rule);background:var(--bg);padding:16px 16px 18px;display:flex;flex-direction:column;gap:8px;transition:background-color .35s}
+  .node.ai{border-color:var(--warm);box-shadow:inset 0 3px 0 var(--warm)}
+  .node.me{box-shadow:inset 0 3px 0 var(--ink)}
+  .node.code{box-shadow:inset 0 3px 0 var(--acc)}
+  .node .nh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .node .nh .mono{color:var(--body);font-size:11px}
+  .node b{font-family:var(--serif);font-weight:700;font-size:20px;line-height:1.15;letter-spacing:-.01em}
+  .node p{color:var(--body);font-size:14.5px;line-height:1.5}
+  .pipe .node:not(:last-child)::after{content:"";position:absolute;top:50%;right:-23px;width:16px;height:16px;transform:translateY(-50%);
+    background:no-repeat center/16px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 8h12M9 3.5 13.5 8 9 12.5' fill='none' stroke='%236D4FE8' stroke-width='1.6'/%3E%3C/svg%3E")}
+  .split{height:34px;position:relative}
+  .split svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .split path{fill:none;stroke:var(--acc);stroke-width:1.6;vector-effect:non-scaling-stroke}
+  .outs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:30px}
+  .chain{list-style:none;display:flex;flex-wrap:wrap;gap:6px 4px;align-items:center;margin-top:4px}
+  .chain li{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink);border:1px solid var(--rule);padding:5px 8px;background:var(--tile)}
+  .chain li{position:relative}
+  .chain li + li::before{content:"\2192";color:var(--acc);position:absolute;left:-15px;top:50%;transform:translateY(-50%);font-size:12px}
+  .chain li + li{margin-left:18px}
+  .guards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--rule);background:var(--tile);margin-top:clamp(28px,4vw,40px)}
+  .guards div{padding:16px;border-right:1px solid var(--rule)}
+  .guards div:last-child{border-right:0}
+  .guards b{display:block;font-family:var(--serif);font-weight:700;font-size:18px;line-height:1.2;margin-bottom:6px}
+  .guards span{color:var(--body);font-size:14px;line-height:1.5;display:block}
+  .built{margin-top:18px;color:var(--body);font-size:15px}
+  .built b{color:var(--ink);font-weight:600}
+  .built a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--acc);text-underline-offset:3px;overflow-wrap:anywhere}
+
+  /* results */
+  .res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .rcard{border:1px solid var(--rule);background:var(--bg);display:flex;flex-direction:column}
+  .rband{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:var(--nbg);color:var(--nink)}
+  .rband .mono{font-size:11px;color:var(--nbody)}
+  .rband b{font-family:var(--mono);font-weight:500;font-size:15px;letter-spacing:.02em}
+  .rbody{padding:14px;display:grid;gap:10px}
+  .rbody .fsub{color:var(--body);font-size:13px}
+  .rline{display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;gap:8px;font-family:var(--mono);color:var(--body);border-top:1px solid var(--rule);padding-top:10px}
+  .rline span{display:flex;flex-direction:column;gap:3px;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+  .rline b{color:var(--ink);font-weight:500;font-size:13px;letter-spacing:0;text-transform:none}
+  .rbig{font-family:var(--serif);font-weight:700;font-size:40px;line-height:1;letter-spacing:-.02em}
+  .rnote{color:var(--body);font-size:15px;margin-top:14px}
+  .rnote b{color:var(--ink);font-weight:600}
+  .bt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:clamp(32px,4.5vw,48px)}
+  .bt .panel{background:var(--bg)}
+  .bt .panel-h .mono{color:var(--body)}
+  .bt table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  .bt th,.bt td{padding:9px 16px;border-bottom:1px solid var(--rule);text-align:left;font-size:14.5px}
+  .bt td + td,.bt th + th{text-align:right}
+  .bt th{font-family:var(--mono);font-weight:500;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--body)}
+  .bt tr:last-child td{border-bottom:0}
+  .bt tr.us td{font-weight:600;color:var(--ink)}
+  .bt tr.us td:first-child::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:8px;vertical-align:1px}
+  .bt td{color:var(--body)}
+  .bt .cap{padding:12px 16px 14px;color:var(--body);font-size:13.5px;line-height:1.5;border-top:1px solid var(--rule)}
+
+  @media (max-width:1100px){
+    .guards{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .guards div:nth-child(2n){border-right:0}
+    .guards div:nth-child(n+3){border-top:1px solid var(--rule)}
+  }
+  @media (max-width:960px){
+    .pipe{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .pipe .node:nth-child(2)::after{display:none}
+    .split{display:none}
+    .outs{gap:16px}
+    .pipe{gap:16px 30px}
+  }
+  @media (max-width:900px){
+    .band{grid-template-columns:1fr}
+    .stage{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"head" "phone" "lanes" "nav"}
+    .phone-wrap{position:static;justify-self:center;width:100%;max-width:380px;margin-bottom:24px}
+    .thread{height:auto;min-height:260px;overflow:visible}
+    .res{grid-template-columns:1fr;gap:10px}
+    .rcard{display:grid;grid-template-columns:minmax(0,1fr)}
+    .bt{grid-template-columns:1fr}
+  }
+  @media (max-width:640px){
+    .steps{margin-left:0;margin-right:0}
+    .step-tab{padding:10px 6px 12px;gap:4px;align-items:center;text-align:center}
+    .step-tab b,.step-tab .when{display:none}
+    .step-tab .short{display:block;font-size:10.5px;letter-spacing:.04em;color:inherit}
+    .step-tab .stp{font-family:var(--serif);font-weight:700;font-size:20px;letter-spacing:0;color:var(--acc)}
+    .step-tab .bd{justify-content:center;gap:3px}
+    .step-tab .bd .badge{font-size:0;width:8px;height:8px;padding:0;border-radius:50%}
+    .step-tab.done .stp::after{font-size:13px}
+    .lane{grid-template-columns:1fr;gap:10px;padding:14px 0}
+    .lane .lab{flex-direction:row;align-items:center;gap:8px}
+    .legend li{grid-template-columns:56px minmax(0,1fr)}
+    .pipe,.outs{grid-template-columns:1fr;gap:26px}
+    .pipe .node::after{display:block!important;top:auto;right:auto;left:22px;bottom:-22px;transform:rotate(90deg)}
+    .pipe .node:last-child::after{display:block!important;content:""}
+    .guards{grid-template-columns:1fr}
+    .guards div{border-right:0!important}
+    .guards div + div{border-top:1px solid var(--rule)}
+    .bt th,.bt td{padding:8px 12px}
+    .stage-head h3{font-size:26px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .thread{scroll-behavior:auto}
+    .typing i{animation:none;opacity:.6}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="../" aria-label="Ian Sabia, home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
+      <span class="mono" style="font-size:13px">Ian Sabia</span>
+    </a>
+    <nav aria-label="Main">
+      <span class="links">
+        <a href="../#currently">Currently</a>
+        <a href="../#work">Work</a>
+        <a href="../#projects" aria-current="true">Projects</a>
+        <a href="../#milan">Milan</a>
+        <a href="../#off">Off the clock</a>
+        <a href="../#contact">Contact</a>
+      </span>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu <i aria-hidden="true"></i></button>
+      <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
+    </nav>
+    <div class="menu" id="menu">
+      <a href="../#currently">Currently <span class="mono">01</span></a>
+      <a href="../#work">Work <span class="mono">02</span></a>
+      <a href="../#projects" aria-current="true">Projects <span class="mono">03</span></a>
+      <a href="../#milan">Milan <span class="mono">04</span></a>
+      <a href="../#off">Off the clock <span class="mono">05</span></a>
+      <a href="../#contact">Contact <span class="mono">06</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <header class="page-hero">
+      <div class="kicker mono"><a href="../#projects">Projects</a><span aria-hidden="true">/</span><span>Python &middot; agents</span></div>
+      <h1>Fantasy AI <em>Manager</em></h1>
+      <p class="lede">I was in too many fantasy football leagues, and managing them took hours I don't have in college. So I built a bot that runs my teams end to end. I don't open the ESPN app anymore.</p>
+      <div class="facts mono"><span>Leagues<b>3 live</b></span><span>Python<b>~8,700 lines</b></span><span>Tests<b>23 files</b></span><span>Since<b>Sep 30, 2026</b></span></div>
+      <div class="actions"><a class="more" href="#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="more quiet" href="https://github.com/Iansabia/fantasy-ai">View the code on GitHub <span aria-hidden="true">&nearr;</span></a></div>
+    </header>
+
+    <section class="band night reveal" aria-label="The rule the bot follows">
+      <div>
+        <span class="mono">The one rule</span>
+        <p class="big"><b>Plain code makes every decision.</b> The AI only labels news and writes explanations, and it's <em>never allowed to invent a number.</em></p>
+      </div>
+      <ul class="legend">
+        <li><span class="badge code">Code</span><span><b>Decides.</b> Player values, lineups, waiver and trade scores.</span></li>
+        <li><span class="badge ai">AI</span><span><b>Labels and explains.</b> Turns news and my texts into small labels.</span></li>
+        <li><span class="badge me">Me</span><span><b>Approves.</b> Adds, drops and trades wait for my reply.</span></li>
+      </ul>
+    </section>
+
+    <section class="block" id="demo">
+      <div class="head reveal"><h2>A week with the bot</h2><span class="num mono">01</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">Steps 1 to 3 are real texts from my leagues, with the league names hidden. Steps 4 and 5 run made-up leagues through the real code and are marked Example. Nothing on this page sends anything.</p>
+
+      <div class="steps" role="tablist" aria-label="Steps in the week" id="steps"></div>
+      <div class="stage" id="stage" role="tabpanel" tabindex="-1">
+        <div class="stage-head" id="sHead"></div>
+        <div class="phone-wrap">
+          <div class="phone" role="region" aria-label="Text messages from the bot">
+            <div class="screen">
+              <div class="p-head" aria-hidden="true">
+                <span class="notch"></span>
+                <span class="av"><svg viewBox="0 0 64 64"><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg></span>
+                <b>Fantasy AI</b>
+                <small>iMessage</small>
+              </div>
+              <div class="thread" id="thread" aria-live="polite" tabindex="0" aria-label="Message thread"></div>
+              <div class="replies" id="replies"></div>
+              <div class="inputbar" aria-hidden="true"><span>iMessage</span><i></i></div>
+            </div>
+          </div>
+          <p class="phone-note" id="phoneNote"></p>
+        </div>
+        <div class="lanes" id="sLanes"></div>
+        <div class="step-nav"><button class="btn ghost" id="prevBtn">&larr; Back</button><button class="btn" id="nextBtn">Next step &rarr;</button></div>
+      </div>
+      <noscript><p class="sub">The demo needs JavaScript. The code and its tests are on GitHub.</p></noscript>
+    </section>
+
+    <section class="block" id="how">
+      <div class="head reveal"><h2>How it works</h2><span class="num mono">02</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">Most of it is plain Python. The AI shows up in two places, and both are boxed in.</p>
+      <div class="flow reveal">
+        <ol class="pipe">
+          <li class="node code"><div class="nh"><span class="mono">1 &middot; Schedule</span><span class="badge code">Code</span></div><b>Wake up</b><p>Runs on my Mac. A full run Thursday at 2pm, a recheck Saturday at 2pm and a last check Sunday at 11:45am, after inactives. It catches up if the laptop was asleep.</p></li>
+          <li class="node"><div class="nh"><span class="mono">2 &middot; Read</span><span class="badge data">Data</span></div><b>Read ESPN and the news</b><p>ESPN has no public API, so it uses the same private endpoints ESPN's own site uses. Plus news feeds, Sleeper, Vegas lines, weather and usage stats.</p></li>
+          <li class="node ai"><div class="nh"><span class="mono">3 &middot; Label</span><span class="badge ai">AI</span></div><b>Label the news</b><p>Each news item becomes a tiny JSON label: status, practice, role change, a short note. Anything malformed gets dropped.</p></li>
+          <li class="node code"><div class="nh"><span class="mono">4 &middot; Decide</span><span class="badge code">Code</span></div><b>Make every call</b><p>Labels turn into capped number changes. Then code values every player and searches for the best lineup, adds and trades.</p></li>
+        </ol>
+        <div class="split" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><path d="M87.5 0 V12 H25 V34 M87.5 12 H75 V34"/></svg></div>
+        <div class="outs">
+          <div class="node code"><div class="nh"><span class="mono">5a &middot; On its own</span><span class="badge code">Code</span></div><b>Lineups and IR</b><p>Saved on ESPN with no reply needed. Then it texts me what moved and why, with the source for every reason.</p>
+            <ol class="chain" aria-label="Steps"><li>Set lineup</li><li>Move IR</li><li>Text me</li></ol></div>
+          <div class="node me"><div class="nh"><span class="mono">5b &middot; Waits for me</span><span class="badge me">Me</span></div><b>Adds, drops, trades</b><p>Texted with pros, cons and a verdict. I reply "approve 15". Free text like "start Mitchell" gets an AI intent label, and code does the rest.</p>
+            <ol class="chain" aria-label="Steps"><li>Queue</li><li>Text me</li><li>My reply</li><li>Re-check</li><li>Send</li></ol></div>
+        </div>
+      </div>
+      <div class="guards reveal">
+        <div><b>Slow on purpose</b><span>Cached reads, random gaps, at most 3 writes a run and 6 a day per league. Any error pauses that league for a day and texts me.</span></div>
+        <div><b>Re-check, then send</b><span>Approving re-reads the league first. If a player moved, got picked up or locked, nothing is sent.</span></div>
+        <div><b>Only my team</b><span>Every request is checked against my team ID before it goes out, test runs included.</span></div>
+        <div><b>No made-up numbers</b><span>If an AI-written note has a number that isn't in the facts, the note gets thrown out.</span></div>
+      </div>
+      <p class="built reveal">I built it with <b>Claude Code</b>, starting Sep 30, 2026. It's about 8,700 lines of Python with 23 test files. The ESPN request shapes follow two open-source projects, <a href="https://github.com/heyitaki/espn-fantasy-football-mcp">heyitaki/espn-fantasy-football-mcp</a> and <a href="https://github.com/jwulff/fantasy-sports">jwulff/fantasy-sports</a>.</p>
+    </section>
+
+    <section class="block" id="results">
+      <div class="head reveal"><h2>Results</h2><span class="num mono">03</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">It took over all three teams in week 4. Here's where they stand, and how its calls hold up against the experts.</p>
+      <div class="res reveal" id="records"></div>
+      <p class="rnote reveal">Records as of <b>Oct 22, 2026</b>, the same snapshot as my home page.</p>
+      <div class="bt reveal">
+        <div class="panel">
+          <div class="panel-h"><span class="mono">Weekly start/sit calls &middot; 2023 to 2025</span></div>
+          <table>
+            <thead><tr><th scope="col">Source</th><th scope="col">Pairs right</th></tr></thead>
+            <tbody>
+              <tr class="us"><td>The bot, replayed</td><td>67.3%</td></tr>
+              <tr><td>ESPN</td><td>67.0%</td></tr>
+              <tr><td>FantasyPros experts</td><td>66.9%</td></tr>
+              <tr><td>Sleeper</td><td>66.8%</td></tr>
+              <tr><td>Points per game so far</td><td>64.5%</td></tr>
+            </tbody>
+          </table>
+          <p class="cap">Share of same-position player pairs it put in the right order. This replays its weekly formula. News and injury calls can't be replayed, so they're left out. The edge over ESPN is small, and I'd rather say so.</p>
+        </div>
+        <div class="panel">
+          <div class="panel-h"><span class="mono">Rest of season &middot; 2023 to 2025</span></div>
+          <table>
+            <thead><tr><th scope="col">Source</th><th scope="col">Rank match</th></tr></thead>
+            <tbody>
+              <tr class="us"><td>The blend it uses now</td><td>0.574</td></tr>
+              <tr><td>FantasyPros experts</td><td>0.561</td></tr>
+              <tr><td>ESPN weekly projection</td><td>0.491</td></tr>
+              <tr><td>Its old value</td><td>0.481</td></tr>
+            </tbody>
+          </table>
+          <p class="cap">Rank correlation with points actually scored. The experts beat its old value (the part I could replay), so the bot switched to a blend fitted on seasons it didn't train on. FantasyCalc has no values before 2026, so it isn't in these tables. This season the bot saves its values next to FantasyCalc's every week and scores both against real points.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="back"><a class="more" href="../#projects"><span aria-hidden="true">&larr;</span> All projects</a><a class="more quiet" href="https://github.com/Iansabia/fantasy-ai">View the code on GitHub <span aria-hidden="true">&nearr;</span></a></div>
+  </main>
+
+  <footer>
+    <p>Made in Boston. No trackers.</p>
+    <div class="stamp mono"><span>Revised<b>2026-10-23</b></span></div>
+  </footer>
+</div>
+<script src="../assets/site.js"></script>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ---------- real texts (league names hidden) and Example texts (made-up leagues, real code) ---------- */
+  const T = {
+    waiver: `❓ Free agent add #15 | League A
+
+Add Keenan Allen (WR), no drop
+Pros:
+• gain +6.4 pts over 3 wks: lineup +6.4 (starts 3 of 3)
+• fixes WR: Adonai Mitchell is WR 23 of 24 (bottom 3 (WR 23 of 24); questionable)
+Cons:
+• none found
+Verdict: worth it, +6.4 pts over 3 wks (needs +3)
+
+Reply 'approve 15' or 'reject 15'`,
+    lineupA: `🏈 League A | Lineup set
+116.8 → 118.8 proj (+1.9)
+
+Starting:
+• Keenan Allen: BE → WR
+   Worth 7.9 (ESPN proj 9.0); Sleeper projects 8.1 vs ESPN 9.0 (both if he plays); team implied total 20.0
+
+Benched:
+• Adonai Mitchell: WR → BE
+   Worth 5.9 (ESPN proj 7.3), others higher; Adonai Mitchell questionable, decision deferred to the final pre-game run (Thu 7:00PM ET); no injury haircut yet; Sleeper projects 3.6 vs ESPN 7.3 (both if he plays); team implied total 20.5
+
+✅ Already saved on ESPN. No reply needed.`,
+    alert: `⚠️ League A | Lineup problem
+
+• WR at risk: Jaylen Waddle is questionable and starts; if he is ruled out after Sun 1:00PM ET there is no WR left (Adonai Mitchell locks first). Text 'start Adonai Mitchell' to play it safe (Adonai Mitchell worth 5.9, Jaylen Waddle 11.8 if he plays)`,
+    thuB: `🏈 League B | Lineup set
+89.6 → 128.2 proj (+38.7)
+
+Starting:
+• Lamar Jackson: BE → QB
+   Worth 22.3 (ESPN proj 22.2); Lamar Jackson questionable, decision deferred to the final pre-game run (Sat 2:00PM ET); no injury haircut yet; team implied total 27.0; Sleeper projects 20.6 vs ESPN 22.2 (both if he plays)
+…`,
+    satB: `🏈 League B | Lineup set
+109.1 → 129.4 proj (+20.3)
+
+Starting:
+• Patrick Mahomes: BE → QB
+   Worth 20.3 (ESPN proj 21.7); Sleeper projects 18.5 vs ESPN 21.7 (both if he plays); team implied total 24.5
+
+Benched:
+• Lamar Jackson: QB → BE
+   OUT (ESPN)
+
+✅ Already saved on ESPN. No reply needed.`,
+    beatB: `✅ League B | Saturday recheck
+
+• 2 lineup moves set`,
+    trade: `❓ Trade proposal #9 | Example League
+
+Give Backup Bo, Flex Fred, Slot Sam | get Rival RB1 (Rival Squad)
+Pros:
+• our lineup +52.1 pts rest of season
+• fixes RB: Depth Dan is RB 20 of 20 (bottom 3 (RB 20 of 20))
+• FantasyCalc: we pay 5200 for 5200 (+0.0%)
+Cons:
+• leaves 1 QB (no backup)
+• leaves 2 WR (no backup)
+• FRAGILE: verdict can flip if values move 5%
+For them: lineup +6.2 ROS; Rival Squad is 10 of 10 at QB
+Verdict: good for us, close call for them
+
+Reply 'approve 9' or 'reject 9'`,
+    weekly: `🏈 Example League | Week 4
+vs Rival Squad: 31.4 - 18.2
+
+Lineup: 109.0 proj (+27.0 from 6 moves)
+
+Out:
+• Hurt Hal (OUT)
+• Season Sid (IR)
+
+Top waiver idea:
+• Add Rising Rb
+• Drop Flex Fred`,
+  };
+
+  /* the facts dict the weekly note is built from (insights.build_facts on the repo's demo league) */
+  const FACTS = {"league": "Example League", "team": "My Team", "week": 4, "matchup": {"matchup_period": 4, "my_points": 31.4, "opp_team_id": 2, "opp_name": "Rival Squad", "opp_points": 18.2}, "lineup_moves": ["benched Hurt Hal: OUT (ESPN)", "benched Bye Bill: bye week", "benched Flex Fred: worth 8.0 (ESPN proj 8.0), others higher", "started Ready Rex at RB: worth 12.0 (ESPN proj 12.0)", "started Bench Ben at WR: worth 13.0 (ESPN proj 13.0)", "started Slot Sam at RB/WR/TE: worth 10.0 (ESPN proj 10.0)"], "move_count": 6, "projected_before": 82.0, "projected_after": 109.0, "projected_gain": 27.0, "lineup_warnings": [], "injured_out": ["Hurt Hal (OUT)", "Season Sid (INJURY_RESERVE)"], "on_bye": ["Bye Bill"], "waiver_ideas": [{"add": "Rising Rb", "drop": "Flex Fred", "gain": 8.7, "kind": "FREEAGENT", "reason": "Rising Rb (RB, free agent): drop Flex Fred (WR), +8.7 pts over 3 wks."}], "recent_transactions": ["Rival Squad: WAIVER EXECUTED"]};
+  const DRAFT = "Week 4 in the Example League: you lead Rival Squad 31.4 to 18.2 so far. I made 6 lineup changes, so your lineup now projects 109.0, up 27.0. Hurt Hal is out and Season Sid is on IR. One idea waits for your OK: add Rising Rb and drop Flex Fred.";
+  const SNEAK = " That's about a 75% chance to win.";
+
+  /* ---------- the five steps ---------- */
+  const code = '<span class="badge code">Code</span>', ai = '<span class="badge ai">AI</span>', me = '<span class="badge me">Me</span>';
+  const STEPS = [
+    {
+      short: 'Waivers', when: 'Thu 1:12pm', title: 'A waiver idea', badges: ['code', 'me'],
+      tag: ['real', 'Real text · Thu Oct 22, 2026 · League A'],
+      h: 'Thursday, 1:12pm. <em>A waiver idea.</em>',
+      intro: "One of my starting receivers was hurt and ranked near the bottom of the league. The bot found a free agent who'd start for me, and asked first.",
+      sees: "<p>My roster and the best free agents. Adonai Mitchell, one of my two starting receivers, is questionable. He ranks 23rd of the 24 starting WRs in the league.</p>",
+      code: `<p>It pairs each top free agent with every bench player it could legally drop, then scores the swap over the next 3 weeks.</p>
+        <div class="calc">
+          <div><span>gain</span> = lineup gain + rest-of-season part</div>
+          <div><span>lineup gain</span> = best lineup with him, minus best lineup without, over 3 weeks</div>
+          <div><span>rest-of-season part</span> = his value above a waiver-wire player &times; his share of starts, minus the same for the drop</div>
+          <div><span>bar</span> = +3 for a free agent, +8 for a waiver claim, since a claim spends my priority</div>
+        </div>
+        <p class="worked">Here: lineup <b>+6.4</b>, and he starts all 3 weeks. There's an open roster spot, so nobody gets dropped and only the lineup counts. +6.4 clears the +3 bar.</p>`,
+      ai: "<p><b>Nothing.</b> The whole text is a template filled in with the numbers above. Even \"fixes WR\" comes from code that ranks every starter in the league.</p>",
+      me: "<p><b>Yes.</b> Adds, drops and trades always wait for my reply. If I approve, it re-reads the league and stops if anything changed. No reply in 12 hours and it expires.</p>",
+      outcome: "<span class=\"mono\">What I really did</span>I approved it. The 2pm Thursday run started him at WR.",
+      thread: [{ t: 'bot', text: T.waiver, meta: [code, 'Template · 1:12pm'] }],
+      replies: [
+        { label: 'Approve', yes: true, then: [
+          { t: 'me', text: 'approve 15' },
+          { t: 'sys', html: 'Simulated. Before it sends, it re-reads League A: Keenan Allen still a free agent ✓ &middot; open roster spot ✓ &middot; same week ✓' },
+          { t: 'bot', text: '#15 sent. ESPN status: EXECUTED. Read-back confirms the change.', meta: [code, 'Template'] }] },
+        { label: 'Skip', then: [
+          { t: 'me', text: 'reject 15' },
+          { t: 'bot', text: '#15 rejected. Nothing sent.', meta: [code, 'Template'] },
+          { t: 'sys', html: "It won't text the same idea again this week." }] }],
+      after: [{ t: 'div', text: 'What really happened', real: true }, { t: 'bot', text: T.lineupA, meta: [code, 'Real · 2:09pm, same day'] }],
+      note: 'Tap Approve or Skip, like I would.',
+    },
+    {
+      short: 'News', when: 'Thu 2:09pm', title: 'A news alert', badges: ['ai', 'code'],
+      tag: ['real', 'Real text · Thu Oct 22, 2026 · League A'],
+      h: 'Thursday, 2:09pm. <em>A risky starter.</em>',
+      intro: "Jaylen Waddle was limited in practice on Wednesday. The AI labeled the news, plain code turned the label into a number, and it spotted a problem with Sunday.",
+      sees: "<p>ESPN news from Wednesday, Oct 21: limited in practice with a chest injury. ESPN tags him Questionable.</p>",
+      ai: `<p>Turns the news item into a small label. Nothing else.</p>
+<pre class="json">{
+  <span class="k">"player"</span>: <span class="s">"Jaylen Waddle"</span>,
+  <span class="k">"practice"</span>: <span class="s">"limited"</span>,
+  <span class="k">"practice_day"</span>: <span class="s">"wed"</span>,
+  <span class="k">"usage_note"</span>: <span class="s">"Limited Wednesday practice with chest injury. Status TBD."</span>
+}</pre>
+        <p class="fine">Its prompt says: do not recommend starts or sits. The raw label isn't stored, so this one is rebuilt from the reason line the bot saved.</p>`,
+      code: `<div class="calc">
+          <div>limited on a Wednesday &rarr; about <b>85%</b> to play</div>
+          <div>blend with ESPN's questionable default, <b>67%</b>, by how sure the label is &rarr; counts <b>84%</b></div>
+          <div>a later run still comes before his game &rarr; no haircut yet, so he starts at full value, <b>11.8</b></div>
+          <div>slot check: his backup's game locks first, so if he's ruled out late, nobody is left to swap in &rarr; text me</div>
+        </div>
+        <p class="fine">In 2023 to 2025, questionable players played about two thirds of the time. Midweek odds like the 85% are estimates, not measured, and sit between the final-report rates.</p>`,
+      me: "<p><b>No.</b> My rule is that questionable players play. One text changes it.</p>",
+      thread: [{ t: 'bot', text: T.alert, meta: [code, 'Template · 2:09pm'] }],
+      replies: [
+        { label: 'start Adonai Mitchell', yes: true, then: [
+          { t: 'me', text: 'start Adonai Mitchell' },
+          { t: 'sys', html: '<span class="badge ai">AI</span>Labels my text: <code>intent: start, player: Adonai Mitchell</code>. Example label. Code makes the change.' },
+          { t: 'bot', text: 'Got it. Adonai Mitchell will start in League A this week. The next lineup run will use this.', meta: [code, 'Template'] }] },
+        { label: 'Ignore', then: [
+          { t: 'sys', html: 'Nothing sent. Waddle keeps his spot, and the last run before his game checks the news again.' }] }],
+      note: 'Tap a reply. Texting the name is a real code path.',
+    },
+    {
+      short: 'Lineup', when: 'Sat 2:27pm', title: 'The lineup swap', badges: ['code'],
+      tag: ['real', 'Real texts · Thu Oct 15 and Sat Oct 17, 2026 · League B'],
+      h: 'Saturday, 2:27pm. <em>The swap.</em>',
+      intro: "Lamar Jackson was questionable all week. On Thursday the bot started him and waited. On Saturday ESPN ruled him out, and the bot swapped in Patrick Mahomes on its own.",
+      sees: "<p>Thursday: Lamar is questionable and worth 22.3. Saturday: ESPN lists him OUT.</p>",
+      code: `<div class="calc">
+          <div><span>worth</span> = ESPN projection &times; news &times; status &times; capped factors</div>
+          <div><span>factors</span>: Sleeper's projection, Vegas team total, home or away, weather, usage. Each is capped, and together they stay between &times;0.70 and &times;1.35</div>
+          <div>an exact search over ESPN's slot rules picks the best legal lineup. OUT, IR and bye players can't start</div>
+          <div>a healthy starter only gets benched for a clear upgrade: <b>1.0</b> point and <b>5%</b> better</div>
+        </div>
+        <p class="worked">Thursday it started Lamar and waited. Saturday: Lamar <b>0</b>, Mahomes <b>20.3</b>. Lineup 109.1 &rarr; 129.4.</p>`,
+      ai: "<p><b>Nothing for the decision.</b> The OUT tag came straight from ESPN. If I text \"why?\", the AI writes the answer from the saved lineup facts.</p>",
+      me: "<p><b>No.</b> Lineups and IR moves run on their own. It texts me after.</p>",
+      thread: [
+        { t: 'bot', text: T.thuB, meta: [code, 'Thu Oct 15 · trimmed, 5 more moves'] },
+        { t: 'div', text: 'Saturday, Oct 17' },
+        { t: 'bot', text: T.satB, meta: [code, 'Template · 2:27pm'] },
+        { t: 'bot', text: T.beatB, meta: [code, 'Template'] }],
+      replies: [
+        { label: "why'd you bench Lamar?", then: [
+          { t: 'me', text: "why'd you bench Lamar?" },
+          { t: 'bot', ai: true, text: "ESPN listed Lamar Jackson as OUT on Saturday, so he can't score this week. Patrick Mahomes was your best QB left, worth 20.3. The swap is already saved on ESPN.", meta: [ai, 'Example answer'] },
+          { t: 'sys', html: 'The AI writes answers like this from the saved lineup facts only.' }] }],
+      note: 'No reply needed. You can still ask why.',
+    },
+    {
+      short: 'Trade', when: 'On request', title: 'A trade idea', badges: ['code', 'me'],
+      tag: ['example', 'Made-up 10-team league, real trade engine'],
+      h: 'A trade idea. <em>Both sides have to win.</em>',
+      intro: "I have a spare QB and a weak RB. One rival has the worst QB room in the league and plenty of RBs. The engine looks for a deal that helps both of us.",
+      sees: "<p>All 10 rosters: each team's rank at QB, RB, WR and TE, its holes and its spare players. Plus FantasyCalc market values.</p>",
+      code: `<div class="calc">
+          <div><span>team value</span> = its best lineups (next 3 weeks + rest of season) + a small credit for backups, all above a waiver-wire player</div>
+          <div>keep a deal only if their lineup gains at least <b>+6</b>, it fills one of their holes, and we still come out ahead</div>
+          <div><span>price</span>: no penalty at 90 to 105% of market value, never 20% or more over</div>
+          <div>re-run both sides with values moved 5%. If the verdict could flip, it says <b>FRAGILE</b></div>
+        </div>
+        <p class="worked">Here: us <b>+52.1</b>, them <b>+6.2</b>, 5200 for 5200 on FantasyCalc. Fair, but fragile, and the text says so.</p>`,
+      ai: "<p><b>Nothing.</b> Even the pitch it drafts for me to send is a template:</p><blockquote>Hey Rival Squad, you're 10 of 10 at QB, and Backup Bo would start for you. Would you trade Rival RB1 for Backup Bo, Flex Fred and Slot Sam?</blockquote>",
+      me: "<p><b>Yes.</b> Approving only sends the offer. The other team still has to say yes, and accepting trades isn't built at all.</p>",
+      thread: [{ t: 'bot', text: T.trade, meta: [code, 'Template · Example data'] }],
+      replies: [
+        { label: 'Approve', yes: true, then: [
+          { t: 'me', text: 'approve 9' },
+          { t: 'sys', html: 'Simulated. It re-reads the league first: Backup Bo, Flex Fred and Slot Sam still mine ✓ &middot; Rival RB1 still on Rival Squad ✓' },
+          { t: 'bot', text: '#9 sent.', meta: [code, 'Template'] },
+          { t: 'sys', html: 'That only sends the offer. Rival Squad still has to accept.' }] },
+        { label: 'Skip', then: [
+          { t: 'me', text: 'reject 9' },
+          { t: 'bot', text: '#9 rejected. Nothing sent.', meta: [code, 'Template'] }] }],
+      note: 'Example data. Tap Approve or Skip.',
+    },
+    {
+      short: 'Note', when: 'Weekly', title: 'The weekly note', badges: ['code', 'ai'],
+      tag: ['example', "The repo's demo league, real code"],
+      h: 'The weekly note. <em>Numbers checked.</em>',
+      intro: "A short text with the score, the moves and anything waiting on me. Code builds it. The AI can make it friendlier, but only if every number checks out.",
+      sees: "<p>The week's facts as one list: score so far, lineup moves, who's out, byes and waiver ideas.</p>",
+      code: "<p>Builds the facts and the text in the phone from a template. That's the version that gets texted.</p><p>If the AI rewrites it, code checks every number in the new version. One number that isn't in the facts, and the AI text is thrown out. Try it below.</p>",
+      ai: "<p>Can rewrite the note in friendlier words. Its prompt says: use only these facts, and don't add, change or compute any number.</p>",
+      me: "<p><b>No.</b> It's just a note.</p>",
+      guard: true,
+      thread: [{ t: 'bot', text: T.weekly, meta: [code, 'Template · Example data'] }],
+      replies: [],
+      note: 'Example data from the repo.',
+    },
+  ];
+  const LANES = [['sees', '<span class="badge data">Sees</span>', 'What it sees'], ['code', code, 'Code decides'], ['ai', ai, 'AI writes'], ['me', me, 'Waits for me?']];
+  const state = STEPS.map(() => ({ choice: null }));
+  let cur = 0, busy = 0;
+
+  /* ---------- timeline tabs ---------- */
+  const stepsEl = $('steps');
+  STEPS.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'step-tab'; b.type = 'button'; b.id = 'step-' + i;
+    b.setAttribute('role', 'tab'); b.setAttribute('aria-controls', 'stage');
+    b.innerHTML = '<span class="mono stp">' + String(i + 1).padStart(2, '0') + '<span class="when"> &middot; ' + esc(s.when) + '</span></span>' +
+      '<b>' + esc(s.title) + '</b><span class="mono short">' + esc(s.short) + '</span>' +
+      '<span class="bd" aria-hidden="true">' + s.badges.map((k) => '<span class="badge ' + k + '">' + (k === 'ai' ? 'AI' : k === 'me' ? 'Me' : 'Code') + '</span>').join('') + '</span>';
+    b.addEventListener('click', () => show(i, true));
+    b.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); show(e.key === 'Home' ? 0 : STEPS.length - 1, true); focusTab(); return; }
+      if (d) { e.preventDefault(); show((i + d + STEPS.length) % STEPS.length, true); focusTab(); }
+    });
+    stepsEl.appendChild(b);
+  });
+  const tabs = [...stepsEl.children];
+  const focusTab = () => tabs[cur].focus();
+
+  /* ---------- the phone ---------- */
+  const thread = $('thread'), replies = $('replies');
+  const stick = () => { if (thread.scrollHeight > thread.clientHeight + 4) thread.scrollTop = thread.scrollHeight; };
+  function add(m, animate) {
+    let el;
+    if (m.t === 'div') {
+      el = document.createElement('div'); el.className = 'divider' + (m.real ? ' real' : ''); el.textContent = m.text;
+      thread.appendChild(el); return el;
+    }
+    if (m.t === 'sys') {
+      el = document.createElement('p'); el.className = 'sys'; el.innerHTML = m.html;
+      thread.appendChild(el); return el;
+    }
+    el = document.createElement('div');
+    el.className = 'bub ' + (m.t === 'me' ? 'me' : 'bot') + (m.ai ? ' ai' : '') + (animate && !reduce ? ' in' : '');
+    el.textContent = m.text;
+    thread.appendChild(el);
+    if (m.meta) {
+      const meta = document.createElement('div');
+      meta.className = 'meta' + (m.t === 'me' ? ' r' : '');
+      meta.innerHTML = m.meta[0] + '<span>' + esc(m.meta[1]) + '</span>';
+      thread.appendChild(meta);
+    }
+    return el;
+  }
+  function renderReplies(i) {
+    const s = STEPS[i];
+    replies.innerHTML = '';
+    if (!s.replies.length || state[i].choice !== null) {
+      const p = document.createElement('p'); p.className = 'hint';
+      p.textContent = !s.replies.length ? 'Nothing to answer. It just lands in my texts.' : 'Done. Pick another step above, or go on.';
+      replies.appendChild(p); return;
+    }
+    s.replies.forEach((r, k) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip-btn' + (r.yes ? ' yes' : '');
+      b.textContent = r.label;
+      const sent = r.then.find((x) => x.t === 'me');
+      if (sent && sent.text !== r.label) b.setAttribute('aria-label', r.label + ' (texts "' + sent.text + '")');
+      b.addEventListener('click', () => choose(i, k));
+      replies.appendChild(b);
+    });
+  }
+  function choose(i, k) {
+    if (state[i].choice !== null) return;
+    state[i].choice = k;
+    const token = ++busy, s = STEPS[i], items = s.replies[k].then.concat(s.after || []);
+    renderReplies(i);
+    tabs[i].classList.add('done');
+    let t = 0;
+    items.forEach((m, n) => {
+      const isBot = m.t === 'bot';
+      const wait = reduce ? 0 : (n === 0 ? 0 : isBot ? 900 : 450);
+      t += wait;
+      setTimeout(() => {
+        if (token !== busy || cur !== i) return;
+        const typing = thread.querySelector('.typing'); if (typing) typing.remove();
+        add(m, true);
+        const next = items[n + 1];
+        if (next && next.t === 'bot' && !reduce) {
+          const d = document.createElement('div'); d.className = 'typing'; d.setAttribute('aria-hidden', 'true');
+          d.innerHTML = '<i></i><i></i><i></i>'; thread.appendChild(d);
+        }
+        stick();
+        if (n === items.length - 1) showOutcome(i);
+      }, t);
+    });
+  }
+
+  /* ---------- explanation lanes ---------- */
+  function showOutcome(i) {
+    const s = STEPS[i];
+    if (!s.outcome || $('realOut')) return;
+    const p = document.createElement('p'); p.className = 'real-out'; p.id = 'realOut'; p.innerHTML = s.outcome;
+    const lane = $('sLanes').querySelector('[data-lane="me"] .body'); if (lane) lane.appendChild(p);
+  }
+  function show(i, user) {
+    cur = i; busy++;
+    const s = STEPS[i];
+    tabs.forEach((t, n) => { t.setAttribute('aria-selected', n === i); t.tabIndex = n === i ? 0 : -1; });
+    $('stage').setAttribute('aria-labelledby', 'step-' + i);
+    $('sHead').innerHTML = '<span class="tag ' + s.tag[0] + '">' + esc(s.tag[1]) + '</span><h3>' + s.h + '</h3><p>' + esc(s.intro) + '</p>';
+    $('sLanes').innerHTML = LANES.map(([k, badge, label]) =>
+      '<div class="lane" data-lane="' + k + '"><div class="lab">' + badge + '<span class="mono">' + label + '</span></div><div class="body">' + s[k] + '</div></div>').join('') +
+      (s.guard ? guardHTML() : '');
+    thread.innerHTML = '';
+    s.thread.forEach((m) => add(m, false));
+    if (state[i].choice !== null) {
+      s.replies[state[i].choice].then.concat(s.after || []).forEach((m) => add(m, false));
+      showOutcome(i);
+    }
+    renderReplies(i);
+    $('phoneNote').textContent = s.note;
+    thread.scrollTop = 0;
+    $('prevBtn').hidden = i === 0;
+    $('nextBtn').innerHTML = i < STEPS.length - 1 ? 'Next: ' + esc(STEPS[i + 1].title) + ' &rarr;' : 'How it works &darr;';
+    if (s.guard) setupGuard();
+    try { sessionStorage.setItem('fai-step', i); } catch (e) {}
+    if (user && innerWidth <= 900) {
+      const r = stepsEl.getBoundingClientRect();
+      if (r.top < 0) stepsEl.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    }
+  }
+  $('prevBtn').addEventListener('click', () => { show(Math.max(0, cur - 1), true); focusTab(); });
+  $('nextBtn').addEventListener('click', () => {
+    if (cur < STEPS.length - 1) { show(cur + 1, true); focusTab(); }
+    else document.getElementById('how').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  });
+
+  /* ---------- the number check, same logic as insights.numbers_are_grounded ---------- */
+  const NUM = /-?\d+(?:\.\d+)?/g;
+  const norm = (n) => n.replace(/^-+/, '').replace(/0+$/, '').replace(/\.+$/, '') || '0';
+  const ALLOWED = new Set((JSON.stringify(FACTS).match(NUM) || []).map(norm));
+  function guardHTML() {
+    const nums = [...ALLOWED].sort((a, b) => parseFloat(a) - parseFloat(b));
+    return '<div class="guard" id="guard"><div class="panel-h"><span class="mono">Number check &middot; Example draft</span><button class="btn ghost" type="button" id="gReset">Reset</button></div>' +
+      '<div class="guard-body"><label class="mono" for="gText">AI draft. Edit it and try to sneak in a number</label>' +
+      '<textarea id="gText" spellcheck="false"></textarea>' +
+      '<div class="g-actions"><button class="btn" type="button" id="gSneak">Add a made-up number</button></div>' +
+      '<p class="g-out" id="gOut"></p><p class="g-verdict" id="gVerdict" aria-live="polite"></p>' +
+      '<div class="g-allowed"><span class="mono" style="border:0;padding:0;color:var(--body)">In the facts:</span>' + nums.map((n) => '<span>' + n + '</span>').join('') + '</div></div></div>';
+  }
+  function setupGuard() {
+    const ta = $('gText'), out = $('gOut'), verdict = $('gVerdict');
+    ta.value = DRAFT;
+    const check = () => {
+      const text = ta.value, bad = [];
+      let html = '', last = 0;
+      text.replace(NUM, (m, at) => {
+        const ok = ALLOWED.has(norm(m));
+        if (!ok) bad.push(m);
+        html += esc(text.slice(last, at)) + '<span class="n ' + (ok ? 'ok' : 'bad') + '">' + esc(m) + '</span>';
+        last = at + m.length; return m;
+      });
+      out.innerHTML = html + esc(text.slice(last));
+      verdict.innerHTML = bad.length
+        ? '<span class="badge ai">Thrown out</span><span>' + esc([...new Set(bad)].join(', ')) + (bad.length > 1 ? " aren't" : " isn't") + ' in the facts. The template note is used instead.</span>'
+        : '<span class="badge code">Passes</span><span>Every number is in the facts, so the AI note can be used.</span>';
+    };
+    ta.addEventListener('input', check);
+    $('gSneak').addEventListener('click', () => { if (!ta.value.includes(SNEAK.trim())) ta.value = ta.value.trimEnd() + SNEAK; check(); });
+    $('gReset').addEventListener('click', () => { ta.value = DRAFT; check(); });
+    check();
+  }
+
+  /* ---------- results: records copied from the home page snapshot ---------- */
+  const TEAMS = [
+    { label: 'Team 1', sub: '10-team league', w: 4, l: 2, pf: 780.4, pa: 755.1, rank: 4, n: 10 },
+    { label: 'Team 2', sub: '12-team league', w: 4, l: 2, pf: 683.9, pa: 658.3, rank: 4, n: 12 },
+    { label: 'Team 3', sub: '10-team league', w: 3, l: 3, pf: 715.4, pa: 722.5, rank: 4, n: 10 },
+  ];
+  const ord = (n) => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th');
+  $('records').innerHTML = TEAMS.map((t) =>
+    '<article class="rcard"><div class="rband"><span class="mono">' + t.label + '</span><b>' + t.w + '-' + t.l + '</b></div>' +
+    '<div class="rbody"><span class="fsub">' + t.sub + '</span><span class="rbig">' + ord(t.rank) + '<span class="mono" style="font-size:11px;color:var(--body);margin-left:8px">of ' + t.n + '</span></span>' +
+    '<div class="rline"><span>Record<b>' + t.w + '-' + t.l + '</b></span><span>Pts for<b>' + t.pf.toFixed(1) + '</b></span><span>Against<b>' + t.pa.toFixed(1) + '</b></span></div></div></article>').join('');
+
+  let start = 0;
+  try { const v = +sessionStorage.getItem('fai-step'); if (v >= 0 && v < STEPS.length) start = v; } catch (e) {}
+  show(start, false);
+})();
+</script>
+</body>
+</html>

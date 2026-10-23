@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A fix inside Omi · Ian Sabia</title>
+<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<meta name="description" content="How I fixed a nested SQLite transaction bug that broke chat, tasks and background synthesis in Omi's Mac app. Merged into main.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iansabia.github.io/omi/">
+<meta property="og:title" content="A fix inside Omi · Ian Sabia">
+<meta property="og:description" content="How I fixed a nested SQLite transaction bug that broke chat, tasks and background synthesis in Omi's Mac app. Merged into main.">
+<meta property="og:image" content="https://iansabia.github.io/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  /* page: A fix inside Omi. Warm means the old, broken path. Violet means the fix. */
+  :root{--bad:color-mix(in srgb,var(--warm) 76%,var(--ink));--acc-ink:color-mix(in srgb,var(--acc) 82%,var(--ink))}
+  /* --bad and --acc-ink keep small warm and violet text above 4.5:1 on cream and tile, in both themes */
+  main :not(pre) > code{font-family:var(--mono);font-size:.84em;background:var(--tile);color:var(--ink);padding:1px 5px;border-radius:3px}
+  .sub code{overflow-wrap:anywhere}
+  .btn{white-space:nowrap;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;background:var(--ink);color:var(--bg);border:0;padding:10px 14px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
+  .btn:hover{background:var(--acc);color:var(--bg)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+  .btn.ghost:hover{border-color:var(--ink)}
+  .btn[aria-disabled="true"]{opacity:.38;cursor:default;border-color:var(--rule)}
+  .plus{color:var(--acc)}
+  .minus{color:var(--bad)}
+
+  /* hero facts: a tidy 2 by 2 grid on phones */
+  @media (max-width:640px){
+    .facts{display:grid;grid-template-columns:1fr 1fr;width:100%}
+    .facts span+span{border-left:0}
+    .facts span:nth-child(2n){border-left:1px solid var(--rule)}
+    .facts span:nth-child(n+3){border-top:1px solid var(--rule)}
+  }
+
+  .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:28px clamp(28px,4vw,56px);align-items:start}
+  .copy p{color:var(--body);margin-bottom:14px;max-width:60ch}
+  .copy p:last-child{margin-bottom:0}
+  .copy b{color:var(--ink);font-weight:600}
+
+  /* 01 what broke: a night panel, like the home page's boards */
+  .down{background:var(--nbg);color:var(--nink);border:1px solid var(--nbg);transition:background-color .35s}
+  .down-h{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--nrule)}
+  .down-h .mono{color:var(--nbody);font-size:11px}
+  .down-h .mono:last-child{color:var(--nwarm)}
+  .down-h .mono:last-child::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--nwarm);margin-right:7px;vertical-align:1px}
+  .feat{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 16px;border-bottom:1px solid var(--nrule)}
+  .feat b{font-family:var(--serif);font-weight:700;font-size:clamp(20px,2.2vw,24px);letter-spacing:-.01em;line-height:1.15}
+  .feat .mono{color:var(--nwarm);white-space:nowrap}
+  .err{padding:16px}
+  .err .mono{color:var(--nbody);font-size:11px}
+  .err p{font-family:var(--mono);font-size:15px;line-height:1.5;color:var(--nwarm);margin-top:6px}
+  .down-f{padding:10px 16px 14px;color:var(--nbody);font-size:13px;border-top:1px solid var(--nrule)}
+
+  /* 02 why: three plain-word terms */
+  .terms{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-bottom:34px}
+  .terms div{padding:16px 20px 18px 0}
+  .terms div+div{border-left:1px solid var(--rule);padding-left:20px}
+  .terms dt{color:var(--acc)}
+  .terms dd{color:var(--body);font-size:15px;margin-top:6px}
+  .why-copy{margin-bottom:34px}
+
+  /* the step-through */
+  .tx{background:var(--bg)}
+  .tx .panel-h{flex-wrap:wrap}
+  .tx .panel-h > .mono{color:var(--body)}
+  .switch{display:inline-flex;border:1px solid var(--rule);background:var(--bg)}
+  .switch button{font:500 11.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:9px 11px;border:0;background:none;color:var(--body);cursor:pointer;transition:background .25s,color .25s}
+  .switch button + button{border-left:1px solid var(--rule)}
+  .switch button:hover{color:var(--ink)}
+  .switch button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .switch button[data-mode="after"][aria-pressed="true"]{background:var(--acc)}
+  .tx-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,4fr)}
+  .tx-vis{padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+  .tx-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+  .tx-cols > div{display:flex;flex-direction:column;min-width:0}
+  .lab{display:block;color:var(--body);font-size:11px;margin-bottom:10px}
+  .lab small{font:400 12px var(--sans);letter-spacing:0;text-transform:none;opacity:.85;margin-left:6px}
+  /* a stack grows up from the floor: the outer call sits at the bottom */
+  .frames{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding-bottom:10px;border-bottom:2px solid var(--rule)}
+  .frame{position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 12px 12px 15px;border:1px dashed var(--rule);color:var(--body);background:transparent;transition:border-color .3s,background-color .3s,color .3s,opacity .3s}
+  .frame b{display:block;font-weight:600;font-size:15px;line-height:1.25}
+  .frame .fn{display:block;font-family:var(--mono);font-size:11.5px;margin-top:2px;color:var(--body)}
+  .frame::before{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:4px;background:transparent}
+  .frame[data-state="own"],.frame[data-state="wait"],.frame[data-state="join"],.frame[data-state="run"],.frame[data-state="commit"]{border-style:solid;border-color:var(--rule);background:var(--tile);color:var(--ink)}
+  .frame[data-state="own"]::before,.frame[data-state="wait"]::before,.frame[data-state="commit"]::before{background:var(--acc)}
+  .frame[data-state="join"]::before{background:repeating-linear-gradient(var(--acc) 0 5px,transparent 5px 9px)}
+  .frame[data-state="crash"]{border-style:solid;border-color:var(--warm);background:color-mix(in srgb,var(--warm) 12%,var(--bg));color:var(--ink);animation:shake .5s var(--ease)}
+  .frame[data-state="fail"]{border-style:solid;border-color:var(--warm);color:var(--ink)}
+  .frame[data-state="fail"]::before{background:var(--warm)}
+  .frame[data-state="gone"],.frame[data-state="done"]{border-style:dashed;color:var(--body)}
+  .frame[data-state="gone"] b,.frame[data-state="done"] b{font-weight:500}
+  .frame[data-state="gone"]{border-color:color-mix(in srgb,var(--warm) 60%,transparent)}
+  .frame.active{border-color:var(--ink)}
+  .frame[data-state="crash"].active{border-color:var(--warm)}
+  .frame.pushed{animation:push .45s var(--ease)}
+  .tag{flex:none;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border:1px solid var(--rule);color:var(--body);white-space:nowrap;background:var(--bg)}
+  .tag.ok{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+  .tag.bad{background:color-mix(in srgb,var(--warm) 16%,var(--bg));border-color:color-mix(in srgb,var(--warm) 60%,transparent);color:var(--bad)}
+  .slot{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px dashed var(--rule);margin-bottom:10px;transition:border-color .3s}
+  .slot b{font-family:var(--serif);font-size:34px;line-height:1;font-weight:700;min-width:20px;transition:color .3s}
+  .slot span{font-size:13.5px;color:var(--ink);line-height:1.3}
+  .slot small{display:block;font-size:12.5px;color:var(--body)}
+  .slot[data-open="1"]{border-style:solid;border-color:var(--acc)}
+  .slot[data-open="1"] b{color:var(--acc)}
+  .slot.clash{border-color:var(--warm);animation:shake .5s var(--ease)}
+  .sql{list-style:none;display:flex;flex-direction:column;gap:6px;min-height:112px}
+  .sql li{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 9px;border:1px solid var(--rule);background:var(--bg);min-width:0}
+  .sql li.new{animation:push .4s var(--ease)}
+  .sql code{font-family:var(--mono);font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sql .meta{flex:none;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--body)}
+  .kl code,.sql code,.check code{background:none;padding:0;border-radius:0}
+  code,pre,.kl,.sql{font-variant-ligatures:none;font-feature-settings:"calt" 0,"liga" 0}
+  .sql li.ok .st{color:var(--acc)}
+  .sql li.bad{border-color:var(--warm);background:color-mix(in srgb,var(--warm) 10%,var(--bg))}
+  .sql li.bad .st,.sql li.undo .st{color:var(--bad)}
+  .sql li.note,.sql li.empty{border-style:dashed;font-size:13px;color:var(--body)}
+  .check{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;padding:10px 12px;border:1px solid var(--rule);background:var(--tile)}
+  .check .mono{color:var(--body);font-size:11px}
+  .check code{font-family:var(--mono);font-size:13px;color:var(--ink)}
+  .check b{font-family:var(--serif);font-size:26px;line-height:1;font-weight:700;min-width:16px}
+  .check .gnote{font-size:13.5px;color:var(--body)}
+  .check.bad b,.check.bad .gnote{color:var(--bad)}
+  .check.good b{color:var(--acc)}
+  .keys{background:var(--nbg);color:var(--nink);padding:12px 14px;transition:background-color .35s}
+  .keys .mono{color:var(--nbody);font-size:11px}
+  .keys .mono b{color:var(--nink);font-weight:500}
+  .kl{margin-top:8px;font-family:var(--mono);font-size:12.5px;line-height:1.55;min-height:72px}
+  .kl .k{display:flex;align-items:center;flex-wrap:wrap;gap:2px 10px;padding:2px 8px;margin:0 -8px;border-left:2px solid transparent;color:var(--nbody)}
+  .kl .k code{white-space:pre;color:inherit}
+  .kl .k.on{color:var(--nink);background:color-mix(in srgb,var(--nacc) 16%,transparent);border-left-color:var(--nacc)}
+  .kl .k.on.bad{background:color-mix(in srgb,var(--nwarm) 18%,transparent);border-left-color:var(--nwarm)}
+  .kl .k:not(.on) .tk,.kl .k:not(.on) .ts,.kl .k:not(.on) .tt,.kl .k:not(.on) .tn{color:inherit}
+  .chip{font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border:1px solid var(--nrule);color:var(--nbody);white-space:nowrap}
+  .chip.ok{color:var(--nacc);border-color:color-mix(in srgb,var(--nacc) 55%,transparent)}
+  .chip.bad{color:var(--nwarm);border-color:color-mix(in srgb,var(--nwarm) 55%,transparent)}
+  .story{border-left:1px solid var(--rule);background:var(--tile);padding:18px;display:flex;flex-direction:column;gap:16px;min-width:0}
+  .story .live{min-height:178px}
+  .story .step{color:var(--acc-ink)}
+  .tx[data-mode="before"] .story .step{color:var(--bad)}
+  .story h3{font-family:var(--serif);font-weight:700;font-size:clamp(22px,2.3vw,27px);line-height:1.12;letter-spacing:-.01em;margin:8px 0 10px}
+  .story p{color:var(--body);font-size:15.5px}
+  .story p code{font-size:.82em}
+  .ctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:auto}
+  .dots{display:flex;gap:4px;margin-left:auto}
+  .dots i{width:14px;height:3px;background:var(--rule);transition:background .3s}
+  .dots i.on{background:var(--ink)}
+  .tx[data-mode="after"] .dots i.on{background:var(--acc)}
+  .tx-note{margin-top:12px;color:var(--body);font-size:14px;max-width:760px}
+  @keyframes shake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+  @keyframes push{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+
+  /* code excerpts, on the night palette */
+  .annot{display:grid;grid-template-columns:minmax(0,8fr) minmax(0,3fr);gap:14px 28px;align-items:start;margin-top:22px}
+  .code{min-width:0;background:var(--nbg);color:var(--nink);border:1px solid var(--nbg);transition:background-color .35s}
+  .code-h{display:flex;justify-content:space-between;gap:2px 12px;flex-wrap:wrap;padding:9px 14px;background:var(--ntile);border-bottom:1px solid var(--nrule);font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--nbody)}
+  .code-h b{color:var(--nink);font-weight:500}
+  .cx{margin:0;padding:12px 0;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.6;tab-size:2}
+  .cx code{display:block;min-width:max-content;font:inherit;color:inherit;background:none;padding:0}
+  .cx .ln{display:block;position:relative;padding:0 18px 0 34px}
+  .cx .ln::before{position:absolute;left:14px;content:"";color:var(--nbody)}
+  .cx .ln.add{background:color-mix(in srgb,var(--nacc) 14%,transparent)}
+  .cx .ln.add::before{content:"+";content:"+" / "";color:var(--nacc)}
+  .cx .ln.del{background:color-mix(in srgb,var(--nwarm) 16%,transparent);color:color-mix(in srgb,var(--nink) 80%,var(--nwarm))}
+  .cx .ln.del::before{content:"-";content:"-" / "Removed: ";color:var(--nwarm)}
+  .cx .ln.elide{color:var(--nbody);font-family:var(--sans);font-size:12.5px;padding-top:3px;padding-bottom:3px;margin:3px 0;border-top:1px dashed var(--nrule);border-bottom:1px dashed var(--nrule)}
+  .cx .ln.elide::before{content:"\22EF";content:"\22EF" / "Left out: "}
+  .tk{color:var(--nacc)}
+  .ts{color:var(--nwarm)}
+  .tc{color:var(--nbody)}
+  .tt{color:color-mix(in srgb,var(--nacc) 45%,var(--nink))}
+  .tn{color:var(--nwarm)}
+  .src{padding:8px 14px;border-top:1px solid var(--nrule);font-size:12px;color:var(--nbody)}
+  .src a{color:var(--nink);text-underline-offset:3px}
+  .note{padding-top:6px}
+  .note .mono{color:var(--acc);display:block;margin-bottom:6px}
+  .note p{color:var(--body);font-size:15px}
+  .old{margin-top:26px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+  .old summary{cursor:pointer;padding:14px 0;display:flex;align-items:baseline;gap:10px;list-style:none;font-weight:500}
+  .old summary::-webkit-details-marker{display:none}
+  .old summary::before{content:"+";font-family:var(--mono);color:var(--acc);width:12px}
+  .old[open] summary::before{content:"\2212"}
+  .old summary .mono{color:var(--body)}
+  .old .annot{margin:0 0 22px}
+
+  /* 03 fix: the diff at a glance */
+  .glance{background:var(--bg)}
+  .glance .panel-h .mono{color:var(--body)}
+  .glance .panel-h .plus{color:var(--acc-ink)}
+  .glance ul{list-style:none}
+  .glance li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;padding:14px 16px;border-bottom:1px solid var(--rule)}
+  .glance li:last-child{border-bottom:0}
+  .glance li code{background:none;padding:0;font-size:13px}
+  .glance li p{grid-column:1/-1;color:var(--body);font-size:14px}
+  .glance .n{font-family:var(--mono);font-size:12.5px;text-align:right;white-space:nowrap}
+  .glance .bar{grid-column:1/-1;display:flex;height:6px;background:var(--ghost);margin-top:4px}
+  .glance .bar i{display:block;height:100%;width:0;transition:width 1.2s var(--ease)}
+  .glance .bar i.a{background:var(--acc)}
+  .glance .bar i.d{background:var(--warm)}
+  .glance-f{padding:12px 16px;border-top:1px solid var(--rule);background:var(--tile);font-size:13.5px;color:var(--body)}
+
+  /* 04 proof: red, then green, then the whole suite */
+  .proof{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--rule);margin-bottom:8px}
+  .proof li{padding:18px 18px 20px;display:flex;flex-direction:column;gap:8px;position:relative}
+  .proof li+li{border-left:1px solid var(--rule)}
+  .proof li::before{content:"";position:absolute;left:-1px;right:-1px;top:-1px;height:3px;background:var(--acc)}
+  .proof li.red::before{background:var(--warm)}
+  .proof .st{align-self:flex-start;padding:3px 8px;font-size:11px;background:var(--acc);color:var(--bg)}
+  .proof li.red .st{background:color-mix(in srgb,var(--warm) 16%,var(--bg));color:var(--bad);border:1px solid color-mix(in srgb,var(--warm) 60%,transparent)}
+  .proof b{font-family:var(--serif);font-weight:700;font-size:22px;line-height:1.15;letter-spacing:-.01em}
+  .proof p{color:var(--body);font-size:15px}
+  .proof-copy{margin-top:34px}
+
+  /* 05 result */
+  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--rule);background:var(--tile);margin-bottom:34px}
+  .stats div{padding:16px 18px;border-right:1px solid var(--rule)}
+  .stats div:last-child{border-right:0}
+  .stats b{display:block;font-family:var(--serif);font-weight:500;font-size:clamp(26px,3vw,34px);line-height:1.05;letter-spacing:-.01em;white-space:nowrap}
+  .stats div > span{color:var(--body);font-size:13.5px}
+  .changelog{border-left:3px solid var(--acc);padding:4px 0 4px 18px}
+  .changelog .mono{color:var(--body);font-size:11px}
+  .changelog blockquote{font-family:var(--serif);font-weight:500;font-size:clamp(20px,2.2vw,24px);line-height:1.3;letter-spacing:-.01em;margin:8px 0}
+  .changelog figcaption{color:var(--body);font-size:14px}
+  .result-actions{display:flex;flex-wrap:wrap;gap:12px 22px;margin-top:22px}
+
+  .credits{margin-top:clamp(52px,7vw,84px);padding:18px 20px;border:1px solid var(--rule);background:var(--tile);color:var(--body);font-size:14px;max-width:760px}
+  .credits .mono{color:var(--acc-ink);display:block;margin-bottom:6px}
+  .credits a{color:var(--ink);text-underline-offset:3px}
+  .credits details{margin-top:10px}
+  .credits summary{cursor:pointer;color:var(--ink);font-weight:500;width:fit-content}
+  .credits pre{white-space:pre-wrap;font-family:var(--mono);font-size:12px;line-height:1.6;margin-top:10px;color:var(--body)}
+
+  @media (max-width:900px){
+    .split,.annot{grid-template-columns:1fr}
+    .tx-grid{grid-template-columns:1fr}
+    .story{border-left:0;border-top:1px solid var(--rule)}
+    .story .live{min-height:118px}
+    .proof{grid-template-columns:1fr}
+    .proof li+li{border-left:0;border-top:1px solid var(--rule)}
+    .proof li::before{top:-1px}
+    .note{padding-top:0}
+  }
+  @media (max-width:640px){
+    .terms{grid-template-columns:1fr}
+    .terms div{padding:14px 0}
+    .terms div+div{border-left:0;padding-left:0;border-top:1px solid var(--rule)}
+    /* phones: stack and SQLite stay side by side so the whole step fits on one screen */
+    .switch .wide{display:none}
+    .tx-vis{padding:12px;gap:10px}
+    .tx-cols{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:10px}
+    .lab{margin-bottom:8px;font-size:10.5px}
+    .lab small{font-size:11.5px}
+    .frames{gap:6px;padding-bottom:8px}
+    .frame{flex-direction:column;align-items:flex-start;gap:6px;padding:8px 8px 8px 12px}
+    .frame b{font-size:14px}
+    .frame .fn{font-size:10.5px;letter-spacing:-.02em}
+    .tag{font-size:10px;padding:3px 6px}
+    .slot{padding:6px 8px;gap:8px;margin-bottom:6px}
+    .slot b{font-size:26px}
+    .slot small{display:none}
+    .sql{gap:5px;min-height:146px}
+    .sql li{flex-direction:column;align-items:stretch;gap:1px;padding:5px 8px}
+    .sql code{font-size:11px}
+    .sql .meta{font-size:9.5px}
+    .check{padding:8px 10px;gap:2px 8px}
+    .check b{font-size:22px}
+    .check .gnote{flex-basis:100%;font-size:13px}
+    .kl{font-size:11.5px}
+    .story{padding:14px;gap:12px}
+    .story h3{margin:6px 0 8px;font-size:21px}
+    .story p{font-size:15px}
+    .story .live{min-height:158px}
+    .stats{grid-template-columns:1fr 1fr}
+    .stats div:nth-child(2n){border-right:0}
+    .stats div:nth-child(n+3){border-top:1px solid var(--rule)}
+    .cx{font-size:12px}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="../" aria-label="Ian Sabia, home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
+      <span class="mono" style="font-size:13px">Ian Sabia</span>
+    </a>
+    <nav aria-label="Main">
+      <span class="links">
+        <a href="../#currently">Currently</a>
+        <a href="../#work">Work</a>
+        <a href="../#projects" aria-current="true">Projects</a>
+        <a href="../#milan">Milan</a>
+        <a href="../#off">Off the clock</a>
+        <a href="../#contact">Contact</a>
+      </span>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu <i aria-hidden="true"></i></button>
+      <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
+    </nav>
+    <div class="menu" id="menu">
+      <a href="../#currently">Currently <span class="mono">01</span></a>
+      <a href="../#work">Work <span class="mono">02</span></a>
+      <a href="../#projects" aria-current="true">Projects <span class="mono">03</span></a>
+      <a href="../#milan">Milan <span class="mono">04</span></a>
+      <a href="../#off">Off the clock <span class="mono">05</span></a>
+      <a href="../#contact">Contact <span class="mono">06</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <header class="page-hero">
+      <div class="kicker mono"><a href="../#projects">Projects</a><span aria-hidden="true">/</span><span>TypeScript &middot; open source</span></div>
+      <h1>A fix <em>inside Omi</em></h1>
+      <p class="lede">Omi is an open-source AI wearable and desktop app. Its Mac app had a bug: chat, tasks and background synthesis all failed with the same database error. I traced it to one check, wrote a test that failed the same way, and fixed it. The fix was merged into main.</p>
+      <div class="facts mono"><span>PR<b>#8443</b></span><span>Merged<b>Jun 27, 2026</b></span><span>Tests<b>233/233</b></span><span>Diff<b>+81 &minus;3</b></span></div>
+      <div class="actions"><a class="more" href="#stack">Step through the bug <span aria-hidden="true">&rarr;</span></a><a class="more quiet" href="https://github.com/BasedHardware/omi/pull/8443">See the pull request <span aria-hidden="true">&nearr;</span></a></div>
+    </header>
+
+    <section class="block" id="broke">
+      <div class="head reveal"><h2>What broke</h2><span class="num mono">01</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">One database error took down three features in Omi's Mac app.</p>
+      <div class="split">
+        <div class="copy reveal">
+          <p>Omi's Mac app runs an agent in the background. It handles <b>chat</b>, runs <b>tasks</b> and does <b>background synthesis</b>. Along the way it saves sessions, runs and events to a small SQLite database on your Mac.</p>
+          <p>All three broke, and every time the error was the same: <code>cannot start a transaction within a transaction</code>.</p>
+          <p>The message was literal. The code asked SQLite to open a second transaction while one was already open. SQLite allows one at a time, so it refused, and the whole operation was undone.</p>
+        </div>
+        <div class="down reveal" role="group" aria-label="Summary of the failure">
+          <div class="down-h"><span class="mono">Omi for Mac &middot; agent</span><span class="mono">Before the fix</span></div>
+          <div class="feat"><b>Chat</b><span class="mono">&#x2715; Failed</span></div>
+          <div class="feat"><b>Task execution</b><span class="mono">&#x2715; Failed</span></div>
+          <div class="feat"><b>Background synthesis</b><span class="mono">&#x2715; Failed</span></div>
+          <div class="err"><span class="mono">The error</span><p>cannot start a transaction within a transaction</p></div>
+          <p class="down-f">A summary, not a screenshot. The error text is word for word.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="why">
+      <div class="head reveal"><h2>Why it broke</h2><span class="num mono">02</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">A transaction inside a transaction, and a check that trusted the wrong answer.</p>
+      <dl class="terms reveal">
+        <div><dt class="mono">SQLite</dt><dd>A small database that lives in one file. Omi's agent keeps its state there.</dd></div>
+        <div><dt class="mono">Transaction</dt><dd>A group of writes that all happen or none do. BEGIN starts one. COMMIT keeps the writes, ROLLBACK undoes them.</dd></div>
+        <div><dt class="mono">Nesting</dt><dd>Code that opened a transaction calls code that wants one too. Only the outermost call should send BEGIN.</dd></div>
+      </dl>
+      <div class="copy why-copy reveal">
+        <p>Omi wraps its database writes in a helper called <code>withTransaction</code>. Big operations use it, and so do the smaller helpers they call, so one transaction often runs inside another. That's fine, as long as the inner call notices and just joins the transaction that's already open.</p>
+        <p>To notice, the old code asked the database: is a transaction open right now? That's the <code>db.isTransaction</code> flag. In the Node runtime bundled with the Mac app, the flag didn't reliably flip to true when a transaction was open. So every inner call thought it was first and sent its own BEGIN.</p>
+      </div>
+
+      <div class="panel tx reveal" id="stack" data-mode="before">
+        <div class="panel-h">
+          <span class="mono">Step through it</span>
+          <div class="switch" role="group" aria-label="Which version of the code to run">
+            <button type="button" data-mode="before" aria-pressed="true">Before<span class="wide"> the fix</span></button>
+            <button type="button" data-mode="after" aria-pressed="false">After<span class="wide"> the fix</span></button>
+          </div>
+        </div>
+        <div class="tx-grid">
+          <div class="tx-vis">
+            <div class="tx-cols">
+              <div>
+                <span class="mono lab">Call stack<small>newest on top</small></span>
+                <div class="frames">
+                  <div class="frame" id="fInner" data-state="idle"><div><b>Inner code</b><span class="fn">insertAdapterBinding()</span></div><span class="tag" id="tInner">Not called yet</span></div>
+                  <div class="frame" id="fOuter" data-state="idle"><div><b>Outer code</b><span class="fn">openNewBinding()</span></div><span class="tag" id="tOuter">Not called yet</span></div>
+                </div>
+              </div>
+              <div>
+                <span class="mono lab">SQLite</span>
+                <div class="slot" id="slot" data-open="0"><b id="slotN">0</b><span><span id="slotT">transactions open</span> <small>SQLite allows 1 at a time</small></span></div>
+                <ol class="sql" id="sql" aria-label="Commands sent to SQLite"><li class="empty">Nothing sent yet</li></ol>
+              </div>
+            </div>
+            <div class="check" id="check"><span class="mono">The check</span><code id="gName">db.isTransaction</code><b id="gVal">false</b><span class="gnote" id="gNote">Right: nothing is open yet.</span></div>
+            <div class="keys"><span class="mono">Running &middot; <b id="kWho">the old withTransaction</b></span><div class="kl" id="kl"></div></div>
+          </div>
+          <div class="story">
+            <div class="live" aria-live="polite" aria-atomic="true">
+              <span class="mono step" id="sStep">Old code</span>
+              <h3 id="sTitle">Two pieces of code, one inside the other</h3>
+              <p id="sText">Both wrap their writes in <code>withTransaction</code>. The inner one runs while the outer one is still open. Press Next step to run the old code.</p>
+            </div>
+            <div class="ctl"><button type="button" class="btn ghost" id="prev" aria-disabled="true">Back</button><button type="button" class="btn" id="next">Next step</button><span class="dots" id="dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span></div>
+          </div>
+        </div>
+      </div>
+      <p class="tx-note reveal">The two pieces of code are a real pair from Omi's agent. In <code>kernel.ts</code>, <code>openNewBinding()</code> opens a transaction, and inside it calls the store's <code>insertAdapterBinding()</code>, which opens its own. The walk-through is simplified: the log shows only the transaction commands, not the writes in between.</p>
+    </section>
+
+    <section class="block" id="fix">
+      <div class="head reveal"><h2>The fix</h2><span class="num mono">03</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">The commit title says it: <code>track transaction depth in store instead of trusting db.isTransaction</code>.</p>
+      <div class="split">
+        <div class="copy reveal">
+          <p>I gave the store its own counter, <code>transactionDepth</code>. Every <code>withTransaction</code> call adds one on the way in and takes one away on the way out.</p>
+          <p>If the counter is already above 0, the call is nested. It runs its work inside the open transaction and sends nothing to the database. <b>Only the outermost call sends BEGIN, and only it sends COMMIT or ROLLBACK.</b></p>
+          <p>The count goes back down in <code>finally</code> blocks, so an error can't leave it stuck. And <code>withTransaction</code> never looks at the database's flag again.</p>
+        </div>
+        <div class="panel glance reveal" id="glance">
+          <div class="panel-h"><span class="mono">Files changed</span><span class="mono"><span class="plus">+81</span> <span class="minus">&minus;3</span></span></div>
+          <ul>
+            <li><code>sqlite-store.ts</code><span class="n"><span class="plus">+28</span> <span class="minus">&minus;2</span></span><p>The counter, the new <code>withTransaction</code>, and a hook so tests can pass in their own database.</p><span class="bar" aria-hidden="true"><i class="a" data-w="56"></i><i class="d" data-w="4"></i></span></li>
+            <li><code>sqlite-store.test.ts</code><span class="n"><span class="plus">+50</span></span><p>One new test that reproduces the bug.</p><span class="bar" aria-hidden="true"><i class="a" data-w="100"></i></span></li>
+            <li><code>CHANGELOG.json</code><span class="n"><span class="plus">+3</span> <span class="minus">&minus;1</span></span><p>One line for the Mac app's changelog.</p><span class="bar" aria-hidden="true"><i class="a" data-w="6"></i><i class="d" data-w="2"></i></span></li>
+          </ul>
+          <p class="glance-f">Three commits: the fix, the test, and the changelog line.</p>
+        </div>
+      </div>
+
+      <details class="old reveal">
+        <summary><span class="mono">Before</span><span>The helper the old <code>withTransaction</code> handed every call to</span></summary>
+        <div class="annot">
+          <figure class="code">
+            <figcaption class="code-h"><span><b>sqlite-store.ts</b> &middot; runTransaction</span><span>lines 797-810, unchanged</span></figcaption>
+            <pre class="cx" tabindex="0" role="region" aria-label="Code: the old runTransaction helper"><code> function runTransaction&lt;T&gt;(db: Pick&lt;DatabaseSync, "exec" | "isTransaction"&gt;, work: () =&gt; T): T {
+   if (db.isTransaction) {
+     return work();
+   }
+   db.exec("BEGIN IMMEDIATE");
+   try {
+     const result = work();
+     db.exec("COMMIT");
+     return result;
+   } catch (error) {
+     db.exec("ROLLBACK");
+     throw error;
+   }
+ }</code></pre>
+            <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+          </figure>
+          <div class="note"><span class="mono">The old check</span><p>That first <code>if</code> is where it went wrong. When the flag said false inside an open transaction, the next line sent a second BEGIN. The helper is still in the file, and the schema migrations still use it.</p></div>
+        </div>
+      </details>
+
+      <div class="annot reveal">
+        <figure class="code">
+          <figcaption class="code-h"><span><b>sqlite-store.ts</b> &middot; withTransaction</span><span>lines 357-369</span></figcaption>
+          <pre class="cx" tabindex="0" role="region" aria-label="Diff, part 1: one removed line, then the added lines for a nested call"><code> withTransaction&lt;T&gt;(work: () =&gt; T): T {
+-  return runTransaction(this.db, work);
++  // Track nesting depth ourselves rather than trusting db.isTransaction: the
++  // bundled agent runtime does not reliably report an open transaction, so a
++  // nested call that issued its own BEGIN would fail with "cannot start a
++  // transaction within a transaction" and break every agent operation.
++  if (this.transactionDepth &gt; 0) {
++    this.transactionDepth += 1;
++    try {
++      return work();
++    } finally {
++      this.transactionDepth -= 1;
++    }
++  }</code></pre>
+          <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+        </figure>
+        <div class="note"><span class="mono">Part 1 &middot; a nested call joins</span><p>If a transaction is already open, just run the work. No BEGIN, no COMMIT. The <code>finally</code> puts the count back even if the work throws.</p></div>
+      </div>
+
+      <div class="annot reveal">
+        <figure class="code">
+          <figcaption class="code-h"><span><b>sqlite-store.ts</b> &middot; withTransaction, continued</span><span>lines 370-382</span></figcaption>
+          <pre class="cx" tabindex="0" role="region" aria-label="Diff, part 2: added lines for the outermost call"><code>+  this.transactionDepth += 1;
++  this.db.exec("BEGIN IMMEDIATE");
++  try {
++    const result = work();
++    this.db.exec("COMMIT");
++    return result;
++  } catch (error) {
++    this.db.exec("ROLLBACK");
++    throw error;
++  } finally {
++    this.transactionDepth -= 1;
++  }
+ }</code></pre>
+          <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+        </figure>
+        <div class="note"><span class="mono">Part 2 &middot; the outer call owns it</span><p>Otherwise this call owns the transaction: BEGIN, run the work, then COMMIT. If anything inside throws, ROLLBACK undoes all of it, nested work included.</p></div>
+      </div>
+    </section>
+
+    <section class="block" id="proof">
+      <div class="head reveal"><h2>How I proved it</h2><span class="num mono">04</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">A test that failed for the same reason the app did. Then the fix. Then the whole suite.</p>
+      <ol class="proof reveal">
+        <li class="red"><span class="mono st">Fail</span><b>Test first</b><p>On the old logic, the inner call sends a second BEGIN and the fake database throws &ldquo;cannot start a transaction within a transaction,&rdquo; the same error as the app. The test never reaches its check.</p></li>
+        <li><span class="mono st">Pass</span><b>Then the fix</b><p>With the counter in place, the inner call joins the outer one. The log reads BEGIN, COMMIT, and the test passes.</p></li>
+        <li><span class="mono st">233/233</span><b>Then everything</b><p>The agent's whole test suite passes: 233 of 233.</p></li>
+      </ol>
+      <div class="copy proof-copy reveal">
+        <p>The test is called &ldquo;nests withTransaction safely when the runtime never reports isTransaction.&rdquo; It runs one <code>withTransaction</code> inside another, the same shape as the app.</p>
+        <p>To make the bug show up on any machine, the test hands the store a fake database that acts like the bundled runtime. Its <code>isTransaction</code> is always false. Like real SQLite, it throws if a second BEGIN arrives while one is open. It also logs every BEGIN, COMMIT and ROLLBACK, so the test can check exactly what was sent.</p>
+      </div>
+
+      <div class="annot reveal">
+        <figure class="code">
+          <figcaption class="code-h"><span><b>sqlite-store.ts</b> &middot; constructor</span><span>lines 332-333</span></figcaption>
+          <pre class="cx" tabindex="0" role="region" aria-label="Diff: one removed line, then two added lines"><code>-this.db = new DatabaseSync(databasePath);
++const Database = options.databaseFactory ?? DatabaseSync;
++this.db = new Database(databasePath) as DatabaseSync;</code></pre>
+          <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+        </figure>
+        <div class="note"><span class="mono">The hook</span><p>A new <code>databaseFactory</code> option lets a test pass in its own database. Without it, the store uses Node's real <code>DatabaseSync</code>, same as before.</p></div>
+      </div>
+
+      <div class="annot reveal">
+        <figure class="code">
+          <figcaption class="code-h"><span><b>sqlite-store.test.ts</b> &middot; the fake database</span><span>lines 262-282</span></figcaption>
+          <pre class="cx" tabindex="0" role="region" aria-label="Code: the fake database from the test"><code> const execLog: string[] = [];
+ let open = false;
+ class NoIsTransactionDatabase {
+   readonly isTransaction = false; // never flips, like the bundled runtime
+   constructor(_path: string) {}
+   exec(sql: string): void {
+     const head = sql.trimStart().toUpperCase();
+     if (head.startsWith("BEGIN")) {
+       if (open) {
+         throw new Error("cannot start a transaction within a transaction");
+       }
+       open = true;
+       execLog.push("BEGIN");
+     } else if (head.startsWith("COMMIT")) {
+       open = false;
+       execLog.push("COMMIT");
+     } else if (head.startsWith("ROLLBACK")) {
+       open = false;
+       execLog.push("ROLLBACK");
+     }
+   }
+~prepare() and close() stubs, lines 283-287</code></pre>
+          <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+        </figure>
+        <div class="note"><span class="mono">The fake</span><p>The flag never flips, and a second BEGIN throws the same message SQLite does. Every BEGIN, COMMIT and ROLLBACK goes into <code>execLog</code>.</p></div>
+      </div>
+
+      <div class="annot reveal">
+        <figure class="code">
+          <figcaption class="code-h"><span><b>sqlite-store.test.ts</b> &middot; the check</span><span>lines 297-301</span></figcaption>
+          <pre class="cx" tabindex="0" role="region" aria-label="Code: the test's check"><code> const result = store.withTransaction(() =&gt; store.withTransaction(() =&gt; "inner-result"));
+
+ expect(result).toBe("inner-result");
+~one comment line
+ expect(execLog).toEqual(["BEGIN", "COMMIT"]);</code></pre>
+          <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+        </figure>
+        <div class="note"><span class="mono">The check</span><p>One transaction inside another. The inner result comes back, and the fake database saw exactly one BEGIN and one COMMIT.</p></div>
+      </div>
+    </section>
+
+    <section class="block" id="result">
+      <div class="head reveal"><h2>The result</h2><span class="num mono">05</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">Merged into main on June 27, 2026.</p>
+      <div class="stats reveal">
+        <div><b>#8443</b><span>pull request, merged into main</span></div>
+        <div><b>233/233</b><span>tests passing</span></div>
+        <div><b><span class="plus">+81</span> <span class="minus">&minus;3</span></b><span>lines across 3 files</span></div>
+        <div><b>~13.6k</b><span>GitHub stars on Omi, when I checked</span></div>
+      </div>
+      <div class="split">
+        <div class="copy reveal">
+          <p>It's a small diff. The point was to stop trusting a flag that could be wrong, and to prove the fix with a test that fails for the same reason the app did.</p>
+          <div class="result-actions"><a class="more" href="https://github.com/BasedHardware/omi/pull/8443">See the pull request <span aria-hidden="true">&nearr;</span></a></div>
+        </div>
+        <figure class="changelog reveal">
+          <span class="mono">desktop/macos/CHANGELOG.json</span>
+          <blockquote>Fixed agent chat and task execution failing with a "cannot start a transaction within a transaction" database error</blockquote>
+          <figcaption>The line I added to the Mac app's changelog.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <aside class="credits" id="license" aria-label="Credits">
+      <span class="mono">Credits</span>
+      <p>Code excerpts on this page are from <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, used under the MIT License. Copyright (c) 2024 Based Hardware Contributors. Whitespace is trimmed for width.</p>
+      <details>
+        <summary>Read the MIT License</summary>
+        <pre>MIT License
+
+Copyright (c) 2024 Based Hardware Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</pre>
+      </details>
+    </aside>
+
+    <div class="back"><a class="more" href="../#projects"><span aria-hidden="true">&larr;</span> All projects</a><a class="more quiet" href="https://github.com/BasedHardware/omi/pull/8443">See the pull request <span aria-hidden="true">&nearr;</span></a></div>
+  </main>
+
+  <footer>
+    <p>Made in Boston. No trackers.</p>
+    <div class="stamp mono"><span>Revised<b>2026-10-23</b></span></div>
+  </footer>
+</div>
+<script src="../assets/site.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+
+  /* tiny TypeScript highlighter for the excerpts: comments, strings, keywords, types, numbers */
+  const KW = new Set('const let var return if else try catch finally throw new class function private readonly export interface this true false void as type import from'.split(' '));
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  function hl(src) {
+    const re = /(\/\/.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|\b([A-Za-z_]\w*)\b|\b(\d+)\b/g;
+    let out = '', i = 0, m;
+    while ((m = re.exec(src))) {
+      out += esc(src.slice(i, m.index));
+      if (m[1]) out += '<span class="tc">' + esc(m[1]) + '</span>';
+      else if (m[2]) out += '<span class="ts">' + esc(m[2]) + '</span>';
+      else if (m[3]) out += KW.has(m[3]) ? '<span class="tk">' + m[3] + '</span>' : /^[A-Z]/.test(m[3]) ? '<span class="tt">' + m[3] + '</span>' : m[3];
+      else out += '<span class="tn">' + m[4] + '</span>';
+      i = re.lastIndex;
+    }
+    return out + esc(src.slice(i));
+  }
+
+  /* excerpts are written diff style: each line starts with " " (same), "+" (added), "-" (removed) or "~" (lines left out) */
+  document.querySelectorAll('pre.cx > code').forEach((c) => {
+    c.innerHTML = c.textContent.replace(/\n+$/, '').split('\n').map((l) => {
+      const mark = l.charAt(0), text = l.slice(1);
+      if (mark === '~') return '<span class="ln elide">' + esc(text.trim()) + '</span>';
+      return '<span class="ln ' + (mark === '+' ? 'add' : mark === '-' ? 'del' : 'ctx') + '">' + (hl(text) || ' ') + '</span>';
+    }).join('');
+  });
+
+  /* diff bars fill in when the card scrolls into view */
+  const glance = $('glance');
+  if (glance) {
+    const fill = () => glance.querySelectorAll('.bar i').forEach((i) => { i.style.width = i.dataset.w + '%'; });
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) fill();
+    else {
+      const gio = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { fill(); gio.disconnect(); } }, { threshold: .3 });
+      gio.observe(glance);
+    }
+  }
+
+  /* the step-through: the same two calls, run on the old code and on the new code */
+  const tx = $('stack');
+  if (!tx) return;
+  const F = (state, tag, kind) => ({ state, tag, kind: kind || '' });
+  const IDLE = F('idle', 'Not called yet');
+  const L = (code, chip, kind, on) => ({ code, chip: chip || '', kind: kind || '', on: !!on });
+  const BEGIN = ['BEGIN IMMEDIATE', 'outer', 'ok', 'opened'];
+  const STEPS = {
+    before: [
+      { title: 'Two pieces of code, one inside the other',
+        text: 'Both wrap their writes in <code>withTransaction</code>. The inner one runs while the outer one is still open. Press Next step to run the old code.',
+        outer: IDLE, inner: IDLE, active: null, open: 0, sql: [],
+        check: ['false', 'Right: nothing is open yet.', ''], who: 'the old withTransaction',
+        lines: [L('withTransaction<T>(work: () => T): T {'), L('  return runTransaction(this.db, work);', 'every call', '', true)] },
+      { title: 'The outer code opens a transaction',
+        text: 'It asks the database if a transaction is open. The flag says false, which is correct. So it sends BEGIN and owns the transaction.',
+        outer: F('own', 'Sent BEGIN', 'ok'), inner: IDLE, active: 'outer', open: 1, sql: [BEGIN],
+        check: ['false', 'Wrong now: a transaction is open.', 'bad'], who: 'outer code',
+        lines: [L('if (db.isTransaction) {', 'false'), L('db.exec("BEGIN IMMEDIATE");', 'opens it', 'ok', true)] },
+      { title: 'The inner code checks the flag',
+        text: 'Same question, from inside. A transaction is open, but the flag still says false. So the inner code thinks it goes first.',
+        outer: F('wait', 'Waiting'), inner: F('run', 'Checking'), active: 'inner', open: 1, sql: [BEGIN],
+        check: ['false', 'Still false. This is the bug.', 'bad'], who: 'inner code',
+        lines: [L('if (db.isTransaction) {', 'still false', 'bad', true)] },
+      { title: 'A second BEGIN',
+        text: 'The inner code sends its own BEGIN. SQLite allows one transaction at a time, so it refuses: &ldquo;cannot start a transaction within a transaction.&rdquo;',
+        outer: F('wait', 'Waiting'), inner: F('crash', 'Error', 'bad'), active: 'inner', open: 1, clash: true,
+        sql: [BEGIN, ['BEGIN IMMEDIATE', 'inner', 'bad', 'refused']],
+        check: ['false', 'Still false.', 'bad'], who: 'inner code',
+        lines: [L('db.exec("BEGIN IMMEDIATE");', 'throws', 'bad', true)] },
+      { title: 'Everything rolls back',
+        text: 'The error reaches the outer code. It sends ROLLBACK, every write is undone, and the chat or task fails. Next, see the fix.',
+        outer: F('fail', 'Rolled back', 'bad'), inner: F('gone', 'Threw'), active: 'outer', open: 0,
+        sql: [BEGIN, ['BEGIN IMMEDIATE', 'inner', 'bad', 'refused'], ['ROLLBACK', 'outer', 'undo', 'undone']],
+        check: ['false', 'Nothing is open after the rollback.', ''], who: 'outer code',
+        lines: [L('} catch (error) {'), L('  db.exec("ROLLBACK");', 'undo all', 'bad', true), L('  throw error;')] }
+    ],
+    after: [
+      { title: 'Same code, now with a counter',
+        text: 'The store keeps its own count of how deep it is, starting at 0. It never asks the database. Press Next step to run the new code.',
+        outer: IDLE, inner: IDLE, active: null, open: 0, sql: [],
+        check: ['0', 'The store counts this itself.', 'good'], who: 'the new store',
+        lines: [L('private transactionDepth = 0;', '', '', true)] },
+      { title: 'Outer call: count is 0, so BEGIN',
+        text: 'A count of 0 means this is the outermost call. The count goes to 1 and it sends BEGIN.',
+        outer: F('own', 'Sent BEGIN', 'ok'), inner: IDLE, active: 'outer', open: 1, sql: [BEGIN],
+        check: ['1', 'The outer call owns the transaction.', 'good'], who: 'outer code',
+        lines: [L('if (this.transactionDepth > 0) {', '0: no'), L('this.transactionDepth += 1;', 'now 1'), L('this.db.exec("BEGIN IMMEDIATE");', 'opens it', 'ok', true)] },
+      { title: 'Inner call: count is 1, so join',
+        text: 'A count above 0 means this call is nested. The count goes to 2. It sends nothing and does its work inside the open transaction.',
+        outer: F('wait', 'Waiting'), inner: F('join', 'Joined', 'ok'), active: 'inner', open: 1,
+        sql: [BEGIN, [null, 'inner', 'note', 'Inner sent nothing']],
+        check: ['2', 'Two calls deep, still one transaction.', 'good'], who: 'inner code',
+        lines: [L('if (this.transactionDepth > 0) {', '1: yes', 'ok'), L('  this.transactionDepth += 1;', 'now 2'), L('  return work();', 'no BEGIN', 'ok', true)] },
+      { title: 'The inner call returns',
+        text: 'The count drops back to 1. No COMMIT, because the inner code doesn\'t own the transaction.',
+        outer: F('wait', 'Waiting'), inner: F('done', 'Returned'), active: 'inner', open: 1,
+        sql: [BEGIN, [null, 'inner', 'note', 'Inner sent nothing']],
+        check: ['1', 'Back to just the outer call.', 'good'], who: 'inner code',
+        lines: [L('} finally {'), L('  this.transactionDepth -= 1;', 'now 1', 'ok', true)] },
+      { title: 'One BEGIN, one COMMIT',
+        text: 'The outer code sends COMMIT and the count goes back to 0. One real transaction, with every write saved together.',
+        outer: F('commit', 'Sent COMMIT', 'ok'), inner: F('done', 'Returned'), active: 'outer', open: 0,
+        sql: [BEGIN, [null, 'inner', 'note', 'Inner sent nothing'], ['COMMIT', 'outer', 'ok', 'saved']],
+        check: ['0', 'Ready for the next one.', 'good'], who: 'outer code',
+        lines: [L('this.db.exec("COMMIT");', 'saves it', 'ok', true), L('this.transactionDepth -= 1;', 'now 0')] }
+    ]
+  };
+  const LAST = 4;
+  let mode = 'before', step = 0, shownSql = 0, shownInner = 'idle';
+  const frames = { outer: $('fOuter'), inner: $('fInner') }, tags = { outer: $('tOuter'), inner: $('tInner') };
+  const prev = $('prev'), next = $('next'), dots = [...$('dots').children];
+  const restart = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+
+  function render(animate) {
+    const s = STEPS[mode][step];
+    tx.dataset.mode = mode;
+    tx.querySelectorAll('.switch button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.mode === mode));
+    ['outer', 'inner'].forEach((k) => {
+      const f = s[k], el = frames[k];
+      el.dataset.state = f.state;
+      el.classList.toggle('active', s.active === k);
+      tags[k].textContent = f.tag;
+      tags[k].className = 'tag' + (f.kind ? ' ' + f.kind : '');
+    });
+    if (animate && shownInner === 'idle' && s.inner.state !== 'idle') restart(frames.inner, 'pushed');
+    else frames.inner.classList.remove('pushed');
+    shownInner = s.inner.state;
+
+    $('slotN').textContent = s.open;
+    $('slotT').textContent = s.open === 1 ? 'transaction open' : 'transactions open';
+    $('slot').dataset.open = s.open;
+    $('slot').classList.toggle('clash', !!s.clash);
+
+    $('sql').innerHTML = s.sql.length ? s.sql.map((r, i) => {
+      const fresh = animate && i >= shownSql ? ' new' : '';
+      if (r[2] === 'note') return '<li class="note' + fresh + '">' + r[3] + '</li>';
+      return '<li class="' + r[2] + fresh + '"><code>' + r[0] + '</code><span class="meta">' + r[1] + ' &middot; <span class="st">' + r[3] + '</span></span></li>';
+    }).join('') : '<li class="empty">Nothing sent yet</li>';
+    shownSql = s.sql.length;
+
+    $('gName').textContent = mode === 'before' ? 'db.isTransaction' : 'transactionDepth';
+    $('gVal').textContent = s.check[0];
+    $('gNote').textContent = s.check[1];
+    $('check').className = 'check' + (s.check[2] ? ' ' + s.check[2] : '');
+
+    $('kWho').textContent = s.who;
+    $('kl').innerHTML = s.lines.map((l) => '<div class="k' + (l.on ? ' on' : '') + (l.on && l.kind === 'bad' ? ' bad' : '') + '"><code>' + hl(l.code) + '</code>' + (l.chip ? '<span class="chip' + (l.kind ? ' ' + l.kind : '') + '">' + l.chip + '</span>' : '') + '</div>').join('');
+
+    $('sStep').textContent = step ? 'Step ' + step + ' of ' + LAST + (mode === 'before' ? ' · old code' : ' · new code') : (mode === 'before' ? 'Old code' : 'New code');
+    $('sTitle').textContent = s.title;
+    $('sText').innerHTML = s.text;
+
+    prev.setAttribute('aria-disabled', step === 0);
+    next.textContent = step < LAST ? 'Next step' : mode === 'before' ? 'See the fix' : 'Start over';
+    dots.forEach((d, i) => d.classList.toggle('on', i <= step));
+  }
+
+  next.addEventListener('click', () => {
+    if (step < LAST) { step++; render(true); return; }
+    mode = mode === 'before' ? 'after' : 'before'; step = 0; render(false);
+  });
+  prev.addEventListener('click', () => {
+    if (step === 0) return;
+    step--; shownSql = STEPS[mode][step].sql.length; render(false);
+  });
+  tx.querySelectorAll('.switch button').forEach((b) => b.addEventListener('click', () => {
+    if (b.dataset.mode === mode) return;
+    mode = b.dataset.mode; shownSql = STEPS[mode][step].sql.length; render(false);
+  }));
+  render(false);
+})();
+</script>
+</body>
+</html>
