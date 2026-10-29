@@ -47,6 +47,7 @@
   .loop .who{color:var(--acc)}
   .loop b{display:block;font-family:var(--serif);font-size:22px;margin:6px 0 4px;color:var(--ink)}
   .loop p{color:var(--body);font-size:14px}
+  .stats.sim{margin-top:22px}
   .loop-note{color:var(--body);font-size:15px;margin-top:14px;max-width:72ch}
   .loop-note b{color:var(--ink);font-weight:600}
 
@@ -139,6 +140,12 @@
         <div><span class="mono who">Student B</span><b>Takes C's room</b><p>B doesn't want A's room, so a pair swap never happens.</p></div>
         <div><span class="mono who">Student C</span><b>Takes A's room</b><p>C wants A's room, which closes the loop.</p></div>
       </div>
+      <div class="stats sim reveal" role="group" aria-label="Simulation result">
+        <div><b>94</b><span>Students who move with pairs only (27%)</span></div>
+        <div><b>182</b><span>Students who move with loops of up to 5 (52%)</span></div>
+        <div><b>1.9&times;</b><span>More students moved</span></div>
+      </div>
+      <p class="loop-note reveal">Simulated: 350 made-up students, the size of the real volunteer swap list, with the median of 25 runs of our matcher. A test of the idea, not a result from real students.</p>
       <p class="loop-note reveal"><b>How the loop finder works.</b> Every posted room is a node, with an arrow from A to B when A would accept B's room. A depth-first search lists every loop of up to 5 students, pruned by a breadth-first distance check. Then a branch-and-bound search picks the set of non-overlapping loops that moves the most students. It's the same cycle-packing problem kidney exchanges solve, and like them it prefers short loops, because one person backing out breaks the whole loop.</p>
       <p class="loop-note reveal">BU only processes 2-person swaps, so a loop of k students is filed as k&minus;1 back-to-back BU Direct Swaps. Nothing is filed until every person in the loop confirms.</p>
     </section>
