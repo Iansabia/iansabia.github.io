@@ -47,7 +47,8 @@
   .loop .who{color:var(--acc)}
   .loop b{display:block;font-family:var(--serif);font-size:22px;margin:6px 0 4px;color:var(--ink)}
   .loop p{color:var(--body);font-size:14px}
-  .loop-note{color:var(--body);font-size:14px;margin-top:12px;max-width:70ch}
+  .loop-note{color:var(--body);font-size:15px;margin-top:14px;max-width:72ch}
+  .loop-note b{color:var(--ink);font-weight:600}
 
   .ladder{list-style:none;display:grid;border-top:1px solid var(--rule)}
   .ladder li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:16px 0;border-bottom:1px solid var(--rule)}
@@ -138,6 +139,7 @@
         <div><span class="mono who">Student B</span><b>Takes C's room</b><p>B doesn't want A's room, so a pair swap never happens.</p></div>
         <div><span class="mono who">Student C</span><b>Takes A's room</b><p>C wants A's room, which closes the loop.</p></div>
       </div>
+      <p class="loop-note reveal"><b>How the loop finder works.</b> Every posted room is a node, with an arrow from A to B when A would accept B's room. A depth-first search lists every loop of up to 5 students, pruned by a breadth-first distance check. Then a branch-and-bound search picks the set of non-overlapping loops that moves the most students. It's the same cycle-packing problem kidney exchanges solve, and like them it prefers short loops, because one person backing out breaks the whole loop.</p>
       <p class="loop-note reveal">BU only processes 2-person swaps, so a loop of k students is filed as k&minus;1 back-to-back BU Direct Swaps. Nothing is filed until every person in the loop confirms.</p>
     </section>
 
@@ -149,7 +151,7 @@
         <li><span class="mono n">01</span><div><b>Personas and pain points</b><span class="who-did">Team</span><p>Four personas. For our main one, a first-year with a bad roommate, we ranked pain points by urgency &times; frequency &times; impact. Roommate incompatibility scored highest.</p></div></li>
         <li><span class="mono n">02</span><div><b>12 ideas, scored</b><span class="who-did">Team</span><p>Each idea got 1 to 5 on impact, feasibility, differentiation and cost. SwapChain scored 16 of 20. Every other option, from BU's own tool to the Discord, matches one pair at a time.</p></div></li>
         <li><span class="mono n">03</span><div><b>PRD, OKRs and the MVP</b><span class="who-did">Team</span><p>MVP must-haves: post a room, the loop finder, confirm first, and roommate profiles. The riskiest assumption: will students post? Our key results are targets, not results.</p></div></li>
-        <li><span class="mono n">04</span><div><b>The working demo</b><span class="who-did me">Me</span><p>A 3D campus map, floor-by-floor plans showing who's leaving and who's staying, room posting, and the loop finder. Built with Claude Code in plain JavaScript and deck.gl.</p></div></li>
+        <li><span class="mono n">04</span><div><b>The working demo</b><span class="who-did me">Me</span><p>A 3D campus map, floor-by-floor plans showing who's leaving and who's staying, room posting, and the loop finder (DFS cycle search + branch-and-bound cycle packing). Built with Claude Code in plain JavaScript and deck.gl.</p></div></li>
       </ol>
     </section>
 
