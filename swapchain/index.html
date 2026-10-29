@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en" data-layout="desktop">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SwapChain</title>
+  <meta name="description" content="SwapChain: a prototype marketplace for swapping dorm rooms, with a chain finder for multi-person swap loops. Made-up students only.">
+  <meta name="theme-color" content="#F6F3EE" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#100C20" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23604C9C'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M10 20.7c-4-1.3-4.7-7.3 0-10 3.5-2 7 .5 8.7 3.3s5.2 5.3 8.6 3.3'/%3E%3Cpath d='M22 11.3c4 1.3 4.7 7.3 0 10-3.5 2-7-.5-8.7-3.3S8.1 12.7 4.7 14.7'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles/app.css">
+  <script>
+    // Pick the layout before first paint so nothing jumps.
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var phone = q.get("embed") === "phone" || q.get("phone") === "1" || !window.matchMedia("(min-width: 1024px)").matches;
+      document.documentElement.setAttribute("data-layout", phone ? "phone" : "desktop");
+      if (q.get("embed") === "phone") document.documentElement.classList.add("embed");
+      var t = q.get("theme");
+      if (t !== "light" && t !== "dark") { try { t = localStorage.getItem("swapchain.theme"); } catch (e) { t = null; } }
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
+  <!-- deck.gl ships with the project so the demo runs with no wifi. The CDN copy is only a backup. -->
+  <script src="vendor/deck.gl-9.1.14.min.js" defer onerror="var s=document.createElement('script');s.src='https://unpkg.com/deck.gl@9.1.14/dist.min.js';document.head.appendChild(s);"></script>
+  <script type="module" src="src/app.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="map" role="application" aria-label="3D campus map. Use the Explore list to choose a dorm."></div>
+    <div id="map-fade" aria-hidden="true"></div>
+    <div id="overlay"></div>
+    <div class="loading" id="loading"><div class="inner">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 15.5c-3-1-3.5-5.5 0-7.5 2.6-1.5 5.3.4 6.5 2.5s3.9 4 6.5 2.5c3.5-2 3-6.5 0-7.5"/><path d="M16.5 8.5c3 1 3.5 5.5 0 7.5-2.6 1.5-5.3-.4-6.5-2.5S6.6 9.5 4 11"/></svg>
+      <span>Building the campus model</span>
+    </div></div>
+    <div class="tooltip" id="tooltip" role="tooltip"></div>
+
+    <header class="topbar">
+      <div class="brand"><span class="mark" id="logo"></span>SwapChain</div>
+      <nav class="topnav" role="tablist" aria-label="Main" id="topnav"></nav>
+      <div class="topright">
+        <span class="window-pill" id="window-pill"><i aria-hidden="true"></i><span></span></span>
+        <button class="btn secondary desk-only" id="preview-btn" data-act="preview" aria-pressed="false"></button>
+        <button class="btn secondary chat-btn" id="chat-btn" aria-pressed="false"></button>
+        <button class="icon-btn desk-only" id="theme-btn" data-act="cycletheme"></button>
+        <button class="avatar-btn" id="me-btn" data-act="tab" data-id="profile" aria-label="Your profile"></button>
+      </div>
+    </header>
+
+    <section id="panel" role="region" aria-label="Explore">
+      <button class="grabber" id="grabber" aria-label="Expand panel"></button>
+      <div class="panel-scroll" id="panel-scroll"></div>
+    </section>
+    <div id="plan" aria-live="polite"></div>
+
+    <aside class="live desk-only" id="live" aria-label="Live activity on SwapChain"></aside>
+    <aside class="chat" id="chat" aria-label="Ask SwapChain"></aside>
+    <svg class="linkline" id="linkline" aria-hidden="true"><path/><circle r="4"/></svg>
+    <div class="map-ctrls" id="map-ctrls"></div>
+    <div class="legend" id="legend" aria-hidden="true">
+      <span><i class="dorm"></i>Dorm with rooms offered</span>
+      <span><i class="loop"></i>A swap loop</span>
+      <span class="pair-key" style="display:none"><i class="pair"></i>1-to-1 swap</span>
+    </div>
+    <div class="osm-attr">© OpenStreetMap contributors</div>
+
+    <div class="counter" aria-live="polite">
+      <div class="counter-box">
+        <div><span class="big num ai-text">0</span> <span class="of">/ 40</span></div>
+        <div class="cap">students moved</div>
+        <div class="bar"><i class="d"></i><i class="l"></i></div>
+        <div class="keys"><span><i></i>1-to-1 swaps</span><span><i class="l"></i>Loops</span></div>
+        <span class="sr-only live"></span>
+      </div>
+    </div>
+    <div class="stat-card" role="dialog" aria-label="Results"></div>
+
+    <nav class="tabbar" role="tablist" aria-label="Main" id="tabbar"></nav>
+    <footer class="footer">
+      <span>Prototype with made-up students. Not affiliated with Boston University.</span>
+      <span aria-hidden="true">·</span>
+      <span>Map data © OpenStreetMap contributors</span>
+    </footer>
+    <div class="toasts" aria-live="polite"></div>
+
+    <div class="preview" id="preview" role="dialog" aria-label="Phone preview">
+      <div class="cap">
+        <h2>Same app, in your pocket.</h2>
+        <p>Tap a dorm, swipe the sheet, run the Chain Demo.</p>
+        <button class="btn secondary" data-act="closepreview">Close preview</button>
+      </div>
+      <div class="device-wrap" id="device-wrap"><div class="device" id="device"></div></div>
+    </div>
+  </div>
+</body>
+</html>

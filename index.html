@@ -319,6 +319,7 @@
   .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
   .card{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:24px 22px 22px;text-decoration:none;display:flex;flex-direction:column;gap:10px;position:relative;transition:background .3s;min-height:230px}
   .card:hover{background:var(--tile)}
+  .card.wide{grid-column:1/-1;min-height:0}
   .card .top-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .card .tagline{color:var(--acc)}
   .stars{font-family:var(--mono);font-size:12px;color:var(--body);white-space:nowrap;opacity:0;transition:opacity .4s}
@@ -426,6 +427,7 @@
       border-left:0;margin-right:calc(-1 * var(--gut));padding-right:var(--gut);scrollbar-width:none}
     .grid::-webkit-scrollbar{display:none}
     .card{scroll-snap-align:start;border-left:1px solid var(--rule);min-height:0;padding:20px 18px}
+    .card.wide{grid-column:auto}
     .contact a{padding:16px 12px}
     .contact b{display:none}
     .contact .mono{font-size:12.5px;color:var(--ink)}
@@ -650,6 +652,12 @@
     <div class="rule"></div>
     <p class="sub reveal">Smaller things I built because I wanted them to exist. Each one has its own page with a demo or the full write-up. Star counts are live from GitHub.</p>
     <div class="grid reveal">
+      <a class="card wide" href="swapchain/">
+        <div class="top-row"><span class="tagline mono">Product &middot; DS229 team project</span></div>
+        <h4>SwapChain</h4>
+        <p>A room-swap marketplace for BU, built in my product management class with a team of four. BU's swap tools only match pairs, so a swap happens only if the person whose room you want also wants yours. We scored 12 ideas and wrote the PRD, personas and OKRs together. I built the demo: a 3D campus map, floor plans and a loop finder that matches chains of students (A takes B's room, B takes C's, C takes A's). The students in it are made up.</p>
+        <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
+      </a>
       <a class="card" href="fantasy/">
         <div class="top-row"><span class="tagline mono">Python &middot; agents</span><span class="stars" data-repo="Iansabia/fantasy-ai"></span></div>
         <h4>Fantasy AI Manager</h4>
