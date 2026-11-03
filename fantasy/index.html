@@ -375,7 +375,7 @@
       <div class="rule"></div>
       <p class="sub reveal">It took over all three teams in week 4. Here's where they stand, and how its calls hold up against the experts.</p>
       <div class="res reveal" id="records"></div>
-      <p class="rnote reveal">Records as of <b>Oct 22, 2026</b>, the same snapshot as my home page.</p>
+      <p class="rnote reveal">Records as of <b>Nov 3, 2026</b>, the same snapshot as my home page.</p>
       <div class="bt reveal">
         <div class="panel">
           <div class="panel-h"><span class="mono">Weekly start/sit calls &middot; 2023 to 2025</span></div>
@@ -811,9 +811,9 @@ Top waiver idea:
 
   /* ---------- results: records copied from the home page snapshot ---------- */
   const TEAMS = [
-    { label: 'Team 1', sub: '10-team league', w: 4, l: 2, pf: 780.4, pa: 755.1, rank: 4, n: 10 },
-    { label: 'Team 2', sub: '12-team league', w: 4, l: 2, pf: 683.9, pa: 658.3, rank: 4, n: 12 },
-    { label: 'Team 3', sub: '10-team league', w: 3, l: 3, pf: 715.4, pa: 722.5, rank: 4, n: 10 },
+    { label: 'Team 1', sub: '10-team league', w: 6, l: 2, pf: 1042.0, pa: 957.3, rank: 3, n: 10 },
+    { label: 'Team 2', sub: '12-team league', w: 5, l: 3, pf: 910.6, pa: 900.3, rank: 5, n: 12 },
+    { label: 'Team 3', sub: '10-team league', w: 3, l: 5, pf: 908.4, pa: 984.5, rank: 7, n: 10 },
   ];
   const ord = (n) => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th');
   $('records').innerHTML = TEAMS.map((t) =>
