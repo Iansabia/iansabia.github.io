@@ -2,19 +2,28 @@
    Colors: the site tokens for the title reveal, the SwapChain map ground for the 3D intros
    (#EFEAE3 by day, #120E24 by night), the same glass Skip pill as the room intro. */
 
-/* Set by page-intro.js in <head>: a plain cover until the intro overlay is up. */
-html.pi-on::after {
+/* Set by page-intro.js in <head>, kept until the intro ends: the page's own kicker and heading wait
+   hidden (the intro draws copies of them on top). The rest of the page shows right away, so it is
+   what slides into the monitor during the desk transition. */
+html.pi-on .page-hero h1,
+html.pi-on .page-hero .kicker {
+  opacity: 0;
+  /* failsafe: if the script dies, the heading shows anyway */
+  animation: pi-unhide 0s linear 6s forwards;
+}
+@keyframes pi-unhide { to { opacity: 1; } }
+
+/* 3D intros only: the map ground color until the overlay is up (pi-cover goes at mount) */
+html.pi-cover.pi-3d::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 2147483000;
-  background: var(--bg, #F6F1E6);
+  background: #EFEAE3;
   pointer-events: none;
-  /* failsafe: if the script dies, the page shows anyway */
   animation: pi-cover 0s linear 6s forwards;
 }
-html.pi-on.pi-3d::after { background: #EFEAE3; }
-html.pi-on.pi-3d[data-theme="dark"]::after { background: #120E24; }
+html.pi-cover.pi-3d[data-theme="dark"]::after { background: #120E24; }
 @keyframes pi-cover { to { visibility: hidden; } }
 
 .pi {
@@ -33,6 +42,8 @@ html.pi-on.pi-3d[data-theme="dark"]::after { background: #120E24; }
 
 .pi-bg { position: absolute; inset: 0; background: var(--bg, #F6F1E6); }
 .pi.pi-3d .pi-bg { background: rgb(var(--pi-rgb)); }
+/* the title reveal plays over the real page: no background of its own */
+.pi:not(.pi-3d) .pi-bg { background: transparent; }
 .pi-stage { position: absolute; inset: 0; opacity: 0; }
 .pi-stage canvas { display: block; }
 /* keeps the title readable over the map: the ground color, fading out toward the 3D */
@@ -40,10 +51,10 @@ html.pi-on.pi-3d[data-theme="dark"]::after { background: #120E24; }
   position: absolute;
   inset: 0;
   opacity: 0;
-  background: linear-gradient(90deg, rgba(var(--pi-rgb), .94) 0%, rgba(var(--pi-rgb), .78) 34%, rgba(var(--pi-rgb), 0) 62%);
+  background: linear-gradient(90deg, rgba(var(--pi-rgb), .78) 0%, rgba(var(--pi-rgb), .6) 26%, rgba(var(--pi-rgb), 0) 46%);
 }
 @media (max-width: 760px) {
-  .pi-scrim { background: linear-gradient(180deg, rgba(var(--pi-rgb), .95) 0%, rgba(var(--pi-rgb), .82) 38%, rgba(var(--pi-rgb), 0) 64%); }
+  .pi-scrim { background: linear-gradient(180deg, rgba(var(--pi-rgb), .82) 0%, rgba(var(--pi-rgb), .62) 28%, rgba(var(--pi-rgb), 0) 48%); }
 }
 
 /* the title: copies of the page's own kicker and heading, laid exactly over them */
@@ -85,9 +96,11 @@ html.pi-on.pi-3d[data-theme="dark"]::after { background: #120E24; }
 
 @media (prefers-reduced-motion: reduce) {
   .pi { display: none; }
-  html.pi-on::after { display: none; }
+  html.pi-cover::after { display: none; }
+  html.pi-on .page-hero h1, html.pi-on .page-hero .kicker { opacity: 1; }
 }
 @media print {
   .pi { display: none; }
-  html.pi-on::after { display: none; }
+  html.pi-cover::after { display: none; }
+  html.pi-on .page-hero h1, html.pi-on .page-hero .kicker { opacity: 1; }
 }

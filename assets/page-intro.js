@@ -8,10 +8,13 @@
  * assets/page-intro/ and load only when the intro will actually play.
  *
  * Plays once per page per browser session (sessionStorage). Never with a #hash or ?nointro, never under
- * reduced motion; the 3D intros are skipped where WebGL2 is missing. It starts after the desk transition
- * finishes: a cross-document view transition (pagereveal), or window.deskTransitionDone (a promise),
- * or the "desk:done" event while <html> has the class "desk-busy". Skip pill, any key, click, wheel,
- * touch or scroll skips it. The page under it is the finished page: the overlay only fades away.
+ * reduced motion; the 3D intros are skipped where WebGL2 is missing (or on save-data, 2g and 3g).
+ * It mounts before the page's first frame when a desk transition arrives (pagereveal), so the heading
+ * already animates inside the monitor while the page zooms in; the clock starts 0.2s into the
+ * transition. Pages add <link rel="expect" href="#<h1 id>" blocking="render"> so the heading exists by
+ * then. The title reveal plays over the real page (only its kicker and heading wait hidden); the 3D
+ * intros sit on the map ground, which blends to the page color before it fades. Skip pill, any key,
+ * click, wheel, touch or scroll skips it. The page under it is the finished page.
  */
 (function () {
   'use strict';
@@ -46,11 +49,11 @@
   if (mode !== 'title') {
     if (!webgl2()) return; // no WebGL: no intro (the page itself has its own fallbacks)
     var c = navigator.connection || {};
-    if (c.saveData || ['slow-2g', '2g'].indexOf(c.effectiveType) > -1) mode = 'title';
+    if (c.saveData || ['slow-2g', '2g', '3g'].indexOf(c.effectiveType) > -1) mode = 'title';
   }
   try { sessionStorage.setItem(KEY, '1'); } catch (e) { /* checked above */ }
 
-  html.classList.add('pi-on');
+  html.classList.add('pi-on', 'pi-cover');
   if (mode !== 'title') html.classList.add('pi-3d');
 
   // ---------------------------------------------------------------- start loading the 3D now (lazy: only when it plays)
@@ -80,31 +83,31 @@
   }
   EVENTS.forEach(function (ev) { addEventListener(ev, onInput, { capture: true, passive: true }); });
 
-  // ---------------------------------------------------------------- wait for the desk transition
-  var vtFinished = null;
-  addEventListener('pagereveal', function (e) {
-    if (e.viewTransition && e.viewTransition.finished) vtFinished = e.viewTransition.finished;
-  }, { once: true });
-  function whenRevealed(go) {
-    var fired = false;
-    function once() { if (!fired) { fired = true; go(); } }
-    setTimeout(once, 4000); // never wait longer than this on a transition
-    // two frames after parsing: pagereveal has fired by then if the browser has it
-    requestAnimationFrame(function () { requestAnimationFrame(function () {
-      var waits = [];
-      if (vtFinished) waits.push(vtFinished);
-      var d = window.deskTransitionDone;
-      if (d && typeof d.then === 'function') waits.push(d);
-      if (html.classList.contains('desk-busy')) waits.push(new Promise(function (r) { document.addEventListener('desk:done', r, { once: true }); }));
-      if (!waits.length) return once();
-      Promise.all(waits.map(function (p) { return Promise.resolve(p).catch(function () {}); })).then(once);
-    }); });
+  // ---------------------------------------------------------------- mount as early as possible
+  // With a desk transition arriving, mount at pagereveal (before the new page's first frame) so the
+  // overlay is part of what slides in, and the heading reveal plays live inside the monitor.
+  var vtFinished = null, lag = 0;
+  function tryMount() {
+    if (state !== 'wait') return;
+    var sel = script.getAttribute('data-title');
+    var h = (sel && document.querySelector(sel)) || document.querySelector('.page-hero h1');
+    if (h || document.readyState !== 'loading') mount();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { whenRevealed(mount); }, { once: true });
-  else whenRevealed(mount);
+  addEventListener('pagereveal', function (e) {
+    var vt = e.viewTransition;
+    if (vt && vt.finished) {
+      vtFinished = vt.finished.catch(function () {});
+      lag = 0.2; // the intro picks up as the page zooms back in
+      if (vt.ready) vt.ready.catch(function () { lag = 0; vtFinished = null; }); // skipped
+    }
+    tryMount();
+  }, { once: true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tryMount, { once: true });
+  else setTimeout(tryMount, 0);
 
   // ---------------------------------------------------------------- the overlay
-  var ov, bg, stage, scrim, titles, skip, scene = null, raf = 0, t0 = 0, mo = null;
+  var ov, bg, stage, scrim, titles, skip, scene = null, raf = 0, t0 = 0, t3 = 0, mo = null, w0 = 0;
+  var groundRGB = null, pageRGB = null;
   var clones = []; // { wrap, inner, kind }
   var phone = matchMedia('(max-width: 760px)').matches;
   var dark = function () { return html.getAttribute('data-theme') === 'dark'; };
@@ -113,10 +116,11 @@
 
   // timeline (seconds)
   var TL = {
-    title: { end: 1.9, kick: [0.08, 0.6], head: [0.14, 0.78], out: [1.35, 1.9] },
-    // 3D: the map fades back to the ground color first, then the ground color fades to the page,
-    // so the map and the page never show through each other
-    '3d': { end: 2.3, stage: [0, 0.35], sweep: 1.95, scrim: [0.55, 1.1], kick: [0.62, 1.12], head: [0.72, 1.3], fade3d: [1.5, 1.92], out: [1.88, 2.3] },
+    title: { end: 1.1, kick: [0, 0.35], head: [0.05, 0.5], out: [0.6, 1.1] },
+    // 3D, from the moment the scene is ready (the title has been revealing over the ground meanwhile):
+    // the map fades back to the ground, the ground blends to the page color, then the overlay fades,
+    // so the map and the page never show through each other and no color jumps
+    '3d': { end: 1.8, stage: [0, 0.18], sweep: 1.5, scrim: [0, 0.18], fade3d: [1.15, 1.45], out: [1.4, 1.8] },
   };
   var run = null; // the active timeline
 
@@ -146,13 +150,35 @@
     c.style.width = r.width + 'px';
     wrap.appendChild(c);
     titles.appendChild(wrap);
-    clones.push({ wrap: wrap, inner: c, kind: kind, stays: inView });
+    clones.push({ wrap: wrap, inner: c, kind: kind, stays: inView, src: src, pad: pad });
+  }
+
+  // web fonts can land after mount: keep the copies exactly on the real kicker and heading
+  function replace() {
+    for (var i = 0; i < clones.length; i++) {
+      var k = clones[i]; if (!k.stays) continue;
+      var r = k.src.getBoundingClientRect(); if (!r.width) continue;
+      k.wrap.style.left = (r.left - k.pad) + 'px'; k.wrap.style.top = (r.top - k.pad) + 'px';
+      k.wrap.style.width = (r.width + 2 * k.pad) + 'px'; k.wrap.style.height = (r.height + 2 * k.pad) + 'px';
+      k.inner.style.width = r.width + 'px';
+    }
+  }
+  function rgbOf(v) {
+    var n = el('div'); n.style.cssText = 'position:absolute;visibility:hidden;color:' + v;
+    html.appendChild(n); var m = getComputedStyle(n).color.match(/[\d.]+/g); n.remove();
+    return m && m.length >= 3 ? [+m[0], +m[1], +m[2]] : null;
+  }
+  function colors() {
+    groundRGB = dark() ? [18, 14, 36] : [239, 234, 227];
+    pageRGB = rgbOf('var(--bg)') || groundRGB;
   }
 
   function mount() {
     if (state !== 'wait') return;
     state = 'run';
     startY = window.scrollY || 0;
+    w0 = innerWidth;
+    colors();
     ov = el('div', 'pi' + (mode !== 'title' ? ' pi-3d' : '') + (dark() ? ' pi-dark' : ''));
     bg = el('div', 'pi-bg'); stage = el('div', 'pi-stage'); scrim = el('div', 'pi-scrim'); titles = el('div', 'pi-title');
     [bg, stage, scrim, titles].forEach(function (n) { n.setAttribute('aria-hidden', 'true'); });
@@ -160,53 +186,70 @@
     skip.addEventListener('click', function () { finish(true); });
     ov.append(bg, stage, scrim, titles, skip);
     html.appendChild(ov); // outside <body>, like the room intro
-    html.classList.remove('pi-on');
+    html.classList.remove('pi-cover'); // pi-on stays: the real kicker and heading wait under the copies
 
     var sel = script.getAttribute('data-title');
     var h1 = (sel && document.querySelector(sel)) || document.querySelector('.page-hero h1') || document.querySelector('main h1, h1');
     var hero = h1 && (h1.closest('.page-hero') || h1.parentElement);
     cloneOver(hero && hero.querySelector('.kicker'), 'kick');
     cloneOver(h1, 'head');
-    apply(0, TL.title); // everything hidden, background up
+    apply(-1, TL.title); // everything hidden, background up
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (state === 'run') replace(); });
+    addEventListener('load', function () { if (state === 'run') replace(); }, { once: true });
 
     mo = new MutationObserver(function () {
       ov.classList.toggle('pi-dark', dark());
+      colors();
       if (scene && scene.setTheme) scene.setTheme(dark());
     });
     mo.observe(html, { attributes: true, attributeFilter: ['data-theme'] });
     addEventListener('resize', onResize);
 
     if (mode === 'title') return begin(TL.title);
-    var cap = TEST ? 60000 : 1200; // the 3D gets this long to be ready, else the title reveal plays
-    var timer = new Promise(function (r) { setTimeout(function () { r(null); }, cap); });
+    // 3D: the title reveals over the ground right away; the map joins as soon as it is ready. It gets
+    // 600ms, or until the desk transition ends if that is later, else the title reveal finishes alone.
+    begin(null);
+    var cap = TEST ? 60000 : 600;
+    var timer = new Promise(function (r) { setTimeout(r, cap); });
+    var deadline = Promise.all([timer, vtFinished || null]).then(function () { return null; });
     var made = modP.then(function (m) {
       return m.create({ host: stage, dark: dark(), phone: phone, width: innerWidth, height: innerHeight });
     });
-    Promise.race([made.catch(function (e) { console.warn('page intro:', e && e.message); return null; }), timer]).then(function (s) {
+    Promise.race([made.catch(function (e) { console.warn('page intro:', e && e.message); return null; }), deadline]).then(function (s) {
       if (state !== 'run') { if (s) s.dispose(); return; }
       if (!s) {
         made.then(function (late) { if (late && late !== scene) late.dispose(); }, function () {});
-        mode = 'title'; ov.classList.remove('pi-3d'); return begin(TL.title);
+        // finish as the title reveal: the ground blends to the page color, then the overlay fades
+        var tf = Math.max(TL.title.out[0], now());
+        run = { end: tf + 0.45, kick: TL.title.kick, head: TL.title.head, fade3d: [tf, tf + 0.3], out: [tf + 0.15, tf + 0.45] };
+        readyResolve('title');
+        return;
       }
       scene = s;
-      begin(TL['3d']);
+      t3 = TEST && TEST.hold ? 0 : now();
+      run = TL['3d'];
+      readyResolve(mode);
     });
   }
-  var onResize = function () { if (!TEST) finish(true); };
+  // mobile toolbars and split view settling fire resize too: only a real width change ends it
+  var onResize = function () { if (!TEST && Math.abs(innerWidth - w0) > 40) finish(true); };
 
+  // tl null: a 3D intro waiting for its scene (the title reveals meanwhile, nothing ends)
+  var WAIT = { end: Infinity, kick: TL.title.kick, head: TL.title.head, out: [1e9, 1e9 + 1] };
+  function now() { return (performance.now() - t0) / 1000 - lag; }
   function begin(tl) {
-    run = tl;
-    readyResolve(mode);
-    if (TEST && TEST.hold) return hold(0);
+    run = tl || WAIT;
+    if (tl) readyResolve(mode);
     t0 = performance.now();
+    if (TEST && TEST.hold) return;
     raf = requestAnimationFrame(tick);
   }
-  function tick(now) {
+  function tick() {
     raf = 0;
     if (state !== 'run') return;
-    var t = (now - t0) / 1000;
+    var t = now();
     apply(t, run);
-    if (t >= run.end) return finish(false);
+    if (t >= (run === TL['3d'] ? t3 + run.end : run.end)) return finish(false);
     raf = requestAnimationFrame(tick);
   }
 
@@ -215,19 +258,26 @@
   var span = function (t, a) { return clamp((t - a[0]) / (a[1] - a[0])); };
   var easeOut = function (x) { return 1 - Math.pow(1 - x, 3); };
   var smooth = function (x) { return x * x * (3 - 2 * x); };
+  function mix(a, b, u) { return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * u) + ',' + Math.round(a[1] + (b[1] - a[1]) * u) + ',' + Math.round(a[2] + (b[2] - a[2]) * u) + ')'; }
   function apply(t, tl) {
-    var out = smooth(span(t, tl.out));
+    var is3d = tl === TL['3d'];
+    var tt = is3d ? t - t3 : t; // the 3D parts run on the scene's clock, the title on the page's
+    var out = smooth(span(tt, tl.out));
     bg.style.opacity = 1 - out;
     skip.style.opacity = 1 - out;
     var drawn = null;
-    if (tl.sweep && scene) {
-      var gone3d = smooth(span(t, tl.fade3d));
-      stage.style.opacity = smooth(span(t, tl.stage)) * (1 - gone3d);
-      scrim.style.opacity = smooth(span(t, tl.scrim)) * (1 - gone3d);
-      drawn = scene.frame(clamp(t / tl.sweep), t);
+    if (mode !== 'title' && groundRGB) {
+      var blend = tl.fade3d ? smooth(span(tt, tl.fade3d)) : 0;
+      bg.style.background = mix(groundRGB, pageRGB, blend);
+    }
+    if (is3d && scene) {
+      var gone3d = smooth(span(tt, tl.fade3d));
+      stage.style.opacity = smooth(span(tt, tl.stage)) * (1 - gone3d);
+      scrim.style.opacity = smooth(span(tt, tl.scrim)) * (1 - gone3d);
+      drawn = scene.frame(clamp(tt / tl.sweep), tt);
     } else { stage.style.opacity = 0; scrim.style.opacity = 0; }
     for (var i = 0; i < clones.length; i++) {
-      var k = clones[i], p = easeOut(span(t, k.kind === 'head' ? tl.head : tl.kick));
+      var k = clones[i], p = easeOut(span(t, k.kind === 'head' ? TL.title.head : TL.title.kick));
       var em = k.kind === 'head' ? 0.42 : 0.6; // in em of the element
       k.inner.style.transform = 'translate3d(0,' + ((1 - p) * em).toFixed(4) + 'em,0)';
       k.inner.style.opacity = (p * (k.stays ? 1 : 1 - out)).toFixed(4);
@@ -243,7 +293,7 @@
     EVENTS.forEach(function (ev) { removeEventListener(ev, onInput, { capture: true }); });
     removeEventListener('resize', onResize);
     if (mo) mo.disconnect();
-    html.classList.remove('pi-on', 'pi-3d');
+    html.classList.remove('pi-on', 'pi-cover', 'pi-3d');
     readyResolve(mode);
     if (was === 'wait' || !ov) return; // skipped before it began: just drop the cover
     if (skipped) ov.classList.add('is-out');
@@ -255,7 +305,7 @@
   // ---------------------------------------------------------------- hooks for screenshots and tests
   function hold(t) {
     if (state !== 'run' || !run) return Promise.resolve(false);
-    var p = apply(t, run);
+    var p = apply(run === TL['3d'] ? t3 + t : t, run);
     return Promise.resolve(p).then(function () {
       return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(function () { r(true); }); }); });
     });

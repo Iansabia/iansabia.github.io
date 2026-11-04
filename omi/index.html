@@ -9,6 +9,7 @@
 <script src="../assets/desk-transition.js"></script>
 <link rel="stylesheet" href="../assets/page-intro.css">
 <script src="../assets/page-intro.js" data-intro="title"></script>
+<link rel="expect" href="#main-h1" blocking="render">
 <meta name="description" content="How I fixed a nested SQLite transaction bug that broke chat, tasks and background synthesis in Omi's Mac app. Merged into main.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://iansabia.github.io/omi/">
@@ -367,7 +368,7 @@
   <main id="main">
     <header class="page-hero">
       <div class="kicker mono"><a href="../#projects">Projects</a><span aria-hidden="true">/</span><span>TypeScript &middot; open source</span></div>
-      <h1>A fix <em>inside Omi</em></h1>
+      <h1 id="main-h1">A fix <em>inside Omi</em></h1>
       <p class="lede">Omi is an open-source AI wearable and desktop app. Its Mac app had a bug: chat, tasks and background synthesis all failed with the same database error. I traced it to one check, wrote a test that failed the same way, and fixed it. The fix was merged into main.</p>
       <div class="facts mono"><span>PR<b>#8443</b></span><span>Merged<b>Jun 27, 2026</b></span><span>Tests<b>233/233</b></span><span>Diff<b>+81 &minus;3</b></span></div>
       <div class="actions"><a class="more" href="#stack">Step through the bug <span aria-hidden="true">&rarr;</span></a><a class="more quiet" href="https://github.com/BasedHardware/omi/pull/8443">See the pull request <span aria-hidden="true">&nearr;</span></a></div>
