@@ -34,7 +34,7 @@
 <style>
   /* Continuum page. The scroll story comes first, then the product work behind it.
      The pictures and frames load from the public demo page at iansabia.github.io/continuum-caddy.
-     This page needs its assets/how3, assets/how4 and assets/app2m folders: do not rename or delete them there. */
+     This page needs its assets/app2m folder: do not rename or delete it there. The 3D hole lives in hole/ next to this page. */
   .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:28px clamp(28px,4vw,56px);align-items:start}
   .copy p{color:var(--body);margin-bottom:14px;max-width:60ch}
   .copy p:last-child{margin-bottom:0}
@@ -65,9 +65,29 @@
   .who-did{display:inline-block;font:500 10.5px/1 var(--sans);letter-spacing:.01em;text-transform:none;padding:4px 6px 3px;margin-left:8px;vertical-align:2px;border:1px solid var(--rule);color:var(--body)}
   .who-did.me{background:var(--acc);border-color:var(--acc);color:var(--bg)}
   .nw{white-space:nowrap}
-  .cc-skip{color:var(--acc);text-underline-offset:3px;white-space:nowrap}
 
-  /* ===== The two scroll scenes, ported from the demo page. Every class is cc- prefixed.
+  /* ===== The 3D hole: the demo in hole/, framed like the figures on this page. Its ground colour follows the theme. ===== */
+  .hole-fig{--hg:#EFEAE3;margin:clamp(20px,3vw,28px) 0 0;border:1px solid var(--rule);background:var(--hg);color:var(--ink);overflow:hidden}
+  :root[data-theme="dark"] .hole-fig{--hg:#120E24}
+  .hole-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 14px;min-height:41px;border-bottom:1px solid var(--rule);background:var(--bg);color:var(--body)}
+  .hole-h>.mono{font-size:11px;letter-spacing:.06em}
+  .hole-full{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.06em;color:var(--acc);text-decoration:none;white-space:nowrap;padding:4px 0}
+  .hole-full svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s var(--ease)}
+  .hole-full:hover{text-decoration:underline;text-underline-offset:3px}
+  .hole-full:hover svg{transform:translate(1px,-1px)}
+  .hole-view{position:relative;height:clamp(520px,calc(100vh - var(--bar) - 150px),720px)}
+  @supports (height:100svh){.hole-view{height:clamp(520px,calc(100svh - var(--bar) - 150px),720px)}}
+  .hole-view iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:transparent;opacity:0;transition:opacity .5s var(--ease)}
+  .hole-view.is-on iframe{opacity:1}
+  .hole-wait{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:12px;color:var(--body);font-size:14px}
+  .hole-wait svg{width:46px;height:46px;color:var(--acc)}
+  .hole-f{padding:10px 14px;border-top:1px solid var(--rule);background:var(--bg);color:var(--body);font-size:13px;line-height:1.5}
+  .hole-f a{color:inherit;text-underline-offset:2px}
+  .hole-tag{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--warm);margin-right:2px}
+  .hole-tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .hole-f-s{display:none}
+
+  /* ===== The app screen scroll scene, ported from the demo page. Every class is cc- prefixed.
      The frames are baked on #0B0817, so the panel is that colour in both themes. ===== */
   .cc{--cc-bg:#0B0817;--cc-ink:#EFEAF8;--cc-body:#A79FBF;--cc-acc:#9B85FF;--cc-rule:#2A2342;--cc-avail:calc(100vh - var(--bar) - 24px)}
   @supports (height:100svh){.cc{--cc-avail:calc(100svh - var(--bar) - 24px)}}   /* svh: the height with a phone's address bar showing, so the pin never hangs off the bottom */
@@ -84,33 +104,10 @@
   .cc-scrub-only{display:none}
   [data-cc="scrub"] .cc-tabs{display:flex}
   [data-cc="scrub"] .cc-scrub-only{display:inline}
-  [data-cc="scrub"] .cc-still-only{display:none}
 
-  /* the stage: a poster under a canvas; the canvas draws the frame for the current scroll position */
-  .cc-view{display:none;position:relative;overflow:hidden;margin:0 auto;aspect-ratio:8/5;background:var(--cc-bg);
-    width:min(100%,calc((var(--cc-avail) - 45px - var(--cc-cap,150px)) * 1.6))}
-  [data-cc-tier="p"] .cc-view{aspect-ratio:9/16;width:min(100%,calc((var(--cc-avail) - 45px - var(--cc-cap,170px)) * .5625))}   /* the stage keeps the shape of the frames it was given */
-  [data-cc="scrub"] .cc-view{display:block}
-  .cc-view>.cc-poster,.cc-view>canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.1)}   /* the frames have soft edges; crop 10% like the demo page does */
-  .cc-poster{z-index:1;transition:opacity .35s}
-  .cc-view canvas{z-index:2;opacity:0;transition:opacity .3s}
-  .cc-view.is-painted canvas{opacity:1}
-  .cc-view.is-painted .cc-poster{opacity:0}
-  /* the crop leaves hard edges where a bright frame meets the panel; fade every edge into the panel colour */
-  .cc-view::after,.cc-still::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
-    box-shadow:inset 0 0 clamp(12px,1.8vw,26px) clamp(12px,1.8vw,26px) var(--cc-bg)}
   .cc-loading{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:7;height:2px;width:120px;background:rgba(127,127,127,.25);overflow:hidden;opacity:0;transition:opacity .3s}
-  .cc-view>.cc-loading{top:12px;bottom:auto}
   .cc-loading::after{content:"";position:absolute;inset:0;transform:scaleX(var(--p,0));transform-origin:left;background:var(--cc-acc)}
   .is-loading>.cc-loading{opacity:1}
-
-  /* step 3: the flight frames carry no numbers, so the example values are text over the picture.
-     The phone screens in steps 2 and 5, and the app frames, do carry baked numbers and labels; the .cc-f line says they are an example. */
-  .cc-chip{position:absolute;left:50%;bottom:16px;transform:translate(-50%,6px);z-index:6;display:flex;align-items:baseline;gap:4px 16px;padding:7px 12px;
-    border:1px solid var(--cc-rule);background:rgba(11,8,23,.84);color:var(--cc-ink);font-size:12px;letter-spacing:.06em;white-space:nowrap;opacity:0;transition:opacity .3s,transform .3s}
-  .cc-chip .k{color:var(--cc-acc)}
-  .cc-chip small{font-size:inherit;color:var(--cc-body);margin-right:6px}
-  .cc-view[data-on="2"] .cc-chip,.cc-still .cc-chip{opacity:1;transform:translate(-50%,0)}
 
   /* the caption slot: every step sits in the same grid cell, so the slot is as tall as the longest step and never jumps */
   .cc-cap{list-style:none;display:grid}
@@ -124,11 +121,6 @@
   [data-cc="scrub"] .cc-cap{border-top:1px solid var(--cc-rule)}
   [data-cc="scrub"] .cc-step{grid-area:1/1;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s;pointer-events:none}
   [data-cc="scrub"] .cc-step.is-active{opacity:1;transform:none;pointer-events:auto;transition-delay:.08s}
-
-  /* the stills layout: one picture per step, cropped like the stage */
-  .cc-still{grid-column:1/-1;position:relative;overflow:hidden;width:100%;max-width:760px;margin:0 auto 10px;aspect-ratio:8/5;background:var(--cc-bg)}
-  .cc-still img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.1)}
-  [data-cc="scrub"] .cc-still{display:none}
 
   /* the phone: a CSS iPhone whose screen scrubs through the app, with a readout on each side */
   .cc-next{margin-top:clamp(44px,6vw,72px)}
@@ -170,24 +162,19 @@
     .cc-step{grid-template-columns:1fr;gap:4px;padding:12px 14px}
     .cc-step b{font-size:21px}
     .cc-step p{font-size:14.5px;line-height:1.5}
-    .cc-still{aspect-ratio:9/16;width:min(100%,calc(62vh * .5625))}
-    .cc-chip{display:grid;grid-template-columns:repeat(3,auto);gap:2px 8px;padding:6px 8px;font-size:9.5px;letter-spacing:.03em;max-width:calc(100% - 8px)}
-    .cc-chip .k{grid-column:1/-1}
-    .cc-chip small{display:block;margin:0}
     .cc-appview{grid-template-columns:1fr;justify-items:center}
     .cc-side{display:none}   /* phones: the stage and the caption get the height */
     .cc-f{padding:8px 14px;font-size:12px;line-height:1.45}   /* stays on phones: it is the line that says the screens show an example */
     .cc-f-l{display:none}
     .cc-f-s{display:inline}
+    .hole-view{height:clamp(540px,calc(100vh - var(--bar) - 110px),760px)}
+    .hole-f{font-size:12px;padding:8px 12px}
+    .hole-f-l{display:none}
+    .hole-f-s{display:inline}
     .cc-iphone{--ph:clamp(240px,calc(var(--cc-avail) - 41px - var(--cc-cap,170px) - 34px),560px)}
   }
-  @supports (height:100svh){@media (max-width:760px){.cc-still{width:min(100%,calc(62svh * .5625))}}}
-  /* landscape phones: keep the stills stage wide enough for the Example shot chip */
-  @media (max-width:760px) and (orientation:landscape){.cc-still{width:min(100%,max(184px,calc(62svh * .5625)))}}
+  @supports (height:100svh){@media (max-width:760px){.hole-view{height:clamp(540px,calc(100svh - var(--bar) - 110px),760px)}}}
   @media (max-width:560px){[data-cc="scrub"] .cc-h .cc-scrub-only{display:none}}
-  /* the smallest phones: stack the chip so it never runs past the stage */
-  .cc-view{container-type:inline-size}
-  @container (max-width:184px){.cc-chip{grid-template-columns:auto;gap:1px}.cc-chip small{display:inline;margin-right:5px}}
   /* touch: give the small step tabs a taller hit area */
   @media (pointer:coarse){.cc-tab{position:relative}.cc-tab::after{content:"";position:absolute;inset:-10px -2px}}
 </style>
@@ -228,58 +215,26 @@
       <h1>The caddy<br><em>you already own</em></h1>
       <p class="lede">Continuum is an AI golf caddy that tracks your shots from ordinary phone video and tells you where to aim, based on where you've been missing. I&nbsp;<span class="nw">co-founded</span> it and lead <span class="nw">product and ML.</span></p>
       <div class="facts mono"><span>Role<b>Co-founder</b></span><span>Since<b>Jul 2025</b></span><span>My part<b>Product and ML</b></span><span>Golfer conversations<b>~70</b></span></div>
-      <p class="hole-link" style="margin-top:22px"><a class="more" href="hole/">See a 3D example hole <span aria-hidden="true">&rarr;</span></a></p>
+      <p class="hole-link" style="margin-top:22px"><a class="more" href="#ccHole">Play the 3D example hole <span aria-hidden="true">&darr;</span></a></p>
     </header>
 
     <section class="block" id="how">
       <div class="head reveal"><h2>How it works</h2><span class="num mono">01</span></div>
       <div class="rule"></div>
-      <p class="sub reveal"><span class="cc-scrub-only">Scroll to play five steps</span><span class="cc-still-only">Five steps</span>, from clamping the phone to the golf cart to finding your ball.<span class="cc-scrub-only"> Or <a class="cc-skip" href="#pivot">skip the animations</a>.</span></p>
+      <p class="sub reveal">One example play of a real hole, hole 10 at Miacomet Golf Club on Nantucket, a par 4. Press play, or step through it.</p>
 
-      <div class="cc-track" id="ccFilm" style="--len:420vh">
-        <div class="cc-pin">
-          <figure class="cc-fig" aria-labelledby="ccFilmLbl">
-            <figcaption class="cc-h"><span class="mono" id="ccFilmLbl">How it works<span class="cc-scrub-only"> &middot; Scroll to play</span></span>
-              <span class="cc-tabs mono"><button class="cc-tab" type="button" aria-current="step" aria-label="Step 01, clamp it to the cart">01</button><button class="cc-tab" type="button" aria-label="Step 02, it tracks the swing and the ball">02</button><button class="cc-tab" type="button" aria-label="Step 03, it reads the numbers">03</button><button class="cc-tab" type="button" aria-label="Step 04, it knows your miss">04</button><button class="cc-tab" type="button" aria-label="Step 05, then it finds your ball">05</button></span></figcaption>
-            <div class="cc-view" data-view role="img" aria-label="Scroll animation, a 3D illustration. A phone clamped to a golf cart films a golfer's swing, with a stick figure drawn over the body. The ball's flight is drawn as an arc, with example numbers for one shot, and the ball comes down near a purple oval around the flag. The cart then drives to the spot and a marker shows where the ball is.">
-              <img class="cc-poster" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" decoding="async">
-              <canvas aria-hidden="true"></canvas>
-              <div class="cc-chip mono" aria-hidden="true"><span class="k">Example shot</span><span><small>Carry</small>156&nbsp;yd</span><span><small>Ball speed</small>110&nbsp;mph</span><span><small>Launch</small>17.5&deg;</span></div>
-              <div class="cc-loading" aria-hidden="true"></div>
-            </div>
-            <ol class="cc-cap">
-              <li class="cc-step is-active">
-                <div class="cc-still"><picture><source media="(max-width:760px)" srcset="https://iansabia.github.io/continuum-caddy/assets/how4/still_0.webp"><img loading="lazy" decoding="async" src="https://iansabia.github.io/continuum-caddy/assets/how3/still_0.webp" alt="A golf cart seen from the driver's seat, with a phone clamped to the roof bar. Its screen shows a golfer."></picture></div>
-                <div class="t"><span class="mono n">01</span><b>Clamp it to the cart</b></div>
-                <p>Clamp your phone to the cart. That is the whole setup, with no launch monitor and no extra sensors.</p>
-              </li>
-              <li class="cc-step">
-                <div class="cc-still"><picture><source media="(max-width:760px)" srcset="https://iansabia.github.io/continuum-caddy/assets/how4/still_2.webp"><img loading="lazy" decoding="async" src="https://iansabia.github.io/continuum-caddy/assets/how3/still_2.webp" alt="The phone up close. Its screen shows the golfer in the middle of a swing, with a stick figure drawn over the body."></picture></div>
-                <div class="t"><span class="mono n">02</span><b>It tracks the swing and the ball</b></div>
-                <p>The phone records ordinary video. It finds your swing by following your body, then follows the ball through the air, frame by frame.</p>
-              </li>
-              <li class="cc-step">
-                <div class="cc-still"><picture><source media="(max-width:760px)" srcset="https://iansabia.github.io/continuum-caddy/assets/how4/still_3.webp"><img loading="lazy" decoding="async" src="https://iansabia.github.io/continuum-caddy/assets/how3/still_3.webp" alt="A purple arc traces the ball's flight over the grass, with a vertical line marking its height at the top."></picture><div class="cc-chip mono" aria-hidden="true"><span class="k">Example shot</span><span><small>Carry</small>156&nbsp;yd</span><span><small>Ball speed</small>110&nbsp;mph</span><span><small>Launch</small>17.5&deg;</span></div></div>
-                <div class="t"><span class="mono n">03</span><b>It reads the numbers</b></div>
-                <p>From the video it estimates the shot. The animation shows ball speed, launch angle and distance for one example shot.</p>
-              </li>
-              <li class="cc-step">
-                <div class="cc-still"><picture><source media="(max-width:760px)" srcset="https://iansabia.github.io/continuum-caddy/assets/how4/still_4.webp"><img loading="lazy" decoding="async" src="https://iansabia.github.io/continuum-caddy/assets/how3/still_4.webp" alt="The ball comes down on the grass near a purple oval around the flag."></picture></div>
-                <div class="t"><span class="mono n">04</span><b>It knows your miss</b></div>
-                <p>As shots add up, it sees which way you tend to miss and tells you where to aim. If you keep missing right, it moves your aim left.</p>
-              </li>
-              <li class="cc-step">
-                <div class="cc-still"><picture><source media="(max-width:760px)" srcset="https://iansabia.github.io/continuum-caddy/assets/how4/still_5.webp"><img loading="lazy" decoding="async" src="https://iansabia.github.io/continuum-caddy/assets/how3/still_5.webp" alt="The cart is parked next to an orange oval on the ground, and a marker shows the ball inside it."></picture></div>
-                <div class="t"><span class="mono n">05</span><b>Then it finds your ball</b></div>
-                <p>After the shot, the app helps you find your ball. In the animation, the cart drives to the spot and a marker shows where the ball is.</p>
-              </li>
-            </ol>
-            <p class="cc-f"><span class="cc-f-l">A 3D illustration. The numbers and labels on the phone screens are an example and say nothing about accuracy.</span><span class="cc-f-s">A 3D illustration. Numbers and labels are examples.</span></p>
-          </figure>
+      <figure class="hole-fig reveal" id="ccHole" aria-labelledby="ccHoleLbl">
+        <figcaption class="hole-h"><span class="mono" id="ccHoleLbl">Miacomet hole 10 &middot; Par 4</span>
+          <a class="hole-full mono" href="hole/">Open full screen <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 2.5h5v5M9.5 2.5 3 9"/></svg></a></figcaption>
+        <div class="hole-view">
+          <div class="hole-wait" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M12 50 C 22 8, 44 6, 52 30" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#C0632F"/></svg><span>Building the hole</span></div>
+          <iframe id="ccHoleFrame" title="3D example play of Miacomet hole 10" allow="fullscreen" referrerpolicy="same-origin"></iframe>
+          <noscript><iframe src="hole/?embed=1" loading="lazy" title="3D example play of Miacomet hole 10"></iframe></noscript>
         </div>
-      </div>
+        <p class="hole-f"><span class="hole-tag">Illustrative example</span> <span class="hole-f-l">The golfer, the shots and the yardages are made up to show how the app works. The course is real, built from OpenStreetMap outlines and real elevation.</span><span class="hole-f-s">The golfer and the shots are made up. The course is real.</span> <span class="nw">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a></span></p>
+      </figure>
 
-      <p class="sub reveal cc-next">The same example shot on the app screen, in three steps.</p>
+      <p class="sub reveal cc-next">The app screen during a real swing, in three steps.</p>
 
       <div class="cc-track" id="ccApp" style="--len:280vh">
         <div class="cc-pin">
@@ -378,7 +333,28 @@
 </div>
 <script src="../assets/site.js"></script>
 <script>
-  /* The two scroll scenes. Scrolling picks a step (each step gets an equal share of the scroll) and a frame inside it;
+  /* The 3D hole. The frame loads when it comes near, follows this page's theme, and pauses when it leaves the screen. */
+  (() => {
+    'use strict';
+    const view = document.querySelector('#ccHole .hole-view'), frame = document.getElementById('ccHoleFrame');
+    if (!view || !frame) return;
+    const root = document.documentElement;
+    const theme = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');   // the site is light unless the reader picked dark
+    const send = (msg) => { try { frame.contentWindow.postMessage({ type: 'cc-hole', ...msg }, location.origin); } catch (e) {} };
+    let loaded = false;
+    frame.addEventListener('load', () => { if (!loaded) return; view.classList.add('is-on'); send({ theme: theme() }); });
+    const load = () => { if (loaded) return; loaded = true; frame.src = 'hole/?embed=1&theme=' + theme(); };
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((es, io) => { if (es.some((e) => e.isIntersecting)) { load(); io.disconnect(); } }, { rootMargin: '100% 0px' }).observe(view);
+      // a frame that only touches the screen edge still counts as intersecting, so pause below 2% in view
+      new IntersectionObserver((es) => { if (loaded && es[es.length - 1].intersectionRatio < .02) send({ pause: true }); }, { threshold: [0, .02] }).observe(view);
+    } else load();
+    const sync = () => { if (loaded) send({ theme: theme() }); };
+    document.addEventListener('themechange', sync);
+  })();
+</script>
+<script>
+  /* The app screen scroll scene. Scrolling picks a step (each step gets an equal share of the scroll) and a frame inside it;
      a canvas draws that frame. Ported from the demo page's own scrubber, without its video, theme and waitlist code. */
   (() => {
     'use strict';
@@ -397,7 +373,6 @@
     const pad = (n) => String(n).padStart(3, '0');
     const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
     const app = document.getElementById('ccApp');
-    const portrait = document.documentElement.dataset.ccTier === 'p';
 
     /* Frame scrubber: eases toward the target frame and always fetches the missing frame nearest the reader. */
     function scrubber({ canvas, view, bar, list, url, W, H, onIndex, conns = 4 }) {
@@ -468,16 +443,6 @@
     }
 
     const scenes = [];
-
-    /* The film: every 2nd frame of the 22.4 s render (283 frames), landscape on wide screens and portrait on phones. */
-    const SKIP = [[192, 205], [224, 231], [242, 249], [269, 276]], FSTEP = 2;   // the stretches the demo page skips too
-    const list = []; for (let q = 0; q <= 320; q++) if (!SKIP.some(([a, b]) => q >= a && q <= b)) list.push(q);
-    const FILM = portrait ? { dir: 'assets/how4/seqm/', W: 720, H: 1280, v: 15 } : { dir: 'assets/how3/seq1m/', W: 960, H: 600, v: 14 };
-    const filmUrl = (q) => BASE + FILM.dir + 's_' + pad(q) + '.webp?v=' + FILM.v;
-    document.querySelector('#ccFilm .cc-poster').src = filmUrl(list[0]);
-    const t0 = [0, 5.8, 8.8, 13.2, 15.2];   // seconds into the film where each step starts
-    const anchors = t0.map((t) => list.findIndex((q) => q * FSTEP / FPS >= t));
-    scenes.push(scene(document.getElementById('ccFilm'), { list, anchors, W: FILM.W, H: FILM.H, url: filmUrl }));
 
     /* The phone: 110 frames of the app screen, every 3rd frame. The readouts light up as the scrub passes them. */
     const appUrl = (i) => BASE + 'assets/app2m/seq/a_' + pad(i) + '.webp?v=2';

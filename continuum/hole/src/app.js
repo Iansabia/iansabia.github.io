@@ -1,7 +1,7 @@
 // Continuum hole demo: one continuous play-through of Miacomet hole 10.
 // Time runs from scroll (the stage is pinned while the track scrolls past) or from Play.
 // When playing, the page scroll follows the time so both stay in step. Step buttons glide there, no cuts.
-import { initTheme, onThemeChange, toggleTheme, sceneColors, reducedMotion } from "./theme.js";
+import { initTheme, onThemeChange, toggleTheme, forceTheme, sceneColors, reducedMotion } from "./theme.js";
 import { HOLE, NUM, SHOTS, PAST, PAST_RIGHT, height, dist, toLL, clamp, smooth, YD, add, mul, norm, sub, right } from "./world.js";
 import { TOTAL, STAGES, CAPTIONS, stateAt, stageAt, T } from "./story.js";
 import { Pip } from "./pip.js";
@@ -132,6 +132,14 @@ document.addEventListener("keydown", (e) => {
   if (e.target.closest && e.target.closest("button, a, input")) return;
   if (e.key === " " || e.key === "k") { e.preventDefault(); $("play-btn").click(); }
 });
+// Embedded in the Continuum page: it sends the theme it shows, and a pause when the frame scrolls out of view.
+if (embed) {
+  window.addEventListener("message", (e) => {
+    if (e.origin !== location.origin || !e.data || e.data.type !== "cc-hole") return;
+    if (e.data.theme) forceTheme(e.data.theme);
+    if (e.data.pause && (playing || seek)) { pause(); clearInterval(rmTimer); updateButtons(); }
+  });
+}
 function updateButtons() {
   root.classList.toggle("playing", playing || (seek && seek.thenPlay));
   $("play-btn").setAttribute("aria-label", playing ? "Pause" : "Play");
@@ -171,7 +179,7 @@ function placeLabels(items) {
     const L = label(it.id, it.html, it.cls);
     seen.add(it.id);
     const lift = it.lift == null ? 12 : it.lift;
-    const x = Math.round(s[0] - L.w / 2 + (it.dx || 0));
+    const x = Math.round(clamp(s[0] - L.w / 2 + (it.dx || 0), 6, Math.max(6, W - L.w - 6))); // keep wide labels inside a narrow frame
     let y = Math.round(s[1] - L.h - lift);
     if (it.a > 0.3) {
       for (let k = 0; k < 4; k++) {

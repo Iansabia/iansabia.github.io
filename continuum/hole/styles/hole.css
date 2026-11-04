@@ -104,6 +104,8 @@ h1, h2, p { margin: 0; }
 @supports (height: 100svh) { .stage { height: 100svh; } }
 html.embed .track { height: 100vh; }
 html.embed .about { display: none; }
+/* embedded: the page around it has the name, the way back and the theme switch */
+html.embed .topbar .brand, html.embed #theme-btn, html.embed .hint { display: none; }
 #map { position: absolute; inset: 0; }
 #map canvas { outline: none; }
 /* a soft fade under the top bar, like the SwapChain map */
@@ -379,6 +381,7 @@ html[data-layout="phone"] #prev-btn, html[data-layout="phone"] #next-btn, html[d
 html[data-layout="phone"] .ctl { width: 36px; height: 36px; }
 html[data-layout="phone"] .ctl svg { width: 18px; height: 18px; }
 html[data-layout="phone"] .steps button { height: 32px; padding: 0 9px; font-size: 13px; }
+@media (max-width: 380px) { html[data-layout="phone"] .steps button { padding: 0 7px; font-size: 12.5px; } html[data-layout="phone"] .controls .sep { margin: 0 2px; } }
 html[data-layout="phone"] .card { left: var(--gutter); right: var(--gutter); top: 96px; width: auto; padding: 14px 16px; }
 html[data-layout="phone"] .caddy-big .num { font-size: 30px; }
 html[data-layout="phone"] .caddy-big { margin-bottom: 8px; }

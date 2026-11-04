@@ -112,10 +112,12 @@ export const SCENE = {
 const MQ = window.matchMedia("(prefers-color-scheme: dark)");
 const listeners = new Set();
 
-/** The site's choice wins (localStorage "theme", or ?theme=), else the system setting. */
+// Set by ?theme= and, when embedded, by the page around this one (postMessage). It beats localStorage.
+let forced = new URLSearchParams(location.search).get("theme");
+
+/** The site's choice wins (?theme= or the parent page, then localStorage "theme"), else the system setting. */
 function readChoice() {
-  const q = new URLSearchParams(location.search).get("theme");
-  if (q === "light" || q === "dark") return q;
+  if (forced === "light" || forced === "dark") return forced;
   try {
     const t = localStorage.getItem("theme");
     if (t === "light" || t === "dark") return t;
@@ -146,6 +148,13 @@ export function toggleTheme() {
   const next = isDark() ? "light" : "dark";
   try { localStorage.setItem("theme", next); } catch (e) { /* optional */ }
   applyChoice(next);
+}
+
+/** The embedding page says which theme it shows. */
+export function forceTheme(t) {
+  if (t !== "light" && t !== "dark") return;
+  forced = t;
+  applyChoice(t);
 }
 
 export function initTheme() {
