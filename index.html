@@ -85,6 +85,10 @@
   .brand{display:flex;align-items:center;gap:10px}
   .brand svg{width:26px;height:26px}
   .brand span{white-space:nowrap}
+  .replay{display:inline-flex;align-items:center;gap:6px;background:none;border:1.5px solid var(--rule);color:var(--ink);border-radius:999px;height:30px;padding:0 12px 0 10px;font:inherit;font-size:13px;cursor:pointer;transition:border-color .3s;white-space:nowrap}
+  .replay svg{width:12px;height:12px;fill:currentColor}
+  @media (hover:hover){.replay:hover{border-color:var(--ink)}}
+  @media (max-width:520px){.replay{padding:0;width:30px;justify-content:center}.replay span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}}
   .toggle{background:none;border:1.5px solid var(--rule);color:var(--ink);border-radius:999px;width:58px;height:30px;position:relative;cursor:pointer;transition:border-color .3s}
   @media (hover:hover){.toggle:hover{border-color:var(--ink)}}
   .toggle i{position:absolute;top:4px;left:5px;width:19px;height:19px;border-radius:50%;background:var(--warm);transition:transform .45s var(--ease),background .3s;box-shadow:0 0 0 0 transparent}
@@ -520,6 +524,7 @@
         <a href="#contact">Contact</a>
       </span>
       <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu <i aria-hidden="true"></i></button>
+      <button class="replay" id="replayIntro" type="button" aria-label="Replay intro"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.2v9.6L10.4 6z"/></svg><span>Replay intro</span></button>
       <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
     </nav>
     <div class="menu" id="menu">
@@ -1464,5 +1469,10 @@
 })();
 </script>
 <script type="module" src="room/intro.js"></script>
+<script type="module">
+document.getElementById('replayIntro').addEventListener('click', () => {
+  import('./room/intro.js').then(m => m.playIntro({ force: true })).catch(() => { location.href = 'room/'; });
+});
+</script>
 </body>
 </html>
