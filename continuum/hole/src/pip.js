@@ -1,6 +1,6 @@
 // What the phone on the cart sees during the tee shot: the real tee box and fairway outlines seen from
 // the phone's spot, the golfer, and the tracking drawn on top (stick figure, club trace, the ball).
-import { FEATURES, SHOTS, height, densify, clamp, smooth, span } from "./world.js";
+import { FEATURES, SHOTS, DATA, ROUTE_A, height, densify, clamp, smooth, span, sub, right, ease } from "./world.js";
 import { PHONE, T, st1 } from "./story.js";
 import { BONES_SWING } from "./pose.js";
 
@@ -35,6 +35,26 @@ const SHAPES = {
   tee: FEATURES.tees.map((f) => f.p.map((p) => toCam([p[0], p[1], height(p[0], p[1]) + 0.45]))),
 };
 
+// The ball map: a plan of the hole turned so it plays up the phone screen (tee at the bottom).
+const MAP = (() => {
+  const o = SHOTS.tee.from, d = SHOTS.dir1, r = right(d);
+  const loc = (p) => { const v = sub(p, o); return [v[0] * r[0] + v[1] * r[1], v[0] * d[0] + v[1] * d[1]]; }; // [across, along]
+  const ring = (f) => f.p.map(loc);
+  const near = (f) => f.p.some((p) => { const q = loc(p); return q[1] > -60 && q[1] < 320 && Math.abs(q[0]) < 150; });
+  return {
+    loc,
+    fair: DATA.polys.fairway.filter(near).map((f) => ({ mine: f.h === FEATURES.fairways[0]?.h, p: ring(f) })),
+    green: DATA.polys.green.filter(near).map(ring),
+    bunker: DATA.polys.bunker.filter(near).map(ring),
+    tee: DATA.polys.tee.filter(near).map(ring),
+    cart: DATA.lines.cartpath.filter(near).map(ring),
+    route: ROUTE_A.pts.map(loc),
+    ball: loc(SHOTS.tee.rest),
+    land: loc(SHOTS.tee.land),
+    teeAt: loc(SHOTS.tee.from),
+  };
+})();
+
 export class Pip {
   constructor(canvas, chips) {
     this.cv = canvas;
@@ -49,8 +69,96 @@ export class Pip {
     if (w !== this.cv.width || h !== this.cv.height) { this.cv.width = w; this.cv.height = h; }
     this.size = [w, h];
   }
+  setMode(map) {
+    if (this.mode === map) return;
+    this.mode = map;
+    const root = this.cv.closest(".pip");
+    if (root) root.classList.toggle("map", map);
+    const rec = root && root.querySelector(".rec");
+    if (rec) rec.lastChild.textContent = map ? "Ball map" : "Phone on the cart";
+    const txt = map ? ["Ball located", "Route to the ball", "At the ball"] : ["Body tracked", "Strike marked", "Ball followed"];
+    [this.chips.body, this.chips.strike, this.chips.ball].forEach((el, i) => { if (el) el.lastChild.textContent = txt[i]; });
+  }
+  drawMap(S, C) {
+    const [W, H] = this.size;
+    const g = this.ctx;
+    const k = W / 180;
+    // frame: along the hole from a little behind the tee to past the ball, fitted between the top pill and the chips
+    const y0 = H * 0.13, y1 = H * 0.7;
+    const a0 = -14, a1 = MAP.ball[1] + 34;
+    const sc = (y1 - y0) / (a1 - a0);
+    const cx = W / 2 - ((MAP.ball[0] + MAP.teeAt[0]) / 2) * sc;
+    const P = (q) => [cx + q[0] * sc, y1 - (q[1] - a0) * sc];
+    g.fillStyle = css(C.rough); g.fillRect(0, 0, W, H);
+    const poly = (ring, fill, stroke, lw = 1) => {
+      g.beginPath(); ring.forEach((q, i) => { const [x, y] = P(q); if (i) g.lineTo(x, y); else g.moveTo(x, y); }); g.closePath();
+      if (fill) { g.fillStyle = fill; g.fill(); }
+      if (stroke) { g.strokeStyle = stroke; g.lineWidth = lw * k; g.stroke(); }
+    };
+    const line = (pts, stroke, lw, dash) => {
+      g.beginPath(); pts.forEach((q, i) => { const [x, y] = P(q); if (i) g.lineTo(x, y); else g.moveTo(x, y); });
+      g.setLineDash(dash ? dash.map((v) => v * k) : []); g.strokeStyle = stroke; g.lineWidth = lw * k; g.lineCap = "round"; g.lineJoin = "round"; g.stroke(); g.setLineDash([]);
+    };
+    MAP.fair.forEach((f) => poly(f.p, css(f.mine ? C.fairway : C.fairwayDim), css(C.fairwayEdge, 0.9), 1));
+    MAP.bunker.forEach((r) => poly(r, css(C.bunker), css(C.bunkerEdge), 1));
+    MAP.green.forEach((r) => poly(r, css(C.green), css(C.greenEdge), 1.4));
+    MAP.tee.forEach((r) => poly(r, css(C.tee), css(C.teeEdge, 0.7), 1));
+    MAP.cart.forEach((r) => { line(r, css(C.cartpathEdge), 5); line(r, css(C.cartpath), 3); });
+
+    // the tee shot, faint
+    line([MAP.teeAt, MAP.land, MAP.ball], css(C.flightMid, 0.55), 2, [3, 4]);
+
+    const t = S.t, LOST = T.LOST, DR = T.DRIVE_A;
+    const foundU = smooth(span(t, LOST[1], LOST[2]));
+    // the route ahead of the cart
+    const driven = t < DR[0] ? 0 : ease(span(t, DR[0], DR[1])) * ROUTE_A.length;
+    if (foundU > 0.5 && t < DR[1] + 0.3) {
+      const pts = [...ROUTE_A.from(driven).map(MAP.loc), MAP.ball];
+      line(pts, css(C.accent, 0.35), 7);
+      line(pts, css(C.accent), 3, [4, 3]);
+    }
+    // search ring closing in, then the pin
+    const bp = P(MAP.ball);
+    if (foundU < 1) {
+      const rr = (1 - foundU) * 46 * k + 10 * k;
+      g.beginPath(); g.arc(bp[0] - (1 - foundU) * 14 * k, bp[1] + (1 - foundU) * 20 * k, rr, 0, Math.PI * 2);
+      g.fillStyle = css(C.accent, 0.12); g.fill(); g.strokeStyle = css(C.accent, 0.8); g.lineWidth = 2 * k; g.setLineDash([4 * k, 3 * k]); g.stroke(); g.setLineDash([]);
+    }
+    if (foundU > 0.3) {
+      const drop = smooth((foundU - 0.3) / 0.5);
+      const pulse = (t * 0.9) % 1;
+      g.beginPath(); g.arc(bp[0], bp[1], (8 + 22 * pulse) * k, 0, Math.PI * 2);
+      g.strokeStyle = css(C.flag, 0.85 * (1 - pulse) * drop); g.lineWidth = 2.4 * k; g.stroke();
+      // a map pin: a teardrop standing on the ball
+      const hy = bp[1] - (1 - drop) * 30 * k;
+      const r = 10 * k;
+      g.save(); g.globalAlpha = drop;
+      g.beginPath(); g.moveTo(bp[0], hy); g.bezierCurveTo(bp[0] - r * 0.4, hy - r * 0.9, bp[0] - r * 1.05, hy - r * 1.35, bp[0] - r * 1.05, hy - r * 2.05);
+      g.arc(bp[0], hy - r * 2.05, r * 1.05, Math.PI, 0); g.bezierCurveTo(bp[0] + r * 1.05, hy - r * 1.35, bp[0] + r * 0.4, hy - r * 0.9, bp[0], hy);
+      g.fillStyle = css(C.flag); g.fill(); g.strokeStyle = css(C.halo); g.lineWidth = 1.6 * k; g.stroke();
+      g.beginPath(); g.arc(bp[0], hy - r * 2.05, r * 0.42, 0, Math.PI * 2); g.fillStyle = "#fff"; g.fill();
+      g.restore();
+    }
+    // the cart: a small rounded box pointing the way it drives
+    const c = S.cart, cp = P(MAP.loc(c.p));
+    const ahead = MAP.loc([c.p[0] + c.dir[0], c.p[1] + c.dir[1]]), cpa = P(ahead);
+    const ang = Math.atan2(cpa[1] - cp[1], cpa[0] - cp[0]);
+    g.save(); g.translate(cp[0], cp[1]); g.rotate(ang);
+    const cw = 16 * k, ch = 10 * k;
+    g.beginPath(); g.roundRect ? g.roundRect(-cw / 2, -ch / 2, cw, ch, 3 * k) : g.rect(-cw / 2, -ch / 2, cw, ch);
+    g.fillStyle = css(C.accent); g.fill(); g.strokeStyle = css(C.halo); g.lineWidth = 1.6 * k; g.stroke();
+    g.beginPath(); g.moveTo(cw / 2 + 5 * k, 0); g.lineTo(cw / 2 - 1 * k, -4 * k); g.lineTo(cw / 2 - 1 * k, 4 * k); g.closePath(); g.fillStyle = css(C.accent); g.fill();
+    g.restore();
+
+    const on = (el, v) => el && el.classList.toggle("on", v);
+    on(this.chips.body, foundU > 0.6);
+    on(this.chips.strike, t > LOST[2]);
+    on(this.chips.ball, t > DR[1] - 0.1);
+  }
   draw(S, C) {
     if (!this.size[0]) this.resize();
+    this.setMode(!!S.pipMap);
+    if (S.pipMap) { this.drawMap(S, C); return; }
     const [W, H] = this.size;
     const g = this.ctx;
     const f = H * 1.05;

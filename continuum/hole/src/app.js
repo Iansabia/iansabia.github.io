@@ -3,7 +3,7 @@
 // When playing, the page scroll follows the time so both stay in step. Step buttons glide there, no cuts.
 import { initTheme, onThemeChange, toggleTheme, forceTheme, sceneColors, reducedMotion } from "./theme.js";
 import { HOLE, NUM, SHOTS, PAST, PAST_RIGHT, height, dist, toLL, clamp, smooth, YD, add, mul, norm, sub, right } from "./world.js";
-import { TOTAL, STAGES, CAPTIONS, stateAt, stageAt, T } from "./story.js";
+import { TOTAL, STAGES, BEATS, stateAt, stageAt, beatAt, T } from "./story.js";
 import { Pip } from "./pip.js";
 import { renderFallback } from "./fallback.js";
 
@@ -29,7 +29,7 @@ $("sum-title").textContent = `${strokes} shots on a par ${par}`;
 $("sum-badge").textContent = names[String(strokes - par)] || `${strokes - par > 0 ? "+" : ""}${strokes - par}`;
 $("shot-dots").innerHTML = Array.from({ length: Math.max(par, strokes) }, (_, i) => `<i class="${i < strokes ? "" : "par"}"></i>`).join("");
 $("shot-list").innerHTML = [
-  ["Tee shot", `Carry ${NUM.teeCarryYd} yd, stops in the fairway`, `${NUM.teeTotalYd} yd`],
+  ["Tee shot", `Carry ${NUM.teeCarryYd} yd, kicks into the rough`, `${NUM.teeTotalYd} yd`],
   ["Approach", "Aimed left, drifted right onto the green", `${NUM.toPinYd} yd`],
   ["Putt", `Holed from ${NUM.leftFt} ft`, `${NUM.leftFt} ft`],
 ].map(([b, s, v], i) => `<li><span class="n">${i + 1}</span><span><b>${b}</b><small>${s}</small></span><span class="v">${v}</span></li>`).join("");
@@ -44,6 +44,7 @@ let visible = true;
 let raf = 0;
 let scene = null;
 let lastStage = -1;
+let lastBeat = -1;
 let lastFrameT = -1;
 let needDraw = true;
 let progY = null; // the last scroll position this code set itself
@@ -228,19 +229,39 @@ const capEl = $("caption"), capBody = $("cap-body");
 const stepBars = [...$("cap-steps").children];
 const stepBtns = [...document.querySelectorAll("#steps [data-step]")];
 let capSwapTimer = 0;
+// small line icons for the caption (one per beat): the words are short, the icon carries the idea
+const ICONS = {
+  flag: '<path d="M6 21V4M6 4h11l-2.5 3.5L17 11H6"/>',
+  phone: '<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
+  body: '<circle cx="12" cy="5" r="2"/><path d="M12 7v7M12 14l-3 6M12 14l3 6M8 10h8"/>',
+  arc: '<path d="M4 19c3-10 11-14 16-8"/><circle cx="20" cy="11" r="1.6"/>',
+  pin: '<path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z"/><circle cx="12" cy="11" r="2"/>',
+  eyeoff: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.6-4.6M9.2 9.2a2.5 2.5 0 0 1 4 .9c0 1.6-1.9 1.6-1.9 3M11.3 15.6h0"/>',
+  map: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
+  cart: '<path d="M4 15h13l2-5H9M9 10V6h8M4 15V9"/><circle cx="7" cy="18" r="1.8"/><circle cx="16" cy="18" r="1.8"/>',
+  check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9"/>',
+  dots: '<circle cx="6" cy="8" r="1.6"/><circle cx="12" cy="8" r="1.6"/><circle cx="18" cy="8" r="1.6"/><circle cx="6" cy="16" r="1.6"/><circle cx="12" cy="16" r="1.6"/><circle cx="18" cy="16" r="1.6"/>',
+  right: '<path d="M5 12h13M13 7l5 5-5 5"/>',
+  left: '<path d="M19 12H6M11 7l-5 5 5 5"/>',
+  putt: '<path d="M4 18h16"/><circle cx="8" cy="15.5" r="1.8"/><path d="M17 18V5l-4 2 4 2"/>',
+  list: '<path d="M9 7h11M9 12h11M9 17h11"/><circle cx="5" cy="7" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="17" r="1"/>',
+};
+const STEP_NAMES = ["", "Tee shot", "Find the ball", "Aim", "Putt"];
 function setCaption(i, instant) {
-  const c = CAPTIONS[i];
+  const c = BEATS[i];
+  const st = stageAt(c.t + 0.01);
   const apply = () => {
-    $("cap-kicker").textContent = c.kicker;
-    $("cap-title").textContent = c.title;
-    $("cap-text").textContent = c.text;
+    $("cap-kicker").textContent = c.kicker || `${st} of 4 · ${STEP_NAMES[st]}`;
+    $("cap-title").innerHTML = `<svg class="cap-ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[c.icon] || ""}</svg><span>${c.title}</span>`;
+    $("cap-text").textContent = c.text || "";
+    capEl.classList.toggle("notext", !c.text);
     capBody.classList.remove("swap");
     measureCaption();
   };
   clearTimeout(capSwapTimer);
   if (instant || RM()) { apply(); return; }
   capBody.classList.add("swap");
-  capSwapTimer = setTimeout(apply, 220);
+  capSwapTimer = setTimeout(apply, 200);
 }
 function measureCaption() {
   root.style.setProperty("--cap-h", capEl.offsetHeight + "px");
@@ -257,10 +278,11 @@ function frameUI(S) {
   const C = sceneColors();
   const st = S.stage;
   if (st !== lastStage) {
-    setCaption(st, lastStage === -1);
     lastStage = st;
     stepBtns.forEach((b) => b.setAttribute("aria-selected", String(+b.dataset.step === st)));
   }
+  const bt = beatAt(S.t);
+  if (bt !== lastBeat) { setCaption(bt, lastBeat === -1); lastBeat = bt; }
   stepBars.forEach((b, i) => {
     const s = STAGES[i + 1];
     b.style.setProperty("--p", clamp((S.t - s.t0) / (s.t1 - s.t0), 0, 1).toFixed(3));
@@ -271,7 +293,7 @@ function frameUI(S) {
   if (S.pip > 0.01) pip.draw(S, C);
   $("caddy").classList.toggle("on", S.caddy > 0.5);
   $("summary").classList.toggle("on", S.summary > 0.5);
-  const chipOn = (S.t >= T.IMP1 && S.t < 21.6) || (S.t >= T.IMP2 && S.t < T.LAND2 + 0.3) || (S.greenPin > 0.5 && S.t < 46.5);
+  const chipOn = (S.t >= T.IMP1 && S.t < 18.4) || (S.t >= T.IMP2 && S.t < T.LAND2 + 0.3) || (S.greenPin > 0.5 && S.t < 46.5);
   $("legend").style.opacity = S.summary > 0.5 || S.caddy > 0.5 || (phone && (S.pip > 0.2 || chipOn)) ? "0" : "1";
   // pattern dots: a count you can watch
   const n = S.pastN;
@@ -290,7 +312,7 @@ function frameUI(S) {
     rFlyV.textContent = Math.round(dist(from, S.ball.p) * YD);
   }
   // one chip at a time: the carry chip waits until "In the air" has gone (see the CSS delay)
-  rCarry.classList.toggle("on", S.t >= T.LAND1 + 0.5 && S.t < 21.6);
+  rCarry.classList.toggle("on", S.t >= T.LAND1 + 0.5 && S.t < 18.4);
   rGreen.classList.toggle("on", S.greenPin > 0.5 && S.t < 46.5);
 
   // labels
@@ -300,14 +322,19 @@ function frameUI(S) {
   items.push({ id: "green", p: SHOTS.pin, html: "Green", a: intro, lift: 26 });
   items.push({ id: "hole-len", p: lerpP(SHOTS.tee.from, SHOTS.pin, 0.5), html: `About <span class="tag">${NUM.holeLineYd} yd</span> from tee to green (measured on the map)`, a: intro * 0.95, cls: "small" });
   for (const k of S.ticks) items.push({ id: "tick" + k.yd, p: k.p, html: `${k.yd} yd`, a: k.a, cls: "small", lift: 8 });
-  items.push({ id: "landed", p: SHOTS.tee.land, html: `Landed <span class="tag">${NUM.teeCarryYd} yd</span>`, a: S.landPin * (1 - S.finder), cls: "accent", lift: 16 });
-  if (S.finder > 0.01) {
-    items.push({ id: "finder", p: SHOTS.tee.rest, html: "Your ball", a: S.finder, cls: "accent", lift: 16 });
-  }
+  items.push({ id: "landed", p: SHOTS.tee.land, html: `Landed <span class="tag">${NUM.teeCarryYd} yd</span>`, a: S.landPin, cls: "accent", lift: 16 });
+  // finding the ball: a question mark over the search ring, then the pin, then a check when the cart is there
+  items.push({ id: "lost", p: [S.lostC[0], S.lostC[1], height(S.lostC[0], S.lostC[1]) + 0.2], html: `<span class="q">?</span>`, a: S.lostA * (1 - smooth((S.lostU - 0.2) / 0.5)), cls: "icon", lift: 18 });
+  const rest = SHOTS.tee.rest, restTop = [rest[0], rest[1], height(rest[0], rest[1]) + 7.5];
+  items.push({ id: "found", p: restTop, html: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Found`, a: S.found, cls: "accent check", lift: 18 });
   // the flag label rides above the pennant; "Aim here" sits off to the left of it so the two never touch
   items.push({ id: "pin", p: [SHOTS.pin[0], SHOTS.pin[1], height(SHOTS.pin[0], SHOTS.pin[1]) + 3.2], html: `Flag <span class="tag">${NUM.toPinYd} yd</span>`, a: S.caddy, lift: 14 });
   items.push({ id: "aim", p: SHOTS.aim, html: "Aim here", a: S.aimA * smooth((S.aimU - 0.6) / 0.4) * (1 - smooth((S.t - T.LAND2) / 0.6)), cls: "accent", lift: 12, dx: -34 });
-  items.push({ id: "usual", p: add(SHOTS.pin, mul(right(SHOTS.dir2), 13)), html: "Your usual miss", a: S.disp * 0.95, cls: "small warm", lift: 0 });
+  // the count builds with the dots, so the pattern is a number you can watch, not a sentence
+  {
+    let rr = 0; for (let i = 0; i < S.pastN; i++) if (PAST[i].right) rr++;
+    items.push({ id: "usual", p: add(SHOTS.pin, mul(right(SHOTS.dir2), 14)), html: `<span class="big">${rr}</span> of ${S.pastN} right`, a: S.pastA * smooth((S.t - T.PAST0) / 0.3), cls: "warm count", lift: 6 });
+  }
   items.push({ id: "drift", p: SHOTS.approach.land, html: "Drifted right, as usual", a: smooth((S.t - T.LAND2) / 0.4) * (1 - smooth((S.t - 43.6) / 0.6)), cls: "small warm", lift: -38, dx: 110 });
   items.push({ id: "near", p: SHOTS.approach.rest, html: `${NUM.leftFt} ft`, a: S.greenPin * (1 - smooth((S.t - T.IMP3) / 0.4)), cls: "small", lift: 10 });
   items.push({ id: "holed", p: [SHOTS.pin[0], SHOTS.pin[1], height(SHOTS.pin[0], SHOTS.pin[1]) + 3.2], html: "In the hole", a: smooth((S.t - (T.IMP3 + T.PUTT_T)) / 0.3) * (1 - S.summary), cls: "accent", lift: 16 });
@@ -318,6 +345,8 @@ const lerpP = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
 
 function draw() {
   const S = stateAt(t);
+  // on a phone the caddy card covers the top of the frame: it leaves as the approach swing starts
+  if (phone) S.caddy *= 1 - smooth((S.t - 35.0) / 0.6);
   if (scene) scene.render(S, viewFor(S.camera, S));
   frameUI(S);
   lastFrameT = t;

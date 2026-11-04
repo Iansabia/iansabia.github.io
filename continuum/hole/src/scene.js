@@ -5,7 +5,7 @@ import {
   WATER, add, sub, mul, norm, right, lerp, lerp2, clamp, smooth, dist, TEE,
 } from "./world.js";
 import { BONES_SWING, BONES_WALK } from "./pose.js";
-import { TICKS, PATHS } from "./story.js";
+import { TICKS, PATHS, T } from "./story.js";
 import { sceneColors, isDark } from "./theme.js";
 
 const D = window.deck;
@@ -460,7 +460,7 @@ export class Scene {
       }));
     };
     ring("land", SHOTS.tee.land, S.landPin, 2.2, C.accent, false);
-    ring("finder", SHOTS.tee.rest, S.finder, 2.4, C.accent, true);
+    this.findLayers(L, S, C, dark);
     ring("near", SHOTS.approach.rest, S.greenPin * (1 - S.summary), 0.9, C.accent, false);
 
     // the caddy's read: past finishes, the usual spread, and the aim line
@@ -494,20 +494,22 @@ export class Scene {
     const b = S.ball.p;
     const gz = height(b[0], b[1]);
     const hAbove = Math.max(0, b[2] - gz);
-    if (!S.ball.holed || S.ball.sink < 1) {
+    const vis = S.ball.vis == null ? 1 : S.ball.vis;
+    if ((!S.ball.holed || S.ball.sink < 1) && vis > 0.01) {
       L.push(new D.ScatterplotLayer({
         ...base, id: "ball-shadow", data: [0], getPosition: () => [b[0], b[1], gz + 0.04], getRadius: 0.5 + hAbove * 0.04, radiusUnits: "meters", radiusMinPixels: 3,
-        getFillColor: rgba(C.shadow, (dark ? 150 : 70) * clamp(1 - hAbove / 40, 0.25, 1)), extensions: SOFT, parameters: NODEPTH,
+        getFillColor: rgba(C.shadow, (dark ? 150 : 70) * clamp(1 - hAbove / 40, 0.25, 1) * vis), extensions: SOFT, parameters: NODEPTH,
+        updateTriggers: { getFillColor: S.t },
       }));
       if (S.ball.air) L.push(new D.ScatterplotLayer({
         ...base, id: "ball-glow", data: [0], getPosition: () => b, getRadius: 13, radiusUnits: "pixels", getFillColor: rgba(C.flight1, dark ? 120 : 90),
         extensions: SOFT, parameters: NODEPTH,
       }));
-      const a = S.ball.holed ? 1 - S.ball.sink : 1;
+      const a = (S.ball.holed ? 1 - S.ball.sink : 1) * vis;
       L.push(new D.ScatterplotLayer({
         ...base, id: "ball", data: [0], getPosition: () => b, getRadius: 0.11, radiusUnits: "meters", radiusMinPixels: 4, radiusMaxPixels: 9,
         stroked: true, getLineColor: rgba(C.ballRing, 230 * a), getLineWidth: 1.4, lineWidthUnits: "pixels", getFillColor: rgba(C.ball, 255 * a),
-        billboard: true, parameters: NODEPTH,
+        billboard: true, parameters: NODEPTH, updateTriggers: { getFillColor: S.t, getLineColor: S.t },
       }));
     }
 
@@ -580,12 +582,43 @@ export class Scene {
     if (S.pastA > 0.01 && S.pastN > 0) {
       const pts = PAST.slice(0, S.pastN).map((d, i) => ({ p: [d.p[0], d.p[1], height(d.p[0], d.p[1]) + 0.15], right: d.right, i }));
       L.push(new D.ScatterplotLayer({
-        ...base, id: "past", data: pts, getPosition: (d) => d.p, getRadius: (d) => 4.5 * smooth((S.t - (28.6 + d.i * 0.2)) / 0.25), radiusUnits: "pixels",
-        stroked: true, lineWidthUnits: "pixels", getLineWidth: 1.5,
+        ...base, id: "past", data: pts, getPosition: (d) => d.p, getRadius: (d) => 7 * smooth((S.t - (T.PAST0 + d.i * T.PAST_DT)) / 0.22) * (1 + 0.6 * (1 - smooth((S.t - (T.PAST0 + d.i * T.PAST_DT) - 0.15) / 0.35))), radiusUnits: "pixels",
+        stroked: true, lineWidthUnits: "pixels", getLineWidth: 2,
         getFillColor: (d) => (d.right ? rgba(C.miss, 255 * S.pastA) : rgba(C.trackDot, 255 * S.pastA)),
         getLineColor: (d) => (d.right ? rgba(dark ? C.trackDot : [255, 255, 255], 230 * S.pastA) : rgba(C.ink, 200 * S.pastA)),
         parameters: NODEPTH, updateTriggers: { getRadius: S.t, getFillColor: S.t, getLineColor: S.t },
       }));
+    }
+    // the shift itself: a bold arrow on the green from the flag over to the new aim point
+    if (S.arrowA > 0.01) {
+      const a = S.arrowA, g = SHOTS.aim;
+      const u = smooth((S.aimU - 0.05) / 0.9);
+      const lift = 0.22;
+      const d = sub(g, PIN), Ld = Math.hypot(d[0], d[1]) || 1, n = [d[0] / Ld, d[1] / Ld];
+      const bow = mul(SHOTS.dir2, Ld * 0.22); // a gentle arc, bowed toward the golfer
+      const pts = [];
+      for (let i = 0; i <= 20; i++) {
+        const s = (i / 20) * Math.max(0.02, u) * 0.86;
+        const q = add(add(PIN, mul(d, s + 0.07)), mul(bow, -4 * s * (1 - s)));
+        pts.push([q[0], q[1], height(q[0], q[1]) + lift]);
+      }
+      const tip = pts[pts.length - 1], prev = pts[pts.length - 2];
+      const td = norm(sub(tip, prev)), tn = right(td);
+      const hl = 2.4, hw = 1.5;
+      const head = [add(tip, mul(td, hl)), add(tip, mul(tn, hw)), add(tip, mul(tn, -hw))].map((q) => [q[0], q[1], height(q[0], q[1]) + lift]);
+      L.push(new D.PathLayer({
+        ...base, id: "arrow-halo", data: [0], getPath: () => pts, getColor: rgba(C.halo, 220 * a), getWidth: 0.9, widthUnits: "meters", widthMinPixels: 6,
+        capRounded: true, jointRounded: true, parameters: NODEPTH, updateTriggers: { getPath: S.t, getColor: S.t },
+      }));
+      L.push(new D.PathLayer({
+        ...base, id: "arrow", data: [0], getPath: () => pts, getColor: rgba(C.aim, 255 * a), getWidth: 0.5, widthUnits: "meters", widthMinPixels: 3.5,
+        capRounded: true, jointRounded: true, parameters: NODEPTH, updateTriggers: { getPath: S.t, getColor: S.t },
+      }));
+      if (u > 0.08) L.push(new D.SolidPolygonLayer({
+        ...base, id: "arrow-head", data: [0], getPolygon: () => head, getFillColor: rgba(C.aim, 255 * a), material: false, parameters: NODEPTH,
+        updateTriggers: { getPolygon: S.t, getFillColor: S.t },
+      }));
+      void n;
     }
     if (S.aimA > 0.01) {
       const tgt = lerp2(PIN, SHOTS.aim, S.aimU);
@@ -597,6 +630,74 @@ export class Scene {
         ...base, id: "aim-dot", data: [0], getPosition: () => [tgt[0], tgt[1], height(tgt[0], tgt[1]) + 0.18], getRadius: 5, radiusUnits: "pixels", stroked: true,
         getFillColor: rgba(C.aim, 255 * S.aimA), getLineColor: rgba(C.trackDot, 255 * S.aimA), getLineWidth: 2, lineWidthUnits: "pixels", parameters: NODEPTH,
         updateTriggers: { getPosition: S.t },
+      }));
+    }
+  }
+
+  // Finding the ball: a search ring that closes onto it, the route the cart will drive (lit ahead of the
+  // cart), a beacon standing over the ball, and a burst when the cart arrives.
+  findLayers(L, S, C, dark) {
+    const rest = SHOTS.tee.rest, rz = height(rest[0], rest[1]);
+    if (S.lostA > 0.01) {
+      const c = S.lostC, z = height(c[0], c[1]) + 0.2, a = S.lostA;
+      const k = (S.t * 0.9) % 1;
+      L.push(new D.ScatterplotLayer({
+        ...base, id: "lost-fill", data: [0], getPosition: () => [c[0], c[1], z], getRadius: S.lostR, radiusUnits: "meters",
+        getFillColor: rgba(C.accent, (dark ? 46 : 30) * a), parameters: NODEPTH, updateTriggers: { getFillColor: S.t, getRadius: S.t, getPosition: S.t },
+      }));
+      L.push(new D.ScatterplotLayer({
+        ...base, id: "lost", data: [0], getPosition: () => [c[0], c[1], z], getRadius: S.lostR, radiusUnits: "meters", stroked: true, filled: false,
+        getLineColor: rgba(C.accent, 220 * a), getLineWidth: 2, lineWidthUnits: "pixels", parameters: NODEPTH,
+        updateTriggers: { getLineColor: S.t, getRadius: S.t, getPosition: S.t },
+      }));
+      L.push(new D.ScatterplotLayer({
+        ...base, id: "lost-pulse", data: [0], getPosition: () => [c[0], c[1], z], getRadius: S.lostR * (0.35 + 0.65 * k), radiusUnits: "meters", stroked: true, filled: false,
+        getLineColor: rgba(C.accent, 160 * a * (1 - k)), getLineWidth: 1.5, lineWidthUnits: "pixels", parameters: NODEPTH,
+        updateTriggers: { getLineColor: S.t, getRadius: S.t, getPosition: S.t },
+      }));
+    }
+    if (S.routeA > 0.01 && S.route.length > 1) {
+      L.push(new D.PathLayer({
+        ...base, id: "route-glow", data: [0], getPath: () => S.route, getColor: rgba(C.accent, (dark ? 70 : 50) * S.routeA), getWidth: 9, widthUnits: "pixels",
+        capRounded: true, jointRounded: true, parameters: NODEPTH, updateTriggers: { getPath: S.t, getColor: S.t },
+      }));
+      L.push(new D.PathLayer({
+        ...base, id: "route", data: [0], getPath: () => S.route, getColor: rgba(C.accent, 235 * S.routeA), getWidth: 3, widthUnits: "pixels",
+        getDashArray: [3, 2], extensions: DASH, capRounded: true, jointRounded: true, parameters: NODEPTH, updateTriggers: { getPath: S.t, getColor: S.t },
+      }));
+    }
+    if (S.beacon > 0.01) {
+      const a = S.beacon, H = 7.5;
+      const k = (S.t * 0.8) % 1;
+      const col = [[rest[0], rest[1], rz + 0.1], [rest[0], rest[1], rz + H]];
+      L.push(new D.PathLayer({
+        ...base, id: "beacon-glow", data: [0], getPath: () => col, getColor: rgba(C.flight1, (dark ? 90 : 70) * a), getWidth: 12, widthUnits: "pixels",
+        capRounded: true, billboard: true, parameters: NODEPTH, updateTriggers: { getColor: S.t },
+      }));
+      L.push(new D.PathLayer({
+        ...base, id: "beacon", data: [0], getPath: () => col, getColor: rgba(C.flag, 255 * a), getWidth: 2.6, widthUnits: "pixels",
+        capRounded: true, billboard: true, parameters: NODEPTH, updateTriggers: { getColor: S.t },
+      }));
+      L.push(new D.ScatterplotLayer({
+        ...base, id: "beacon-head", data: [0], getPosition: () => col[1], getRadius: 7 + 1.5 * Math.sin(S.t * 5), radiusUnits: "pixels", stroked: true,
+        getFillColor: rgba(C.flag, 255 * a), getLineColor: rgba(C.halo, 255 * a), getLineWidth: 2, lineWidthUnits: "pixels", parameters: NODEPTH,
+        updateTriggers: { getRadius: S.t, getFillColor: S.t, getLineColor: S.t },
+      }));
+      for (const [i, off] of [[0, 0], [1, 0.5]]) {
+        const kk = (k + off) % 1;
+        L.push(new D.ScatterplotLayer({
+          ...base, id: "beacon-ring" + i, data: [0], getPosition: () => [rest[0], rest[1], rz + 0.12], getRadius: 1 + 6 * kk, radiusUnits: "meters", radiusMinPixels: 4,
+          stroked: true, filled: false, getLineColor: rgba(C.flag, 230 * a * (1 - kk)), getLineWidth: 2, lineWidthUnits: "pixels", parameters: NODEPTH,
+          updateTriggers: { getRadius: S.t, getLineColor: S.t },
+        }));
+      }
+    }
+    if (S.burst > 0 && S.burst < 1) {
+      const u = S.burst;
+      L.push(new D.ScatterplotLayer({
+        ...base, id: "burst", data: [0], getPosition: () => [rest[0], rest[1], rz + 0.14], getRadius: 1.5 + 9 * Math.sqrt(u), radiusUnits: "meters",
+        stroked: true, filled: false, getLineColor: rgba(C.accent, 255 * (1 - u)), getLineWidth: 3, lineWidthUnits: "pixels", parameters: NODEPTH,
+        updateTriggers: { getRadius: S.t, getLineColor: S.t },
       }));
     }
   }
@@ -625,6 +726,14 @@ export class Scene {
       // the golfer's bag on the back
       box(-1.32, 0.3, 0.3, 0.3, 0.4, 0.95, C.cartRoof), box(-1.32, -0.25, 0.3, 0.3, 0.4, 0.85, mix(C.cartRoof, C.cart, 0.5)),
     ];
+    // while it drives to the ball, a marker under the cart keeps it easy to follow from far away
+    if (S.cartMark > 0.01) {
+      L.push(new D.ScatterplotLayer({
+        ...base, id: "cart-mark", data: [0], getPosition: () => [p[0], p[1], z0 + 0.1], getRadius: 3.2, radiusUnits: "meters", radiusMinPixels: 13,
+        getFillColor: rgba(C.accent, (dark ? 90 : 60) * S.cartMark), stroked: true, getLineColor: rgba(C.accent, 230 * S.cartMark), getLineWidth: 2, lineWidthUnits: "pixels",
+        parameters: NODEPTH, updateTriggers: { getFillColor: S.t, getLineColor: S.t },
+      }));
+    }
     L.push(new D.ScatterplotLayer({
       ...base, id: "cart-shadow", data: [0], getPosition: () => [p[0], p[1], z0 + 0.05], getRadius: 2.2, radiusUnits: "meters",
       getFillColor: rgba(C.shadow, dark ? 140 : 60), extensions: SOFT, parameters: NODEPTH,

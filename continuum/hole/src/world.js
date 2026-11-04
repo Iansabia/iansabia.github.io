@@ -105,8 +105,16 @@ for (const [d, off] of [[212, 5], [212, 2], [205, 3], [200, 0], [195, 0], [190, 
   if (inFair(p)) { L1 = p; break; }
 }
 if (!L1) L1 = add(S1, mul(dir1, 200));
-let R1 = L1;
-for (const r of [12, 9, 6, 3]) { const p = add(L1, mul(dir1, r)); if (inFair(p)) { R1 = p; break; } }
+// It kicks right on landing and stops in the rough, off the fairway, where it is hard to see from the tee
+// (the ball-finding beat). The first spot that is clear of every mapped surface wins.
+const onSurface = (p) => ["fairway", "green", "tee", "bunker"].some((k) => H.polys[k].some((f) => pointIn(p, f.p)));
+const clearOf = (p) => !onSurface(p) && [[1.5, 0], [-1.5, 0], [0, 1.5], [0, -1.5]].every(([a, b]) => !onSurface(add(add(p, mul(dir1, a)), mul(right(dir1), b))));
+let R1 = null;
+for (const [a, k] of [[9, 15], [8, 15], [10, 15], [7, 14.5], [12, 15], [6, 16], [9, 18], [14, 16], [16, 18]]) {
+  const p = add(add(L1, mul(dir1, a)), mul(right(dir1), k));
+  if (clearOf(p)) { R1 = p; break; }
+}
+if (!R1) R1 = add(add(L1, mul(dir1, 8)), mul(right(dir1), 15));
 
 // Shot 2: the approach. The golfer aims left (the caddy's advice), the ball drifts right onto the green.
 const dir2 = norm(sub(PIN, R1));
@@ -167,9 +175,10 @@ if (teePath && teePath.n.d < 30) {
   routeA.push(n.q, ...seg);
 } else routeA.push(add(S1, mul(right(dir1), -8)));
 export const CART_TEE = add(routeA[0], mul(dir1, -2.5));
-const cartNearBall = add(add(R1, mul(right(dir1), 9)), mul(dir1, -6));
+// the cart stops just short of the ball, on its fairway side, so the two read as a pair
+const cartNearBall = add(add(R1, mul(right(dir1), -3.4)), mul(dir1, -2.6));
 routeA.unshift(CART_TEE);
-routeA.push(add(cartNearBall, mul(dir1, -14)), cartNearBall);
+routeA.push(add(cartNearBall, mul(dir1, -16)), cartNearBall);
 // green side: the nearest real cart path point to the green, short of it
 let greenPark = add(PIN, mul(dir2, -30));
 let bestG = Infinity;
@@ -189,6 +198,12 @@ function polyline(pts) {
       let i = 1; while (i < d.length - 1 && d[i] < s) i++;
       const u = (s - d[i - 1]) / ((d[i] - d[i - 1]) || 1);
       return { p: lerp2(pts[i - 1], pts[i], u), dir: norm(sub(pts[i], pts[i - 1])) };
+    },
+    /** The rest of the route from distance s: the current spot, then every later corner. */
+    from(s) {
+      s = clamp(s, 0, d[d.length - 1]);
+      let i = 1; while (i < d.length - 1 && d[i] <= s) i++;
+      return [this.at(s).p, ...pts.slice(i)];
     },
   };
 }
