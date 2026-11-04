@@ -92,6 +92,21 @@
   @media (max-width:380px){
     .cta{padding:0 14px}
   }
+
+  /* the SwapChain film leads the page and plays right here; the live app is the secondary button */
+  .shot.vid{width:100%;aspect-ratio:16/9;background:#000;align-self:start}
+  .shot.vid video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:block}
+  .demo.lead .shot.vid{align-self:center;border-right:0}
+  .demo.lead{background:var(--bg)}
+  .vid-play{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:0 12px 14px;background:none;border:0;cursor:pointer;color:#0B0817;font:600 15px/1.2 var(--sans);-webkit-tap-highlight-color:transparent}
+  .vid-play[hidden]{display:none}
+  .vid-play span{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px;background:var(--nacc)}
+  .vid-play svg{width:11px;height:13px;flex:none}
+  .cta.ghost{background:transparent;color:var(--acc);box-shadow:inset 0 0 0 1.5px var(--acc)}
+  :root[data-theme="dark"] .cta.ghost{color:var(--acc)}
+  @media (hover:hover){.cta.ghost:hover{background:color-mix(in srgb,var(--acc) 10%,transparent)}}
+  .cta2.ext{font-size:13px;color:var(--body);text-decoration-thickness:1px}
+  @media (max-width:760px){.demo.lead .shot.vid{border-bottom:1px solid var(--rule)}}
 </style>
 </head>
 <body>
@@ -138,21 +153,21 @@
       <div class="rule"></div>
       <div class="demos">
 
-        <article class="demo lead reveal">
-          <a class="shot" href="../swapchain/app/" tabindex="-1" aria-hidden="true">
-            <img class="l" src="img/app-light.webp" alt="" width="1120" height="700" fetchpriority="high">
-            <img class="d" src="img/app-dark.webp" alt="" width="1120" height="700" loading="lazy">
-          </a>
+        <article class="demo lead reveal" id="swapchain">
+          <div class="shot vid">
+            <video id="leadFilm" src="../swapchain/media/swapchain-demo.mp4" poster="../swapchain/media/poster.jpg" width="1920" height="1080" controls muted playsinline loop preload="none" aria-label="Two-minute demo of SwapChain"></video>
+            <button class="vid-play" id="leadPlay" type="button" hidden><span><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z" fill="currentColor"/></svg>Play the demo</span></button>
+          </div>
           <div class="body">
-            <div class="tags"><span class="mono type">Live app</span><span class="mono where">SwapChain</span></div>
+            <div class="tags"><span class="mono type">Video &middot; 2 min</span><span class="mono where">SwapChain</span></div>
             <h3>SwapChain</h3>
-            <p>A 3D campus map, floor plans and a loop finder that matches chains of students (A takes B's room, B takes C's, C takes A's). Tap a dorm, swipe the sheet, run the Chain Demo.</p>
-            <div class="ctas"><a class="cta" href="../swapchain/app/">Open the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../swapchain/">Project page</a></div>
+            <p>A room-swap marketplace for BU that finds loops of students who can all move at once, not just pairs. The film follows a swap list of 350 students, all made up. No sound.</p>
+            <div class="ctas"><a class="cta ghost" data-demo data-demo-title="SwapChain live demo" href="../swapchain/app/">Try the live demo yourself <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../swapchain/">Project page</a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../continuum/hole/" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../continuum/hole/" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/hole-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/hole-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -160,12 +175,12 @@
             <div class="tags"><span class="mono type">Interactive 3D</span><span class="mono where">Continuum</span></div>
             <h3>Miacomet hole 10 &middot; Par 4</h3>
             <p>One example play of a real hole, hole 10 at Miacomet Golf Club on Nantucket, a par 4. Press play, or step through it.</p>
-            <div class="ctas"><a class="cta" href="../continuum/hole/">Play the hole <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
+            <div class="ctas"><a class="cta" data-demo href="../continuum/hole/">Play the hole <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../room/" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../room/" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/room-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/room-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -173,12 +188,12 @@
             <div class="tags"><span class="mono type">Interactive 3D</span><span class="mono where">The intro</span></div>
             <h3>The intro flight</h3>
             <p>Down a brownstone street, in the front door, and onto the monitor in my room.</p>
-            <div class="ctas"><a class="cta" href="../room/">Replay intro <span aria-hidden="true">&rarr;</span></a></div>
+            <div class="ctas"><a class="cta" data-demo href="../room/">Replay intro <span aria-hidden="true">&rarr;</span></a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../#nvidia" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../#nvidia" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/drive-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/drive-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -186,12 +201,12 @@
             <div class="tags"><span class="mono type">Video</span><span class="mono where">Home &middot; NVIDIA</span></div>
             <h3>Your call vs. my model</h3>
             <p>Make the call on four real dashcam clips, then see what my model said.</p>
-            <div class="ctas"><a class="cta" href="../#nvidia">Make the call <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026">See the challenge <span aria-hidden="true">&nearr;</span></a></div>
+            <div class="ctas"><a class="cta" data-demo href="../#nvidia">Make the call <span aria-hidden="true">&rarr;</span></a><a class="cta2 ext" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026">See the challenge <span aria-hidden="true">&nearr;</span></a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../calculator/#demo" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../calculator/#demo" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/calc-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/calc-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -199,12 +214,12 @@
             <div class="tags"><span class="mono type">Walkthrough</span><span class="mono where">Calculator</span></div>
             <h3>An AI graphing calculator</h3>
             <p>Pick a problem, then press enter on the calculator. Each hop follows the real code.</p>
-            <div class="ctas"><a class="cta" href="../calculator/#demo">Try the calculator <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../calculator/">Project page</a></div>
+            <div class="ctas"><a class="cta" data-demo href="../calculator/#demo">Try the calculator <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../calculator/">Project page</a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../fantasy/#demo" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../fantasy/#demo" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/fantasy-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/fantasy-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -212,12 +227,12 @@
             <div class="tags"><span class="mono type">Walkthrough</span><span class="mono where">Fantasy AI</span></div>
             <h3>A week with the bot</h3>
             <p>Steps 1 to 3 are real texts from my leagues. Steps 4 and 5 run made-up leagues through the real code and are marked Example. In step 5, edit an AI draft and try to sneak in a number.</p>
-            <div class="ctas"><a class="cta" href="../fantasy/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
+            <div class="ctas"><a class="cta" data-demo href="../fantasy/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../omi/#stack" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../omi/#stack" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/omi-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/omi-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -225,7 +240,7 @@
             <div class="tags"><span class="mono type">Walkthrough</span><span class="mono where">Omi</span></div>
             <h3>Step through the bug</h3>
             <p>A transaction inside a transaction, and a check that trusted the wrong answer. Run it before and after the fix.</p>
-            <div class="ctas"><a class="cta" href="../omi/#stack">Step through it <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../omi/">Project page</a></div>
+            <div class="ctas"><a class="cta" data-demo href="../omi/#stack">Step through it <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../omi/">Project page</a></div>
           </div>
         </article>
 
@@ -235,24 +250,11 @@
     <section class="block" id="watch">
       <div class="head reveal"><h2>Watch</h2><span class="num mono">02</span></div>
       <div class="rule"></div>
-      <p class="sub reveal">A film and a scroll animation. Sit back.</p>
+      <p class="sub reveal">A scroll animation. Sit back.</p>
       <div class="demos">
 
         <article class="demo reveal">
-          <a class="shot" href="../swapchain/#film" tabindex="-1" aria-hidden="true">
-            <img src="img/film.webp" alt="" width="1120" height="700" loading="lazy">
-            <span class="badge"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z" fill="currentColor"/></svg>2 min</span>
-          </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Video</span><span class="mono where">SwapChain</span></div>
-            <h3>The SwapChain demo</h3>
-            <p>A room-swap marketplace for BU that finds loops of students who can all move at once, not just pairs. Two minutes, no sound.</p>
-            <div class="ctas"><a class="cta" href="../swapchain/#film">Watch the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../swapchain/">Project page</a></div>
-          </div>
-        </article>
-
-        <article class="demo reveal">
-          <a class="shot" href="../continuum/#ccApp" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../continuum/#ccApp" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/ccapp-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/ccapp-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -260,7 +262,7 @@
             <div class="tags"><span class="mono type">Walkthrough</span><span class="mono where">Continuum</span></div>
             <h3>The app screen</h3>
             <p>The app screen during a real swing, in three steps. Scroll to play.</p>
-            <div class="ctas"><a class="cta" href="../continuum/#ccApp">Scroll through it <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
+            <div class="ctas"><a class="cta" data-demo href="../continuum/#ccApp">Scroll through it <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
           </div>
         </article>
 
@@ -274,7 +276,7 @@
       <div class="demos three">
 
         <article class="demo reveal">
-          <a class="shot" href="../#continuum" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../#continuum" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/range-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/range-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -282,12 +284,12 @@
             <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home &middot; Continuum</span></div>
             <h3>The range</h3>
             <p>Click where you want to aim. Hit three and I'll tell you what you're doing. A toy, not the real model.</p>
-            <div class="ctas"><a class="cta" href="../#continuum">Hit a few <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
+            <div class="ctas"><a class="cta" data-demo href="../#continuum">Hit a few <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../#medtronic" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../#medtronic" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/race-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/race-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -295,12 +297,12 @@
             <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home &middot; Medtronic</span></div>
             <h3>Lookup race</h3>
             <p>Five lookups by hand, 10 to 15 minutes each, against about a minute with the agent. Sped up 300&times;.</p>
-            <div class="ctas"><a class="cta" href="../#medtronic">Run a lookup <span aria-hidden="true">&rarr;</span></a></div>
+            <div class="ctas"><a class="cta" data-demo href="../#medtronic">Run a lookup <span aria-hidden="true">&rarr;</span></a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../paper/#ladder" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../paper/#ladder" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/paper-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/paper-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -308,12 +310,12 @@
             <div class="tags"><span class="mono type">Toy</span><span class="mono where">Paper</span></div>
             <h3>The headline result</h3>
             <p>The simplest model won. Hover a model to see its full row.</p>
-            <div class="ctas"><a class="cta" href="../paper/#ladder">See the chart <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../paper/">The paper</a></div>
+            <div class="ctas"><a class="cta" data-demo href="../paper/#ladder">See the chart <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../paper/">The paper</a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../#currently" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../#currently" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/rooting-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/rooting-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -321,12 +323,12 @@
             <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home &middot; Currently</span></div>
             <h3>Rooting for</h3>
             <p>My Fantasy AI sets all three lineups. Hover a week to see the score.</p>
-            <div class="ctas"><a class="cta" href="../#currently">See the weeks <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
+            <div class="ctas"><a class="cta" data-demo href="../#currently">See the weeks <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../#main" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo href="../#main" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/hero-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/hero-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -334,7 +336,7 @@
             <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home</span></div>
             <h3>Hit a shot</h3>
             <p>Click anywhere at the top of the home page to hit a shot.</p>
-            <div class="ctas"><a class="cta" href="../#main">Hit a shot <span aria-hidden="true">&rarr;</span></a></div>
+            <div class="ctas"><a class="cta" data-demo href="../#main">Hit a shot <span aria-hidden="true">&rarr;</span></a></div>
           </div>
         </article>
 
@@ -359,6 +361,28 @@
     if (document.documentElement.dataset.theme === 'dark') eager();
     var idle = window.requestIdleCallback || function(f){ return setTimeout(f, 2500); };
     addEventListener('load', function(){ idle(eager); });
+  })();
+</script>
+<script>
+  /* the lead film: desktop plays it muted once it is on screen (not under reduced motion or save data);
+     phones load nothing until a tap, then play a smaller copy right here in the page */
+  (function(){
+    var v=document.getElementById('leadFilm'), b=document.getElementById('leadPlay');
+    if(!v) return;
+    var phone=b && matchMedia('(pointer: coarse)').matches && Math.min(screen.width,screen.height)<600;
+    if(phone){
+      v.src='../swapchain/media/swapchain-demo-phone.mp4'; v.controls=false; v.loop=false; b.hidden=false;
+      b.addEventListener('click',function(){ b.hidden=true; v.controls=true; v.play().catch(function(){}); });
+      v.addEventListener('ended',function(){ v.controls=false; b.hidden=false; });
+      return;
+    }
+    v.preload='metadata';
+    var save=navigator.connection && navigator.connection.saveData;
+    if(save || matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function(es){ es.forEach(function(e){
+      if(e.isIntersecting) v.play().catch(function(){});
+      else if(!v.paused) v.pause();
+    }); },{threshold:.35}).observe(v);
   })();
 </script>
 </body>

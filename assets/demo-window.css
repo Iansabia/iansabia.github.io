@@ -1,0 +1,90 @@
+/* Demo window (see assets/demo-window.js): a large framed window over the page, the page dimmed
+   around it. Phones: nearly full screen, the Back bar stays. Uses the site tokens from site.css. */
+
+html.dw-lock { overflow: hidden; }
+html.dw-lock body { padding-right: var(--dw-gap, 0px); }
+
+dialog.dw {
+  position: fixed; inset: 0; margin: auto; padding: 0; border: 0; background: transparent;
+  width: min(1280px, calc(100vw - 64px)); height: min(860px, calc(100vh - 64px));
+  max-width: none; max-height: none; overflow: visible; color: var(--ink, #0B0817);
+}
+@supports (height: 100dvh) { dialog.dw { height: min(860px, calc(100dvh - 64px)); } }
+dialog.dw::backdrop {
+  background: rgba(11, 8, 23, .55);
+  -webkit-backdrop-filter: blur(6px) saturate(.9); backdrop-filter: blur(6px) saturate(.9);
+}
+
+.dw-box {
+  display: flex; flex-direction: column; width: 100%; height: 100%;
+  background: var(--bg, #F6F1E6); border: 1px solid var(--rule, #D3CAB5);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 30px 80px -20px rgba(11, 8, 23, .55), 0 0 0 1px rgba(255, 255, 255, .04);
+}
+
+.dw-bar {
+  display: flex; align-items: center; gap: 8px; flex: none;
+  min-height: 52px; padding: 4px 6px 4px 6px;
+  border-bottom: 1px solid var(--rule, #D3CAB5); background: var(--bg, #F6F1E6);
+  font: 500 15px/1.2 var(--sans, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif);
+}
+.dw-back, .dw-x, .dw-full {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; min-width: 44px; padding: 0 12px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--ink, #0B0817); font: inherit; text-decoration: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: background-color .2s, color .2s;
+}
+.dw-back { font-weight: 600; color: var(--acc, #6D4FE8); }
+.dw-back span { font-size: 17px; line-height: 1; }
+.dw-title {
+  flex: 1; min-width: 0; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 500 12px/1.2 var(--mono, ui-monospace, Menlo, monospace); color: var(--body, #4A4363);
+}
+.dw-full { font-size: 13px; color: var(--body, #4A4363); }
+.dw-full svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.dw-x { padding: 0; }
+.dw-x svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+@media (hover: hover) {
+  .dw-back:hover, .dw-x:hover, .dw-full:hover { background: var(--tile, #ECE5D6); }
+  .dw-full:hover { color: var(--ink, #0B0817); }
+}
+.dw-back:focus-visible, .dw-x:focus-visible, .dw-full:focus-visible { outline: 2px solid var(--acc, #6D4FE8); outline-offset: -2px; }
+
+.dw-frame { position: relative; flex: 1; min-height: 0; background: var(--bg, #F6F1E6); }
+.dw-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; opacity: 0; transition: opacity .3s; }
+.dw-frame.ready iframe { opacity: 1; }
+.dw-wait {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  color: var(--body, #4A4363); font: 500 12px/1 var(--mono, ui-monospace, Menlo, monospace);
+}
+.dw-frame.ready .dw-wait { display: none; }
+.dw-wait i {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--rule, #D3CAB5); border-top-color: var(--acc, #6D4FE8);
+  animation: dw-spin .9s linear infinite;
+}
+@keyframes dw-spin { to { transform: rotate(360deg); } }
+
+/* open: the window rises a little and the dim fades in */
+dialog.dw.dw-anim[open] .dw-box { animation: dw-in .38s cubic-bezier(.22, 1, .36, 1) both; }
+dialog.dw.dw-anim[open]::backdrop { animation: dw-fade .3s ease both; }
+@keyframes dw-in { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+@keyframes dw-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  dialog.dw[open] .dw-box, dialog.dw[open]::backdrop { animation: none !important; }
+  .dw-wait i { animation-duration: 2.4s; }
+  .dw-frame iframe { transition: none; }
+}
+
+/* phones and small windows: nearly full screen, the Back bar stays */
+@media (max-width: 760px), (max-height: 520px) {
+  dialog.dw { width: calc(100vw - 16px); height: calc(100vh - 16px); }
+  @supports (height: 100dvh) { dialog.dw { height: calc(100dvh - 16px); } }
+  .dw-box { border-radius: 12px; }
+  .dw-full .dw-full-long { display: none; }
+}
+@media (max-width: 420px) {
+  .dw-title { display: none; }
+  .dw-bar { justify-content: space-between; }
+  .dw-full { margin-left: auto; }
+}
