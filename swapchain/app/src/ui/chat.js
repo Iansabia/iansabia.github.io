@@ -245,7 +245,8 @@ export function createChat(app, { reducedMotion }) {
       if (mine) { app.ui.openLoop = cycleKey(mine); app._fitKey = null; app.go({ tab: "matches" }); }
       else app.go({ tab: "explore", loopKey: id });
     }
-    if (window.matchMedia("(max-width: 700px)").matches) setOpen(false);
+    // on any phone layout the panel covers the map, so close it to show what the answer opened
+    if (app.phone) setOpen(false);
   });
   root.addEventListener("submit", (e) => {
     e.preventDefault();

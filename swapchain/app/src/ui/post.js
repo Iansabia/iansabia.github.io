@@ -59,7 +59,7 @@ export function postView(app) {
     out.push(`<div class="field"><label for="p-dorm">Dorm</label><select class="select" id="p-dorm" data-field="dormId">` +
       DORMS.map((x) => `<option value="${x.id}" ${x.id === d.dormId ? "selected" : ""}>${esc(x.name)}</option>`).join("") + `</select></div>`);
     if (dorm.towers.length) {
-      out.push(`<div class="field"><span class="lbl">Tower</span><div class="seg" role="group" aria-label="Tower">` + dorm.towers.map((t) => `<button data-act="pset" data-id="towerId" data-v="${t.id}" aria-pressed="${d.towerId === t.id}">${esc(t.name)} ${t.letter}</button>`).join("") + `</div></div>`);
+      out.push(`<div class="field"><span class="lbl">Tower</span><div class="seg" role="group" aria-label="Tower">` + dorm.towers.map((t) => `<button data-act="pset" data-id="towerId" data-v="${t.id}" aria-pressed="${d.towerId === t.id}">${esc(t.name)} Tower</button>`).join("") + `</div></div>`);
     }
     out.push(`<div class="field two"><div><span class="lbl" style="display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px">Floor</span>${numstep("floor", d.floor, "Floor")}</div>` +
       `<div style="flex:1;min-width:140px"><label for="p-num" style="display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px">Room number</label><input class="input mono" id="p-num" data-field="number" inputmode="numeric" autocomplete="off" value="${esc(d.number)}" style="font-size:17px"></div></div>`);

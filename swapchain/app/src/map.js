@@ -101,6 +101,9 @@ function extentAlong(g, dir) {
 }
 
 const PERIOD = 2600;
+// Phones: the city's idle motion (traffic, grid pulses, the slow sway, loop shimmer) runs for this long
+// after anything changes or you touch the map, then the map holds still until the next change.
+const PHONE_AMBIENT_MS = 6000;
 
 // Ground grid: a hairline grid that carries the ground past the edge of the map data, so the empty
 // space around campus reads as a designed surface instead of a void. Lines fade in where the edge fog
@@ -242,12 +245,22 @@ const fogSolid = (ground) => {
 };
 
 export class CampusMap {
-  constructor({ container, overlay, phone, onDorm, onFloor, onRoom, onPerson, onBackground, onHover, freeArea }) {
+  constructor({ container, overlay, phone, lowPower = false, onDorm, onFloor, onRoom, onPerson, onBackground, onHover, onRoomChange, freeArea }) {
     this.container = container;
     this.__groups = GROUPS; // for QA in the console
     this.overlay = overlay;
     this.phone = phone;
-    this.cb = { onDorm, onFloor, onRoom, onPerson, onBackground, onHover };
+    this.cb = { onDorm, onFloor, onRoom, onPerson, onBackground, onHover, onRoomChange };
+    // real phones (not the desktop's phone preview) draw only when something changes (see frame)
+    this.lowPower = !!lowPower;
+    this.covered = false; // the sheet or the Ask panel is over the whole map
+    this.dirty = true;
+    this.lastBuild = 0;
+    this.activeUntil = 0;
+    this.ambOff = 0; // idle time taken out of the ambient clock, so motion resumes where it stopped
+    this.idleAt = 0;
+    const conn = navigator.connection;
+    this.saveData = !!(conn && conn.saveData);
     this.freeArea = freeArea;
     this.t0 = performance.now();
     this.colors = sceneColors();
@@ -299,6 +312,8 @@ export class CampusMap {
         this.vs = viewState;
         const user = interactionState && (interactionState.isDragging || interactionState.isPanning || interactionState.isRotating || interactionState.isZooming);
         if (user) this.orbit = false;
+        // phones only draw on change: a camera move is one (layers that depend on zoom follow it)
+        if (this.lowPower) this.kick();
       },
       onHover: (info) => this.handleHover(info),
       onClick: (info) => this.handleClick(info),
@@ -309,11 +324,12 @@ export class CampusMap {
         // camera moves asked for before deck finished loading (deep links like ?demo=4) are applied now
         this.loaded = true;
         if (this.pendingView) { const v = this.pendingView; this.pendingView = null; this.deck.setProps({ initialViewState: { ...v, transitionDuration: 0 } }); this.vs = v; this.kick(); }
-        setTimeout(() => this.loadContext(), 600); // the sketch ring loads after the campus is on screen
+        if (this.lowPower) this.deferContext();
+        else setTimeout(() => this.loadContext(), 600); // the sketch ring loads after the campus is on screen
       },
       onError: (e) => { console.warn("deck", e && e.message); },
     });
-    container.addEventListener("pointerdown", () => { this.orbit = false; }, { capture: true });
+    container.addEventListener("pointerdown", () => { this.orbit = false; if (this.lowPower) this.kick(); }, { capture: true });
     this.canvas = container.querySelector("canvas");
     if (this.canvas) this.canvas.setAttribute("aria-label", "3D campus map. Use the Explore list to choose a dorm.");
 
@@ -814,33 +830,91 @@ export class CampusMap {
       this.liftKey = key;
       const g = GROUPS.get(key);
       if (g) {
-        // fly into the floor itself and stay in 3D. The camera's target is lifted to the floor's
-        // height (viewState.position), so even a top floor sits mid-screen instead of above the camera.
-        const [lo] = g.floors;
-        const gap = this.phone ? 3.3 : 3.9; // breathing room between floors when a building opens
-        const zf = (floor - 1) * g.fh + (floor - lo + 1) * gap + g.fh * 0.18 + 1.2;
-        const pitch = this.phone ? 46 : 50, bearing = this.bearingDorm;
-        // center on the floor's rooms (a low wing beside the tower would pull a footprint center off)
-        let aim = g.verts;
-        try {
-          const tall = g.buildings.filter((bb) => bb.height >= g.height * 0.6);
-          const cells = floorRooms((tall.length ? tall : g.buildings).map((bb) => bb.ring.map(toM)), g.dormId, floor, new Map(), toM);
-          if (cells.length) aim = cells.flatMap((cc) => cc.poly);
-        } catch (e) { /* the footprint will do */ }
-        const xs = aim.map((v) => v[0]), ys = aim.map((v) => v[1]);
-        const c = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
-        // fit the floor's long side to most of the free map area
-        const span = Math.max(...aim.map((v) => Math.hypot(v[0] - c[0], v[1] - c[1])));
-        const fa = this.freeArea();
-        const fw = Math.max(240, Math.min(fa.right - fa.left, (fa.bottom - fa.top) * 1.6));
-        const mpp0 = (40075016 * Math.cos((LAT0 * Math.PI) / 180)) / 512;
-        const zoom = clamp(Math.log2((0.7 * fw * mpp0) / (2 * span + 6)), 17.4, 19.4);
-        const ll = toLL(c);
-        this.floorView = this.centerOn({ longitude: ll[0], latitude: ll[1], zoom, pitch, bearing, position: [0, 0, zf] }, aim, zf);
+        this.floorView = this.floorViewFor(g, floor);
         this.setView(this.floorView, 1100, "linear");
       }
     }
     this.kick();
+  }
+
+  /** The camera for an open floor. */
+  floorViewFor(g, floor) {
+    // fly into the floor itself and stay in 3D. The camera's target is lifted to the floor's
+    // height (viewState.position), so even a top floor sits mid-screen instead of above the camera.
+    const [lo] = g.floors;
+    const gap = this.phone ? 3.3 : 3.9; // breathing room between floors when a building opens
+    const zf = (floor - 1) * g.fh + (floor - lo + 1) * gap + g.fh * 0.18 + 1.2;
+    const pitch = this.phone ? 46 : 50, bearing = this.bearingDorm;
+    // center on the floor's rooms (a low wing beside the tower would pull a footprint center off)
+    let aim = g.verts;
+    try {
+      const tall = g.buildings.filter((bb) => bb.height >= g.height * 0.6);
+      const cells = floorRooms((tall.length ? tall : g.buildings).map((bb) => bb.ring.map(toM)), g.dormId, floor, new Map(), toM);
+      if (cells.length) aim = cells.flatMap((cc) => cc.poly);
+    } catch (e) { /* the footprint will do */ }
+    const xs = aim.map((v) => v[0]), ys = aim.map((v) => v[1]);
+    const c = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+    // fit the floor's long side to most of the free map area
+    const span = Math.max(...aim.map((v) => Math.hypot(v[0] - c[0], v[1] - c[1])));
+    const fa = this.freeArea();
+    const fw = Math.max(240, Math.min(fa.right - fa.left, (fa.bottom - fa.top) * 1.6));
+    const mpp0 = (40075016 * Math.cos((LAT0 * Math.PI) / 180)) / 512;
+    const zoom = clamp(Math.log2((0.7 * fw * mpp0) / (2 * span + 6)), 17.4, 19.4);
+    const ll = toLL(c);
+    const view = this.centerOn({ longitude: ll[0], latitude: ll[1], zoom, pitch, bearing, position: [0, 0, zf] }, aim, zf);
+    return this.phone ? this.fitFloorPhone(view, aim, zf, g.buildings.flatMap((bb) => bb.ring.map(toM))) || view : view;
+  }
+
+  /**
+   * Phones: at the usual framing the rooms on an open floor sit about 14 px apart, too small to tap.
+   * Turn the camera so the floor's long side runs along the long side of the free map (if that gains
+   * real size), then zoom until the floor just fits the free map.
+   */
+  fitFloorPhone(base, aim, zf, plate = []) {
+    const { W, H } = this.size();
+    const fa = this.freeArea();
+    const box = { l: fa.left + 10, r: fa.right - 10, t: fa.top + 24, b: fa.bottom - 10 };
+    const tw = box.r - box.l, th = box.b - box.t;
+    if (!(tw > 120 && th > 100) || aim.length < 3) return null;
+    // the floor's long axis: the main direction of its room corners
+    let mx = 0, my = 0;
+    for (const v of aim) { mx += v[0] / aim.length; my += v[1] / aim.length; }
+    let sxx = 0, syy = 0, sxy = 0;
+    for (const v of aim) { const dx = v[0] - mx, dy = v[1] - my; sxx += dx * dx; syy += dy * dy; sxy += dx * dy; }
+    const axis = 90 - (0.5 * Math.atan2(2 * sxy, sxx - syy) * 180) / Math.PI; // compass bearing of the long side
+    const near = (b) => base.bearing + ((((b - base.bearing) % 360) + 540) % 360) - 180;
+    // the whole floor plate stays in view, not just the rooms on it
+    const all = aim.concat(plate);
+    const lls = all.map((m) => toLL(m));
+    const fitAt = (bearing) => {
+      let v = { ...base, bearing };
+      for (let i = 0; i < 6; i++) {
+        v = this.centerOn(v, all, zf);
+        let vp;
+        try { vp = new D.WebMercatorViewport({ width: W, height: H, longitude: v.longitude, latitude: v.latitude, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing, position: v.position }); } catch (e) { return null; }
+        let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+        for (const ll of lls) {
+          const p = vp.project([ll[0], ll[1], zf]);
+          if (!Number.isFinite(p[0]) || !Number.isFinite(p[1])) continue;
+          x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]);
+        }
+        if (!Number.isFinite(x0)) return null;
+        const s = Math.min(tw / Math.max(1, x1 - x0), th / Math.max(1, y1 - y0));
+        const nz = clamp(v.zoom + Math.log2(s) * 0.95, 17.4, 20.4);
+        if (Math.abs(nz - v.zoom) < 0.01) break;
+        v = { ...v, zoom: nz };
+      }
+      return this.centerOn(v, all, zf);
+    };
+    let best = null;
+    [base.bearing, near(axis), near(axis + 90), near(axis + 180), near(axis - 90)].forEach((b, i) => {
+      const v = fitAt(b);
+      if (!v) return;
+      // keep the usual angle unless turning gains real size; among turns, the smaller turn wins
+      const score = v.zoom - (i === 0 ? 0 : 0.2 + Math.abs(b - base.bearing) / 900);
+      if (!best || score > best.score) best = { v, score };
+    });
+    return best ? best.v : null;
   }
 
   startFade(to) {
@@ -1084,9 +1158,31 @@ export class CampusMap {
   }
 
   // ---------- render loop ----------
+  // Desktop: the loop runs while anything moves, including the city's idle motion (unchanged).
+  // Phones: it runs only while something changes (camera, data, selection, a transition) plus a short
+  // stretch of idle motion after that, at most 30 frames a second for idle motion, and never while the
+  // sheet or the Ask panel covers the map. Then the map holds still and costs nothing.
   kick() {
+    this.dirty = true;
+    if (this.lowPower) this.wake();
     if (this.paused || this.raf) return;
     this.raf = requestAnimationFrame(this.frame);
+  }
+  /** Something changed or was touched: idle motion may run again for a while, picking up where it stopped. */
+  wake() {
+    const now = performance.now();
+    if (this.idleAt) { this.ambOff += now - this.idleAt; this.idleAt = 0; }
+    this.activeUntil = now + PHONE_AMBIENT_MS;
+  }
+  markIdle() { if (!this.idleAt) this.idleAt = performance.now(); }
+  /** The clock idle motion runs on. Phones leave out the time the map stood still, so nothing jumps. */
+  ambNow(now) { return this.lowPower ? now - this.ambOff - (this.idleAt ? now - this.idleAt : 0) : now; }
+  /** The app says when the sheet or the Ask panel covers the whole map (phones). */
+  setCovered(c) {
+    c = !!c;
+    if (c === this.covered) return;
+    this.covered = c;
+    if (!c) this.kick();
   }
   pause(p) {
     this.paused = p;
@@ -1097,16 +1193,24 @@ export class CampusMap {
 
   frame() {
     this.raf = 0;
-    if (this.paused || document.hidden) return;
+    if (this.paused || document.hidden) { this.markIdle(); return; }
     const now = performance.now();
+    if (this.lowPower) {
+      if (this.covered) { this.markIdle(); return; } // nothing on screen to draw; uncovering kicks again
+      // idle motion alone does not need every display frame
+      if (!this.dirty && now - this.lastBuild < 32 && !this.finiteAnim(now)) { this.raf = requestAnimationFrame(this.frame); return; }
+    }
+    this.dirty = false;
+    this.lastBuild = now;
+    const amb = this.ambNow(now);
     let anim = false;
     // idle orbit on the opening view
     if (this.orbit && !this.sel.dormId && !this.noOrbit) {
       const inTransition = this.vs.transitionDuration && now - (this.vsSetAt || 0) < this.vs.transitionDuration;
       if (!inTransition) {
         // a slow sway around the framed bearing (not a full spin), so the framing always holds
-        if (!this.orbitT0) { this.orbitT0 = now; this.orbitBase = this.vs.bearing; }
-        const b = this.orbitBase + 3.5 * Math.sin(((now - this.orbitT0) / 28000) * 2 * Math.PI);
+        if (!this.orbitT0) { this.orbitT0 = amb; this.orbitBase = this.vs.bearing; }
+        const b = this.orbitBase + 3.5 * Math.sin(((amb - this.orbitT0) / 28000) * 2 * Math.PI);
         this.vs = { ...this.vs, bearing: b, transitionDuration: 0 };
         this.deck.setProps({ initialViewState: this.vs });
       }
@@ -1115,12 +1219,19 @@ export class CampusMap {
     this.lastFrame = now;
     const layers = this.buildLayers(now);
     this.deck.setProps({ layers });
-    anim = anim || this.animating(now);
-    if (anim) this.raf = requestAnimationFrame(this.frame);
-    else this.lastFrame = 0;
+    let more;
+    if (this.lowPower) more = this.finiteAnim(now) || ((anim || this.ambientAnim()) && !this.saveData && now < this.activeUntil);
+    else more = anim || this.animating(now);
+    if (more) this.raf = requestAnimationFrame(this.frame);
+    else { this.lastFrame = 0; this.markIdle(); }
   }
 
   animating(now) {
+    return this.finiteAnim(now) || this.ambientAnim();
+  }
+
+  /** Motion that ends on its own: fades, floors lifting, loops drawing on, students moving. */
+  finiteAnim(now) {
     if (now - this.fade.t0 < this.fade.dur + 50) return true;
     if (this.explode) {
       const [lo, hi] = this.explode.group.floors;
@@ -1128,7 +1239,6 @@ export class CampusMap {
       if (this.explode.dir < 0) { this.explode = null; return true; }
     }
     if (this.floorAnim && now - this.floorAnim.t0 < 700) return true;
-    if (this.pulsesOn || this.lifeOn) return true;
     if (this.beads.length && now - (this.beadT0 || 0) < 2200) return true;
     if (this.carrier && now - this.carrier.t0 < 1200) return true;
     if (this.movers && now - this.movers.t0 < this.movers.ms + 200) return true;
@@ -1136,6 +1246,21 @@ export class CampusMap {
     for (const t of this.threads.values()) {
       if (!t.ok) continue;
       if (now < t.start + Math.max(t.dur, t.sprout || 0) + 700) return true;
+    }
+    if (this.lowPower) {
+      // on desktop the idle motion keeps the loop going through these; phones must wait for them
+      if (this.room && now - this.room.t0 < 660) return true;
+      if (this._glass && this._glass.spots.length && now - this._glass.t0 < 760) return true;
+      if (this.exitGlass && now < this.exitGlass.until + 40) return true;
+    }
+    return false;
+  }
+
+  /** Motion with no end: traffic and grid pulses, the shimmer on a picked or gradient loop, a waiting chain. */
+  ambientAnim() {
+    if (this.pulsesOn || this.lifeOn) return true;
+    for (const t of this.threads.values()) {
+      if (!t.ok) continue;
       if (t.kind === "loop" && (t.focus || (t.style && t.style.ai)) && !reducedMotion()) return true;
       if (t.kind === "open" && !reducedMotion()) return true;
     }
@@ -1144,6 +1269,7 @@ export class CampusMap {
 
   buildLayers(now) {
     const C = this.colors;
+    const amb = this.ambNow(now); // idle motion runs on this clock (the same as now on desktop)
     const fadeV = this.fadeValue(now);
     const sel = this.sel;
     const ex = this.explode;
@@ -1161,7 +1287,7 @@ export class CampusMap {
     // pulses only while the grid is in view (wide shots), and never with reduced motion
     this.pulsesOn = !reducedMotion() && PULSES.length && (this.vs.zoom || 0) < 17.2;
     if (this.pulsesOn) {
-      const tSec = ((now - this.t0) / 1000) % PULSE_CYCLE;
+      const tSec = ((amb - this.t0) / 1000) % PULSE_CYCLE;
       const pk = this.dark() ? 1 : 0.85;
       const pulse = (id, w, a, trail) => new D.TripsLayer({
         id, data: PULSES, getPath: (d) => d.path, getTimestamps: (d) => d.ts, getColor: (d) => rgba(d.c, Math.round(a * pk)),
@@ -1172,7 +1298,7 @@ export class CampusMap {
       const cyc = (id, w, a, trail) => new D.TripsLayer({
         id, data: CYCLES, getPath: (d) => d.path, getTimestamps: (d) => d.ts, getColor: (d) => rgba(d.c, Math.round(a * pk)),
         getWidth: w, widthUnits: "pixels", capRounded: true, jointRounded: false, trailLength: trail, fadeTrail: true,
-        currentTime: ((now - this.t0) / 1000) % 32, parameters: flat, updateTriggers: { getColor: tk },
+        currentTime: ((amb - this.t0) / 1000) % 32, parameters: flat, updateTriggers: { getColor: tk },
       });
       layers.push(cyc("grid-cycle-glow", 9, 70, 3.2), cyc("grid-cycle", 2.5, 255, 2.6));
     }
@@ -1228,7 +1354,13 @@ export class CampusMap {
 
     const glassNow = { ...glass, groups: xg, spots: glass.spots.filter((sp) => xg.has(sp.key)) };
     // the building the camera is leaving stays hidden until the camera is clear of it (see exitGlass)
-    const dormData = DORM_B.filter((b) => !(exIds && exIds.has(b.id)) && !(xg.has(b.towerId) || xg.has(b.dormId)) && !(exiting && (b.towerId === exiting || b.dormId === exiting)));
+    // The same array is reused until what it holds changes: a new array every frame made deck.gl redo
+    // the dorm geometry and restart the color fade (a GPU read-back) on every single frame.
+    const dk = `${ex ? ex.group.key : ""}|${[...xg].sort().join(",")}|${exiting || ""}`;
+    if (!this._dormData || this._dormData.k !== dk) {
+      this._dormData = { k: dk, data: DORM_B.filter((b) => !(exIds && exIds.has(b.id)) && !(xg.has(b.towerId) || xg.has(b.dormId)) && !(exiting && (b.towerId === exiting || b.dormId === exiting))) };
+    }
+    const dormData = this._dormData.data;
     const dormColor = (b) => {
       if (sel.dormId) {
         if (b.dormId !== sel.dormId) return C.dormDim;
@@ -1358,9 +1490,9 @@ export class CampusMap {
     // city life: cars, people, stoplights, the game at Fenway
     this.lifeOn = !reducedMotion();
     layers.push(...fenwayLayers({ dark: this.dark(), material: this.material }));
-    layers.push(...windowLayers({ now, t0: this.t0, zoom: this.vs.zoom, dark: this.dark(), fade: fadeV }));
+    layers.push(...windowLayers({ now: amb, t0: this.t0, zoom: this.vs.zoom, dark: this.dark(), fade: fadeV }));
     layers.push(...cdsLayers({ zoom: this.vs.zoom, dark: this.dark(), fade: fadeV }));
-    if (this.lifeOn) layers.push(...lifeLayers({ now, t0: this.t0, zoom: this.vs.zoom || 15, dark: this.dark(), demo: this.dimAll, depth: {}, glow: { depthWriteEnabled: false }, soft: SOFT }));
+    if (this.lifeOn) layers.push(...lifeLayers({ now: amb, t0: this.t0, zoom: this.vs.zoom || 15, dark: this.dark(), demo: this.dimAll, depth: {}, glow: { depthWriteEnabled: false }, soft: SOFT }));
 
     // threads
     this.threadLayers(layers, now);
@@ -1382,6 +1514,12 @@ export class CampusMap {
     // neighbors the full-size room now covers step aside
     const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
     this.room.hide = new Set(cells.filter((c) => c !== cell && [c.c, ...c.poly, ...c.poly.map((p, i) => mid(p, c.poly[(i + 1) % c.poly.length]))].some(f.covers)).map((c) => c.number));
+    this.setView(this.roomView(f), 1200, "linear");
+    this.kick();
+    if (this.cb.onRoomChange) this.cb.onRoomChange();
+  }
+  /** The camera for a furnished room: aimed at the room itself, up at its floor, filling about half the free map. */
+  roomView(f) {
     const pitch = this.phone ? 46 : 48;
     const bearing = (Math.atan2(f.fwd[0], f.fwd[1]) * 180) / Math.PI;
     // aim the camera at the room itself, up at its floor, so it never ends up below an upper floor
@@ -1390,14 +1528,36 @@ export class CampusMap {
     const px = Math.min(fa.right - fa.left, (fa.bottom - fa.top) * 1.3) * (this.phone ? 0.8 : 0.55);
     const zoom = clamp(Math.log2((px * ((40075016 * Math.cos((LAT0 * Math.PI) / 180)) / 512)) / Math.max(f.W, f.Dp, 3)), 20.2, 21.8);
     const v = this.offsetView({ longitude: f.center[0], latitude: f.center[1], zoom, pitch, bearing });
-    this.setView({ ...v, position: [0, 0, this.zTopNow + 0.8] }, 1200, "linear");
-    this.kick();
+    return { ...v, position: [0, 0, this.zTopNow + 0.8] };
   }
   closeRoom({ fly = true } = {}) {
     if (!this.room) return;
     this.room = null;
     if (fly && this.floorView) this.setView(this.floorView, 900, "linear");
     this.kick();
+    if (this.cb.onRoomChange) this.cb.onRoomChange();
+  }
+
+  /**
+   * Phones: the window changed shape (turned on its side, or the sheet became a side column). Frame
+   * whatever is open again for the new free area, without replaying its opening animation.
+   */
+  refitSelection(duration = 300) {
+    this.topMin = null; // the top bar may have a new height
+    if (this.room && this.room.f && this.zTopNow != null) { this.setView(this.roomView(this.room.f), duration, "linear"); return; }
+    const key = this.sel.towerId || this.sel.dormId;
+    if (!key) return;
+    if (this.sel.floor != null) {
+      const g = GROUPS.get(key);
+      if (g) { this.floorView = this.floorViewFor(g, this.sel.floor); this.setView(this.floorView, duration, "linear"); }
+      return;
+    }
+    this.flyToDorm(this.sel.dormId, this.sel.towerId, duration);
+  }
+  /** The building view camera (the same one selectDorm flies to). */
+  flyToDorm(dormId, towerId, duration = 1400) {
+    if (towerId) this.flyToGroup(towerId, { zoom: this.phone ? 17.0 : 17.55, pitch: 58, bearingDelta: 20, duration });
+    else this.flyToGroup(dormId, { zoom: dormId === "warren" ? (this.phone ? 16.55 : 17.0) : (this.phone ? 16.85 : 17.3), pitch: 62, bearingDelta: 20, duration });
   }
 
   /**
@@ -1416,11 +1576,24 @@ export class CampusMap {
   }
 
   /**
+   * Phones: the sketch ring is 0.5 MB of decoration. Fetch it only once someone starts using the page,
+   * and never on Save-Data or a 2G/3G connection.
+   */
+  deferContext() {
+    const c = navigator.connection;
+    if (c && (c.saveData || ["slow-2g", "2g", "3g"].includes(c.effectiveType))) return;
+    const go = () => { document.removeEventListener("pointerdown", go, true); setTimeout(() => this.loadContext(), 600); };
+    document.addEventListener("pointerdown", go, true);
+  }
+
+  /**
    * The city around the campus box (data/context.js, real OSM outlines), drawn only as a sketch:
    * roof outlines and corner posts in the grid color, strongest at the edge of the campus model and
    * fading toward the horizon, so the solid city hands off to the sketch and never goes blank.
    */
   loadContext() {
+    if (this.ctxLoading) return;
+    this.ctxLoading = true;
     import("../data/context.js").then(({ CONTEXT }) => {
       const sm = (a, b, v) => { const x = clamp((v - a) / (b - a), 0, 1); return x * x * (3 - 2 * x); };
       const outside = (ll) => { const m = toM(ll); const x0 = toM([BX0, BY0]), x1 = toM([BX1, BY1]); return Math.max(x0[0] - m[0], m[0] - x1[0], x0[1] - m[1], m[1] - x1[1]); };
@@ -1456,6 +1629,7 @@ export class CampusMap {
     this.zTopNow = zTop;
     const roomA = this.room && this.room.key === key ? clamp((performance.now() - this.room.t0) / 600, 0, 1) : 0;
     const wallH = (2.5 - 1.9 * roomA) * easeOut(clamp((focusV - 0.25) / 0.75, 0, 1));
+    this.wallHNow = wallH;
     const open = this.room && this.room.key === key ? this.room : null;
     const cells = open ? this.roomCache.cells.filter((c) => c.number !== open.number && !(open.hide && open.hide.has(c.number))) : this.roomCache.cells;
     const hot = this.hotRoom, hov = this.hover.room;
@@ -1486,7 +1660,7 @@ export class CampusMap {
       const named = cells.filter((c) => (c.mark && (c.mark.listed || c.mark.me)) || c.number === hov || c.number === hot);
       layers.push(new D.TextLayer({
         id: "room-numbers", data: named, getPosition: (c) => [c.cll[0], c.cll[1], zTop + wallH + 0.3], getText: (c) => c.number,
-        getSize: this.phone ? 10 : 12, sizeUnits: "pixels", getColor: (c) => (c.mark && c.mark.me ? [255, 255, 255, 255] : rgba(C.roomText, 235)),
+        getSize: 12, sizeUnits: "pixels", getColor: (c) => (c.mark && c.mark.me ? [255, 255, 255, 255] : rgba(C.roomText, 235)),
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif", fontWeight: 600,
         characterSet: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-", billboard: true,
         fontSettings: { sdf: true, fontSize: 64, buffer: 6 }, outlineWidth: 3, outlineColor: rgba(fill({ mark: null, type: "double" }), 230),
@@ -1562,7 +1736,7 @@ export class CampusMap {
 
   /** Color of a loop at a point along it (u = 0..1). Gradient loops flow slowly. */
   loopColorAt(t, u, now) {
-    const c = t.style.ai ? aiColorAt(u * 0.9 - (reducedMotion() ? 0 : (now - this.t0) / 5200), this.dark()) : t.rgb;
+    const c = t.style.ai ? aiColorAt(u * 0.9 - (reducedMotion() ? 0 : (this.ambNow(now) - this.t0) / 5200), this.dark()) : t.rgb;
     if (!t.doneAt) return c;
     // confirmed: fade to green
     const k = clamp((now - t.doneAt) / 600, 0, 1);
@@ -1611,7 +1785,8 @@ export class CampusMap {
     const W = ph ? 2.6 : 3.2;
     const alphaOf = (t) => (t.dim ? 46 : t.id === hlThread ? 110 : 255);
     const colorKey = `${this.themeKey}|${hlThread}|${loops.map((t) => (t.dim ? 1 : 0) + (t.doneAt ? `d${Math.round(clamp((now - t.doneAt) / 600, 0, 1) * 20)}` : "")).join("")}`;
-    const aiKey = pieces.length && !rm ? Math.floor(now / 50) : 0;
+    const amb = this.ambNow(now); // idle motion clock (same as now on desktop)
+    const aiKey = pieces.length && !rm ? Math.floor(amb / 50) : 0;
     const trips = (id, data, getColor, getWidth, trigger, caps = true) => new D.TripsLayer({
       id, data, getPath: (d) => d.path, getTimestamps: (d) => d.ts,
       getColor, getWidth, widthUnits: "pixels", widthMinPixels: 1,
@@ -1634,7 +1809,7 @@ export class CampusMap {
         layers.push(new D.TripsLayer({
           id: "thread-pulse", data: pulseData, getPath: (d) => d.path, getTimestamps: (d) => d.ts,
           getColor: (d) => d.c, getWidth: ph ? 3.6 : 4.4, widthUnits: "pixels", capRounded: true, jointRounded: true, billboard: true,
-          parameters: noDepth, currentTime: (now - this.t0) % PERIOD, trailLength: PERIOD * 0.14, fadeTrail: true,
+          parameters: noDepth, currentTime: (amb - this.t0) % PERIOD, trailLength: PERIOD * 0.14, fadeTrail: true,
           updateTriggers: { getColor: `${this.themeKey}|${colorKey}` },
         }));
       }
@@ -1644,7 +1819,7 @@ export class CampusMap {
     if (opens.length) {
       const faint = [];
       const dots = [];
-      const phase = rm ? 0 : ((now - this.t0) / 1400) % 1;
+      const phase = rm ? 0 : ((amb - this.t0) / 1400) % 1;
       for (const t of opens) {
         const P = t.points, F = t.frac;
         for (let i = 0; i + 1 < P.length; i += 2) faint.push({ t, path: P.slice(i, Math.min(P.length, i + 3)), u: F[i] });
@@ -1794,12 +1969,35 @@ export class CampusMap {
     if (this.cb.onHover) this.cb.onHover({ dormId, floor, room: room ? o : null, x: info && info.x, y: info && info.y });
   }
 
+  /**
+   * Phones: the offered room (or yours) whose middle is closest to a tap, within r pixels. Rooms on an
+   * open floor are small on a phone, so a tap a few pixels off still opens the room you meant.
+   */
+  nearestMarkedRoom(x, y, r) {
+    const vp = this.deck && this.deck.getViewports && this.deck.getViewports()[0];
+    if (!vp || !this.roomsNow || this.zTopNow == null || x == null) return null;
+    const z = this.zTopNow + (this.wallHNow || 0);
+    let best = null, bd = r;
+    for (const c of this.roomsNow) {
+      if (!(c.mark && (c.mark.listingId || c.mark.me))) continue;
+      const p = vp.project([c.cll[0], c.cll[1], z]);
+      const d = Math.hypot(p[0] - x, p[1] - y);
+      if (d < bd) { bd = d; best = c; }
+    }
+    return best;
+  }
+
   handleClick(info) {
-    const o = info && info.object;
+    let o = info && info.object;
     this.orbit = false;
     if (info && info.layer && (info.layer.id === "room-avatars" || info.layer.id === "room-interior") && o) {
       if (o.personId && o.role !== "free" && this.cb.onPerson) this.cb.onPerson(o.personId);
       return;
+    }
+    // phones: a tap that misses an offered room by a little goes to that room, not its neighbor
+    if (this.phone && !this.room && this.sel.floor != null && info && !(info.layer && info.layer.id === "rooms" && o && o.mark && (o.mark.listingId || o.mark.me))) {
+      const near = this.nearestMarkedRoom(info.x, info.y, 18);
+      if (near) { info = { ...info, layer: { id: "rooms" }, object: near }; o = near; }
     }
     if (info && info.layer && info.layer.id === "rooms" && o) {
       if (o.mark && o.mark.listingId && this.cb.onRoom) this.cb.onRoom(o.mark.listingId, o.number);
@@ -1916,8 +2114,11 @@ export class CampusMap {
       it.el.classList.toggle("sel", this.sel.dormId === id);
       it.el.classList.toggle("fade", !!this.sel.dormId && this.sel.dormId !== id || (this.dimAll && !this.sel.dormId));
       it.el.classList.toggle("hover", this.hover.dormId === id);
-      if (this.sel.dormId === id) it.el.style.opacity = this.explode ? "0" : "";
-      else it.el.style.opacity = "";
+      // the open building's own label hides while its floors are apart; hidden, it must not catch taps
+      // meant for the rooms under it
+      const hide = this.sel.dormId === id && !!this.explode;
+      it.el.style.opacity = hide ? "0" : "";
+      it.el.style.pointerEvents = hide ? "none" : "";
     }
     for (const a of this.areaLabels) a.el.classList.toggle("hide", !!this.sel.dormId);
   }
@@ -1981,8 +2182,10 @@ export class CampusMap {
     const topMin = this.topMin;
     let fa = null;
     try { fa = this.freeArea(); } catch (e) { fa = null; }
-    this.tagMinX = this.phone ? 0 : fa ? fa.left : 0;
-    const minX = this.phone ? 6 : (fa ? fa.left - 10 : 6);
+    // labels stay clear of a side panel (desktop, and phones on their side where the sheet is a column)
+    const side = !this.phone || (fa && fa.left > 40);
+    this.tagMinX = side && fa ? fa.left : 0;
+    const minX = side && fa ? fa.left - 10 : 6;
     const maxX = W - 6;
     const maxY = this.phone && fa ? fa.bottom - 4 : H - 6;
     // which areas are clustered right now (with a little hysteresis so labels do not flicker)

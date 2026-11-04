@@ -50,7 +50,7 @@
   .step-tab{background:none;border:0;border-right:1px solid var(--rule);color:var(--body);text-align:left;padding:14px 14px 16px;cursor:pointer;display:flex;flex-direction:column;gap:6px;position:relative;font:inherit;min-width:0;transition:background .25s,color .25s}
   .step-tab:last-child{border-right:0}
   .step-tab::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--acc);transform:scaleX(0);transform-origin:left;transition:transform .45s var(--ease)}
-  .step-tab:hover{background:var(--tile)}
+  @media (hover:hover){.step-tab:hover{background:var(--tile)}}
   .step-tab[aria-selected="true"]{color:var(--ink)}
   .step-tab[aria-selected="true"]::after{transform:scaleX(1)}
   .step-tab .stp{color:var(--acc);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -89,10 +89,10 @@
   .real-out .mono{display:block;color:var(--acc);font-size:11px;margin-bottom:4px}
   .step-nav{grid-area:nav;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:20px}
   .btn{white-space:nowrap;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;background:var(--ink);color:var(--bg);border:0;padding:10px 14px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
-  .btn:hover{background:var(--acc);color:var(--on-acc)}
+  @media (hover:hover){.btn:hover{background:var(--acc);color:var(--on-acc)}}
   .btn:active{transform:translateY(1px)}
   .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
-  .btn.ghost:hover{border-color:var(--ink)}
+  @media (hover:hover){.btn.ghost:hover{border-color:var(--ink)}}
   .btn[hidden]{display:none}
 
   /* number check (step 5) */
@@ -147,9 +147,9 @@
   .replies{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:10px 12px;border-top:1px solid var(--rule);min-height:57px;align-items:center}
   .replies .hint{font-size:12px;color:var(--body);text-align:center}
   .chip-btn{font:600 14px/1 var(--sans);padding:10px 16px;border-radius:999px;border:1.5px solid var(--acc);background:transparent;color:var(--ink);cursor:pointer;transition:background .2s,color .2s,transform .15s}
-  .chip-btn:hover{background:color-mix(in srgb,var(--acc) 14%,transparent)}
+  @media (hover:hover){.chip-btn:hover{background:color-mix(in srgb,var(--acc) 14%,transparent)}}
   .chip-btn.yes{background:var(--acc);color:var(--on-acc)}
-  .chip-btn.yes:hover{background:color-mix(in srgb,var(--acc) 86%,var(--ink))}
+  @media (hover:hover){.chip-btn.yes:hover{background:color-mix(in srgb,var(--acc) 86%,var(--ink))}}
   .chip-btn:active{transform:translateY(1px)}
   .inputbar{margin:0 12px 14px;height:34px;border:1px solid var(--rule);border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 14px;color:var(--body);font-size:13.5px}
   .inputbar i{width:24px;height:24px;border-radius:50%;background:var(--ghost)}
@@ -225,7 +225,8 @@
     .outs{gap:16px}
     .pipe{gap:16px 30px}
   }
-  @media (max-width:900px){
+  /* also big phones on their side (up to 932px wide, at most 500px tall): the sticky phone mock is taller than their screen, so stack it */
+  @media (max-width:900px), (max-width:932px) and (max-height:500px){
     .band{grid-template-columns:1fr}
     .stage{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"head" "phone" "lanes" "nav"}
     .phone-wrap{position:static;justify-self:center;width:100%;max-width:380px;margin-bottom:24px}
@@ -247,13 +248,32 @@
     .lane .lab{flex-direction:row;align-items:center;gap:8px}
     .legend li{grid-template-columns:56px minmax(0,1fr)}
     .pipe,.outs{grid-template-columns:1fr;gap:26px}
-    .pipe .node::after{display:block!important;top:auto;right:auto;left:22px;bottom:-22px;transform:rotate(90deg)}
-    .pipe .node:last-child::after{display:block!important;content:""}
+    /* same weight as the base arrow rule, so this one wins: the arrow points down, centred in the gap under each card */
+    .pipe .node:not(:last-child)::after{display:block;top:auto;right:auto;left:22px;bottom:-22px;transform:rotate(90deg)}
     .guards{grid-template-columns:1fr}
     .guards div{border-right:0!important}
     .guards div + div{border-top:1px solid var(--rule)}
     .bt th,.bt td{padding:8px 12px}
     .stage-head h3{font-size:26px}
+  }
+  /* small phones on their side: the time no longer fits next to the step number (the heading below repeats it) */
+  @media (max-width:767px){.step-tab .when{display:none}}
+  /* phones, upright or on their side: labels at least 11px, reading text 15px, notes 14px */
+  @media (max-width:640px), (max-width:932px) and (max-height:500px){
+    .badge,.meta,.meta .badge,.sys .badge,.p-head small,.divider,.rline span,.bt th,.step-tab .short,.tag.example::before{font-size:11px}
+    .node p,.guards span,.bt td,.bt .cap,.bub{font-size:15px}
+    .sys,.phone-note,.replies .hint{font-size:14px;text-wrap:balance}
+    .sys code{font-size:12.5px}
+    .fine{font-size:14px!important}
+    /* violet labels on the tan boxes, a little darker in light mode for 4.5:1 contrast */
+    :root:not([data-theme="dark"]) .calc span,:root:not([data-theme="dark"]) .real-out .mono{color:color-mix(in srgb,var(--acc) 90%,var(--ink))}
+  }
+  @media (min-width:641px) and (max-width:932px) and (max-height:500px){.step-tab .bd .badge{font-size:11px}}
+  /* touch screens: 44px tall buttons; each reply chip keeps its size and gets an invisible band above and below for a 44px tap */
+  @media (pointer:coarse){
+    .btn{min-height:44px}
+    .chip-btn{position:relative}
+    .chip-btn::after{content:"";position:absolute;inset:-6px -1.5px}
   }
   @media (prefers-reduced-motion:reduce){
     .thread{scroll-behavior:auto}
@@ -419,6 +439,8 @@
 <script>
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // the same breakpoint as the CSS that stacks the demo (phone mock above the lanes)
+  const stacked = matchMedia('(max-width: 900px), (max-width: 932px) and (max-height: 500px)');
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -662,7 +684,8 @@ Top waiver idea:
     stepsEl.appendChild(b);
   });
   const tabs = [...stepsEl.children];
-  const focusTab = () => tabs[cur].focus();
+  // When stacked, show() scrolls the tabs to the top itself, and a focus() that scrolls too would stop that halfway.
+  const focusTab = () => tabs[cur].focus({ preventScroll: stacked.matches });
 
   /* ---------- the phone ---------- */
   const thread = $('thread'), replies = $('replies');
@@ -762,7 +785,7 @@ Top waiver idea:
     $('nextBtn').innerHTML = i < STEPS.length - 1 ? 'Next: ' + esc(STEPS[i + 1].title) + ' &rarr;' : 'How it works &darr;';
     if (s.guard) setupGuard();
     try { sessionStorage.setItem('fai-step', i); } catch (e) {}
-    if (user && innerWidth <= 900) {
+    if (user && stacked.matches) {
       const r = stepsEl.getBoundingClientRect();
       if (r.top < 0) stepsEl.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     }
@@ -786,6 +809,16 @@ Top waiver idea:
       '<p class="g-out" id="gOut"></p><p class="g-verdict" id="gVerdict" aria-live="polite"></p>' +
       '<div class="g-allowed"><span class="mono" style="border:0;padding:0;color:var(--body)">In the facts:</span>' + nums.map((n) => '<span>' + n + '</span>').join('') + '</div></div></div>';
   }
+  // When stacked (phones), the draft box grows to fit its text so no line hides under its edge.
+  // Desktop keeps the fixed height, and a height set by dragging the box's corner is left alone.
+  let sized = null;
+  function fitDraft() {
+    const ta = $('gText'); if (!ta) return;
+    if (sized === ta) { ta.style.height = ''; sized = null; }
+    if (stacked.matches && ta.scrollHeight > ta.clientHeight) { ta.style.height = ta.scrollHeight + ta.offsetHeight - ta.clientHeight + 'px'; sized = ta; }
+  }
+  addEventListener('resize', fitDraft);
+  if (document.fonts) document.fonts.ready.then(fitDraft);
   function setupGuard() {
     const ta = $('gText'), out = $('gOut'), verdict = $('gVerdict');
     ta.value = DRAFT;
@@ -802,6 +835,7 @@ Top waiver idea:
       verdict.innerHTML = bad.length
         ? '<span class="badge ai">Thrown out</span><span>' + esc([...new Set(bad)].join(', ')) + (bad.length > 1 ? " aren't" : " isn't") + ' in the facts. The template note is used instead.</span>'
         : '<span class="badge code">Passes</span><span>Every number is in the facts, so the AI note can be used.</span>';
+      fitDraft();
     };
     ta.addEventListener('input', check);
     $('gSneak').addEventListener('click', () => { if (!ta.value.includes(SNEAK.trim())) ta.value = ta.value.trimEnd() + SNEAK; check(); });

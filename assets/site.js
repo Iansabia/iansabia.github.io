@@ -23,10 +23,16 @@
     btn.addEventListener('click', (e) => { e.stopPropagation(); set(!menu.classList.contains('open')); });
     menu.addEventListener('click', (e) => { if (e.target.closest('a')) set(false); });
     document.addEventListener('click', (e) => { if (!menu.contains(e.target)) set(false); });
+    // A tap on a video never sends a click (its controls take it), so also close on any press outside the menu.
+    document.addEventListener('pointerdown', (e) => { if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) set(false); }, true);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.classList.contains('open')) { set(false); btn.focus(); } });
   }
 
-  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12 });
+  // Fade a block in once 12% of it shows. A block taller than about 8 screens can never show 12%, so it fades in as soon as it enters.
+  const tooTall = (e) => e.boundingClientRect.height * .12 > (e.rootBounds ? e.rootBounds.height : innerHeight);
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (e.isIntersecting && (e.intersectionRatio > .1 || tooTall(e))) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: [0, .12] });
   document.querySelectorAll('.reveal,.rule').forEach((n) => io.observe(n));
 
   const bar = document.querySelector('.progress'), article = document.querySelector('[data-read]');

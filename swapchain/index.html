@@ -25,7 +25,14 @@
   .film-f{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 22px;padding:14px 16px;border-top:1px solid var(--nrule)}
   .film-f p{color:var(--nbody);font-size:14px;max-width:60ch}
   .go-live{display:inline-flex;align-items:center;gap:10px;background:var(--nacc);color:#0B0817;font-weight:600;text-decoration:none;padding:10px 16px;transition:gap .3s var(--ease)}
-  .go-live:hover{gap:16px}
+  @media (hover:hover){.go-live:hover{gap:16px}}
+  /* phones get a play button instead of autoplay (see the script at the bottom); it stays hidden on desktop */
+  .film-v{position:relative}
+  .film-play{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;align-items:flex-end;justify-content:center;padding:0 12px 14px;background:none;border:0;cursor:pointer;color:#0B0817;font:600 15px/1.2 var(--sans);-webkit-tap-highlight-color:transparent}
+  .film-play[hidden]{display:none}
+  .film-play span{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px;background:var(--nacc)}
+  .film-play svg{width:11px;height:13px;flex:none}
+  .film-tip{display:none}
 
   .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:28px clamp(28px,4vw,56px);align-items:start}
   .copy p{color:var(--body);margin-bottom:14px;max-width:60ch}
@@ -64,6 +71,24 @@
     .stats,.loop{grid-template-columns:1fr}
     .stats div+div,.loop div+div{border-left:0;border-top:1px solid var(--rule);padding-left:0}
     .loop div+div{padding-left:18px}
+  }
+  @media (max-width:960px){
+    /* phones: body text at least 15px, labels at least 11px */
+    .film-f p,.stats span,.loop p{font-size:15px}
+    .who-did{font-size:11px}
+  }
+  @media (pointer:coarse) and (orientation:portrait) and (max-width:600px){
+    .film-tip{display:block}
+  }
+  @media (max-width:350px){
+    /* the whole frame is the tap target, so the label can shrink to clear the poster's subtitle */
+    .film-play{padding-bottom:10px}
+    .film-play span{min-height:40px;padding:0 14px}
+  }
+  @media (orientation:landscape) and (max-height:540px){
+    /* short landscape screens: the whole frame fits under the sticky bar */
+    .film-v{width:min(100%,calc((100vh - var(--bar) - 16px) * 16 / 9));margin:0 auto}
+    @supports (height:100svh){.film-v{width:min(100%,calc((100svh - var(--bar) - 16px) * 16 / 9))}}
   }
 </style>
 </head>
@@ -105,8 +130,12 @@
 
       <figure class="film">
         <figcaption class="film-h"><span class="mono">The demo &middot; 2 min</span><span class="mono">No sound</span></figcaption>
-        <video id="film" src="media/swapchain-demo.mp4" poster="media/poster.jpg" controls muted playsinline loop preload="metadata" aria-label="Two-minute demo of SwapChain"></video>
+        <div class="film-v">
+          <video id="film" src="media/swapchain-demo.mp4" poster="media/poster.jpg" controls muted playsinline loop preload="none" aria-label="Two-minute demo of SwapChain"></video>
+          <button class="film-play" id="filmPlay" type="button" hidden><span><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z" fill="currentColor"/></svg>Play full screen</span></button>
+        </div>
         <div class="film-f">
+          <p class="film-tip">Turn your phone sideways to read the captions.</p>
           <p>Every student in the demo is made up. Not affiliated with Boston University.</p>
           <a class="go-live" href="app/">Explore the live demo <span aria-hidden="true">&rarr;</span></a>
         </div>
@@ -172,12 +201,44 @@
 </div>
 <script src="../assets/site.js"></script>
 <script>
-  // Start the film on load, unless the visitor prefers less motion.
-  const film = document.getElementById('film');
-  if (film && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    film.autoplay = true;
-    film.play().catch(() => {});
-  }
+  // Desktop: start the film on load, unless the visitor prefers less motion or saves data.
+  // Phones: download nothing until a tap, then play a smaller copy of the same film full screen,
+  // where the captions are big enough to read.
+  (() => {
+    const film = document.getElementById('film'), play = document.getElementById('filmPlay');
+    if (!film) return;
+    const phone = play && matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
+    if (phone) {
+      film.src = 'media/swapchain-demo-phone.mp4';   // same film at 960px and 30fps: 6MB instead of 28MB
+      film.loop = false;
+      film.controls = false;
+      film.removeAttribute('playsinline');            // so an iPhone plays it in its own full screen player
+      play.hidden = false;
+      play.addEventListener('click', () => {
+        play.hidden = true;
+        film.controls = true;
+        if (document.fullscreenEnabled && film.requestFullscreen) {
+          film.requestFullscreen().then(() => screen.orientation.lock('landscape')).catch(() => {});
+        }
+        film.play().catch(() => {});
+        film.focus({ preventScroll: true });
+      });
+      // At the end, back to the page with the play button again.
+      film.addEventListener('ended', () => {
+        if (document.fullscreenElement === film) document.exitFullscreen().catch(() => {});
+        else if (film.webkitDisplayingFullscreen && film.webkitExitFullscreen) film.webkitExitFullscreen();
+        film.controls = false;
+        play.hidden = false;
+      });
+      return;
+    }
+    film.preload = 'metadata';
+    const saveData = navigator.connection && navigator.connection.saveData;
+    if (!saveData && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      film.autoplay = true;
+      film.play().catch(() => {});
+    }
+  })();
 </script>
 </body>
 </html>

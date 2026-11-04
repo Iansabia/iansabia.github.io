@@ -23,10 +23,10 @@
   main :not(pre) > code{font-family:var(--mono);font-size:.84em;background:var(--tile);color:var(--ink);padding:1px 5px;border-radius:3px}
   .sub code{overflow-wrap:anywhere}
   .btn{white-space:nowrap;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;background:var(--ink);color:var(--bg);border:0;padding:10px 14px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
-  .btn:hover{background:var(--acc);color:var(--bg)}
+  @media (hover:hover){.btn:hover{background:var(--acc);color:var(--bg)}}
   .btn:active{transform:translateY(1px)}
   .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
-  .btn.ghost:hover{border-color:var(--ink)}
+  @media (hover:hover){.btn.ghost:hover{border-color:var(--ink)}}
   .btn[aria-disabled="true"]{opacity:.38;cursor:default;border-color:var(--rule)}
   .plus{color:var(--acc)}
   .minus{color:var(--bad)}
@@ -73,7 +73,7 @@
   .switch{display:inline-flex;border:1px solid var(--rule);background:var(--bg)}
   .switch button{font:500 11.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:9px 11px;border:0;background:none;color:var(--body);cursor:pointer;transition:background .25s,color .25s}
   .switch button + button{border-left:1px solid var(--rule)}
-  .switch button:hover{color:var(--ink)}
+  @media (hover:hover){.switch button:hover{color:var(--ink)}}
   .switch button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
   .switch button[data-mode="after"][aria-pressed="true"]{background:var(--acc)}
   .tx-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,4fr)}
@@ -87,6 +87,7 @@
   .frame{position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 12px 12px 15px;border:1px dashed var(--rule);color:var(--body);background:transparent;transition:border-color .3s,background-color .3s,color .3s,opacity .3s}
   .frame b{display:block;font-weight:600;font-size:15px;line-height:1.25}
   .frame .fn{display:block;font-family:var(--mono);font-size:11.5px;margin-top:2px;color:var(--body)}
+  .frame .fn wbr{display:none} /* break points in the function names are for phones only */
   .frame::before{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:4px;background:transparent}
   .frame[data-state="own"],.frame[data-state="wait"],.frame[data-state="join"],.frame[data-state="run"],.frame[data-state="commit"]{border-style:solid;border-color:var(--rule);background:var(--tile);color:var(--ink)}
   .frame[data-state="own"]::before,.frame[data-state="wait"]::before,.frame[data-state="commit"]::before{background:var(--acc)}
@@ -238,9 +239,21 @@
 
   @media (max-width:900px){
     .split,.annot{grid-template-columns:1fr}
-    .tx-grid{grid-template-columns:1fr}
-    .story{border-left:0;border-top:1px solid var(--rule)}
-    .story .live{min-height:118px}
+    /* one column, and the story box opens up, so the Back and Next row is a plain block in the panel
+       and can stick to the bottom of the screen while the demo is in view */
+    .tx-grid{display:block}
+    .story{display:contents}
+    .story .live{box-sizing:content-box;min-height:118px;padding:18px 18px 16px;background:var(--tile);border-top:1px solid var(--rule)}
+    .ctl{position:sticky;bottom:0;z-index:5;margin:0;padding:8px 18px;background:var(--tile);border-top:1px solid var(--rule)}
+    /* demo labels and code at 11px or more */
+    .kl{min-height:76px}
+    .kl .k code{font-size:inherit}
+    .tag,.chip,.sql .meta{font-size:11px}
+    /* a frame too narrow for its name and its tag puts the tag on the next line; the log keeps room for that so the panel height holds.
+       A name too long for its frame breaks after insertAdapter or openNew. */
+    .frame{flex-wrap:wrap}
+    .frame .fn wbr{display:inline}
+    .sql{min-height:121px}
     .proof{grid-template-columns:1fr}
     .proof li+li{border-left:0;border-top:1px solid var(--rule)}
     .proof li::before{top:-1px}
@@ -253,26 +266,28 @@
     /* phones: stack and SQLite stay side by side so the whole step fits on one screen */
     .switch .wide{display:none}
     .tx-vis{padding:12px;gap:10px}
-    .tx-cols{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:10px}
-    .lab{margin-bottom:8px;font-size:10.5px}
+    .tx-cols{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:10px}
+    .lab{margin-bottom:8px;font-size:11px}
     .lab small{font-size:11.5px}
     .frames{gap:6px;padding-bottom:8px}
-    .frame{flex-direction:column;align-items:flex-start;gap:6px;padding:8px 8px 8px 12px}
+    .frame{flex-direction:column;align-items:flex-start;gap:6px;padding:8px 6px 8px 10px}
     .frame b{font-size:14px}
-    .frame .fn{font-size:10.5px;letter-spacing:-.02em}
-    .tag{font-size:10px;padding:3px 6px}
-    .slot{padding:6px 8px;gap:8px;margin-bottom:6px}
+    .frame .fn{font-size:11px;letter-spacing:-.02em}
+    .tag{font-size:11px;padding:3px 6px}
+    .slot{padding:6px 8px;gap:8px;margin-bottom:6px;min-height:49.2px}
     .slot b{font-size:26px}
     .slot small{display:none}
-    .sql{gap:5px;min-height:146px}
+    .sql{gap:5px;min-height:152px}
     .sql li{flex-direction:column;align-items:stretch;gap:1px;padding:5px 8px}
     .sql code{font-size:11px}
-    .sql .meta{font-size:9.5px}
+    .sql .meta{font-size:11px}
     .check{padding:8px 10px;gap:2px 8px}
     .check b{font-size:22px}
     .check .gnote{flex-basis:100%;font-size:13px}
     .kl{font-size:11.5px}
-    .story{padding:14px;gap:12px}
+    .kl .k code{white-space:pre-wrap}
+    .story .live{padding:14px 14px 12px}
+    .ctl{padding:8px 14px}
     .story h3{margin:6px 0 8px;font-size:21px}
     .story p{font-size:15px}
     .story .live{min-height:158px}
@@ -280,6 +295,36 @@
     .stats div:nth-child(2n){border-right:0}
     .stats div:nth-child(n+3){border-top:1px solid var(--rule)}
     .cx{font-size:12px}
+  }
+  /* phones, upright or sideways: supporting text at 15px, source lines at 13px,
+     and code wraps instead of scrolling sideways (a wrapped line starts 2 characters in from its own indent) */
+  @media (max-width:640px), (max-width:932px) and (max-height:540px) and (orientation:landscape){
+    .tx-note,.glance li p,.glance-f,.stats div > span,.changelog figcaption,.down-f,.credits{font-size:15px}
+    .src{font-size:13px}
+    .cx code{min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
+    .cx .ln{padding-left:calc(34px + (var(--i,0) + 2) * 1ch);text-indent:calc((var(--i,0) + 2) * -1ch)}
+    .cx .ln::before{text-indent:0}
+  }
+  /* narrower phones: room for the longest step, so Next stays in the same place from step to step */
+  @media (max-width:392px){.kl{min-height:96px}}
+  @media (max-width:374px){.kl{min-height:115px}.story .live{min-height:179px}}
+  @media (max-width:359px){.tx-cols{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}.kl{min-height:135px}.sql{min-height:203px}.check{min-height:85px}.keys .mono{letter-spacing:.04em}.dots i{width:8px}}
+  /* wide landscape phones keep two columns; the Back and Next row sticks to the bottom of the screen inside the story column */
+  @media (min-width:901px) and (max-height:540px) and (orientation:landscape) and (pointer:coarse){
+    .ctl{position:sticky;bottom:0;z-index:5;margin:auto -18px -8px;padding:8px 18px;background:var(--tile);border-top:1px solid var(--rule);flex-wrap:nowrap}
+    .dots{min-width:0}
+    .frame .fn wbr{display:inline}
+  }
+  /* touch screens: tap areas of at least 44px, grown with invisible pseudo elements so nothing moves */
+  @media (pointer:coarse){
+    .btn,.switch button,.credits summary,.credits p a,.src a{position:relative}
+    .btn::after,.switch button::after,.credits summary::after,.credits p a::after,.src a::after{content:"";position:absolute}
+    .btn::after{inset:-4px 0}
+    .switch button::after{inset:-8px 0}
+    .credits p a::after{inset:-13px -2px}
+    .credits summary::after{inset:-11px -4px}
+    .src{padding-top:14px;padding-bottom:14px;word-spacing:2px}
+    .src a::after{inset:-15px 0}
   }
 </style>
 </head>
@@ -371,8 +416,8 @@
               <div>
                 <span class="mono lab">Call stack<small>newest on top</small></span>
                 <div class="frames">
-                  <div class="frame" id="fInner" data-state="idle"><div><b>Inner code</b><span class="fn">insertAdapterBinding()</span></div><span class="tag" id="tInner">Not called yet</span></div>
-                  <div class="frame" id="fOuter" data-state="idle"><div><b>Outer code</b><span class="fn">openNewBinding()</span></div><span class="tag" id="tOuter">Not called yet</span></div>
+                  <div class="frame" id="fInner" data-state="idle"><div><b>Inner code</b><span class="fn">insertAdapter<wbr>Binding()</span></div><span class="tag" id="tInner">Not called yet</span></div>
+                  <div class="frame" id="fOuter" data-state="idle"><div><b>Outer code</b><span class="fn">openNew<wbr>Binding()</span></div><span class="tag" id="tOuter">Not called yet</span></div>
                 </div>
               </div>
               <div>
@@ -643,7 +688,8 @@ SOFTWARE.</pre>
     c.innerHTML = c.textContent.replace(/\n+$/, '').split('\n').map((l) => {
       const mark = l.charAt(0), text = l.slice(1);
       if (mark === '~') return '<span class="ln elide">' + esc(text.trim()) + '</span>';
-      return '<span class="ln ' + (mark === '+' ? 'add' : mark === '-' ? 'del' : 'ctx') + '">' + (hl(text) || ' ') + '</span>';
+      /* --i is the line's indent; on phones a wrapped line continues 2 characters further in */
+      return '<span class="ln ' + (mark === '+' ? 'add' : mark === '-' ? 'del' : 'ctx') + '" style="--i:' + text.match(/^ */)[0].length + '">' + (hl(text) || ' ') + '</span>';
     }).join('');
   });
 

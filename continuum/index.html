@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Continuum · Ian Sabia</title>
+<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script>
+  /* Decide before first paint. "scrub" pins the two scroll scenes. "still" shows still pictures and the text:
+     reduced motion, Save-Data, a slow link or a short window. With no JS the page lands on the stills too.
+     The tier is the frame set: portrait frames ("p") for phone widths, landscape ("l") for the rest. */
+  window.ccMode = function () {
+    var c = navigator.connection || {};
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || c.saveData || ['slow-2g', '2g', '3g'].indexOf(c.effectiveType) > -1 || !matchMedia('(min-height: 600px)').matches) return 'still';
+    return matchMedia('(max-width: 760px)').matches ? 'scrub p' : 'scrub l';
+  };
+  (function (m) { var d = document.documentElement.dataset; d.cc = m.split(' ')[0]; d.ccTier = m.split(' ')[1] || ''; })(window.ccMode());
+</script>
+<meta name="description" content="An AI golf caddy that runs on your phone. It tracks your shots from ordinary video and tells you where to aim. I co-founded it and lead product and ML.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iansabia.github.io/continuum/">
+<meta property="og:title" content="Continuum · Ian Sabia">
+<meta property="og:description" content="An AI golf caddy that runs on your phone and tells you where to aim based on where you have been missing.">
+<meta property="og:image" content="https://iansabia.github.io/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Ian Sabia. Data science at Boston University.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<noscript><style>.reveal{opacity:1;transform:none}.rule{transform:none}</style></noscript>
+<style>
+  /* Continuum page. The scroll story comes first, then the product work behind it.
+     The pictures and frames load from the public demo page at iansabia.github.io/continuum-caddy.
+     This page needs its assets/how3, assets/how4 and assets/app2m folders: do not rename or delete them there. */
+  .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:28px clamp(28px,4vw,56px);align-items:start}
+  .copy p{color:var(--body);margin-bottom:14px;max-width:60ch}
+  .copy p:last-child{margin-bottom:0}
+  .copy b{color:var(--ink);font-weight:600}
+
+  .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+  .stats div{padding:18px 18px 20px 0}
+  .stats div+div{border-left:1px solid var(--rule);padding-left:18px}
+  .stats b{display:block;font-family:var(--serif);font-size:clamp(28px,3.4vw,40px);line-height:1;color:var(--ink)}
+  .stats b small{font-size:.55em;font-weight:500}
+  .stats span{display:block;margin-top:8px;color:var(--body);font-size:14px}
+  .stats.sim{margin-top:22px}
+
+  .loop{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--rule)}
+  .loop div{padding:18px;position:relative}
+  .loop div+div{border-left:1px solid var(--rule)}
+  .loop .who{color:var(--acc)}
+  .loop b{display:block;font-family:var(--serif);font-size:22px;margin:6px 0 4px;color:var(--ink)}
+  .loop p{color:var(--body);font-size:14px}
+  .loop-note{color:var(--body);font-size:15px;margin-top:14px;max-width:72ch}
+  .loop-note b{color:var(--ink);font-weight:600}
+
+  .ladder{list-style:none;display:grid;border-top:1px solid var(--rule)}
+  .ladder li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:16px 0;border-bottom:1px solid var(--rule)}
+  .ladder .n{color:var(--acc);padding-top:3px}
+  .ladder b{font-weight:600;color:var(--ink)}
+  .ladder p{color:var(--body);font-size:15px;margin-top:4px;max-width:70ch}
+  .who-did{display:inline-block;font:500 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px 3px;margin-left:8px;vertical-align:2px;border:1px solid var(--rule);color:var(--body)}
+  .who-did.me{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+  .nw{white-space:nowrap}
+  .cc-skip{color:var(--acc);text-underline-offset:3px;white-space:nowrap}
+
+  /* ===== The two scroll scenes, ported from the demo page. Every class is cc- prefixed.
+     The frames are baked on #0B0817, so the panel is that colour in both themes. ===== */
+  .cc{--cc-bg:#0B0817;--cc-ink:#EFEAF8;--cc-body:#A79FBF;--cc-acc:#9B85FF;--cc-rule:#2A2342;--cc-avail:calc(100vh - var(--bar) - 24px)}
+  @supports (height:100svh){.cc{--cc-avail:calc(100svh - var(--bar) - 24px)}}   /* svh: the height with a phone's address bar showing, so the pin never hangs off the bottom */
+  .cc-track{position:relative;margin-top:clamp(20px,3vw,28px)}
+  [data-cc="scrub"] .cc-track{height:var(--len,420vh)}
+  [data-cc="scrub"] .cc-pin{position:sticky;top:calc(var(--bar) + 12px)}   /* nothing above this may set overflow, or sticky stops working */
+  .cc-fig{margin:0;border:1px solid var(--rule);background:var(--cc-bg);color:var(--cc-ink);isolation:isolate}
+  .cc-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 14px;min-height:41px;border-bottom:1px solid var(--cc-rule);color:var(--cc-body)}
+  .cc-h>.mono{font-size:11px;letter-spacing:.06em}
+  .cc-tabs{display:none;gap:4px}
+  .cc-tab{font:inherit;letter-spacing:.06em;color:inherit;background:none;border:1px solid var(--cc-rule);padding:4px 8px;cursor:pointer;transition:background-color .25s,color .25s,border-color .25s}
+  .cc-tab:hover{border-color:var(--cc-acc)}
+  .cc-tab[aria-current="step"]{background:var(--cc-acc);border-color:var(--cc-acc);color:var(--cc-bg)}
+  .cc-scrub-only{display:none}
+  [data-cc="scrub"] .cc-tabs{display:flex}
+  [data-cc="scrub"] .cc-scrub-only{display:inline}
+  [data-cc="scrub"] .cc-still-only{display:none}
+
+  /* the stage: a poster under a canvas; the canvas draws the frame for the current scroll position */
+  .cc-view{display:none;position:relative;overflow:hidden;margin:0 auto;aspect-ratio:8/5;background:var(--cc-bg);
+    width:min(100%,calc((var(--cc-avail) - 45px - var(--cc-cap,150px)) * 1.6))}
+  [data-cc-tier="p"] .cc-view{aspect-ratio:9/16;width:min(100%,calc((var(--cc-avail) - 45px - var(--cc-cap,170px)) * .5625))}   /* the stage keeps the shape of the frames it was given */
+  [data-cc="scrub"] .cc-view{display:block}
+  .cc-view>.cc-poster,.cc-view>canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.1)}   /* the frames have soft edges; crop 10% like the demo page does */
+  .cc-poster{z-index:1;transition:opacity .35s}
+  .cc-view canvas{z-index:2;opacity:0;transition:opacity .3s}
+  .cc-view.is-painted canvas{opacity:1}
+  .cc-view.is-painted .cc-poster{opacity:0}
+  /* the crop leaves hard edges where a bright frame meets the panel; fade every edge into the panel colour */
+  .cc-view::after,.cc-still::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+    box-shadow:inset 0 0 clamp(12px,1.8vw,26px) clamp(12px,1.8vw,26px) var(--cc-bg)}
+  .cc-loading{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:7;height:2px;width:120px;background:rgba(127,127,127,.25);overflow:hidden;opacity:0;transition:opacity .3s}
+  .cc-view>.cc-loading{top:12px;bottom:auto}
+  .cc-loading::after{content:"";position:absolute;inset:0;transform:scaleX(var(--p,0));transform-origin:left;background:var(--cc-acc)}
+  .is-loading>.cc-loading{opacity:1}
+
+  /* step 3: the flight frames carry no numbers, so the example values are text over the picture.
+     The phone screens in steps 2 and 5, and the app frames, do carry baked numbers and labels; the .cc-f line says they are an example. */
+  .cc-chip{position:absolute;left:50%;bottom:16px;transform:translate(-50%,6px);z-index:6;display:flex;align-items:baseline;gap:4px 16px;padding:7px 12px;
+    border:1px solid var(--cc-rule);background:rgba(11,8,23,.84);color:var(--cc-ink);font-size:12px;letter-spacing:.06em;white-space:nowrap;opacity:0;transition:opacity .3s,transform .3s}
+  .cc-chip .k{color:var(--cc-acc)}
+  .cc-chip small{font-size:inherit;color:var(--cc-body);margin-right:6px}
+  .cc-view[data-on="2"] .cc-chip,.cc-still .cc-chip{opacity:1;transform:translate(-50%,0)}
+
+  /* the caption slot: every step sits in the same grid cell, so the slot is as tall as the longest step and never jumps */
+  .cc-cap{list-style:none;display:grid}
+  .cc-step{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:6px 28px;align-items:start;padding:16px;border-top:1px solid var(--cc-rule)}
+  .cc-step:first-child{border-top:0}
+  .cc-step .n{display:flex;align-items:center;gap:10px;color:var(--cc-acc);margin-bottom:4px}
+  .cc-step b{display:block;font-family:var(--serif);font-weight:700;font-size:clamp(20px,2.2vw,26px);line-height:1.15;letter-spacing:-.01em;color:var(--cc-ink)}
+  .cc-step p{color:var(--cc-body);font-size:15px;max-width:60ch}
+  .cc-f{padding:10px 16px;border-top:1px solid var(--cc-rule);color:var(--cc-body);font-size:13px}
+  .cc-f-s{display:none}   /* phones get the one line version, so the stage keeps its height */
+  [data-cc="scrub"] .cc-cap{border-top:1px solid var(--cc-rule)}
+  [data-cc="scrub"] .cc-step{grid-area:1/1;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s;pointer-events:none}
+  [data-cc="scrub"] .cc-step.is-active{opacity:1;transform:none;pointer-events:auto;transition-delay:.08s}
+
+  /* the stills layout: one picture per step, cropped like the stage */
+  .cc-still{grid-column:1/-1;position:relative;overflow:hidden;width:100%;max-width:760px;margin:0 auto 10px;aspect-ratio:8/5;background:var(--cc-bg)}
+  .cc-still img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.1)}
+  [data-cc="scrub"] .cc-still{display:none}
+
+  /* the phone: a CSS iPhone whose screen scrubs through the app, with a readout on each side */
+  .cc-next{margin-top:clamp(44px,6vw,72px)}
+  .cc-appview{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:clamp(16px,3vw,48px);padding:12px 16px}
+  .cc-iphone{--ph:clamp(280px,calc(var(--cc-avail) - 41px - var(--cc-cap,150px) - 34px),720px);position:relative;height:var(--ph);aspect-ratio:78/163.4;border-radius:17%/8.1%;
+    background:linear-gradient(135deg,#f6a35c 0%,#e77a2c 42%,#c95c16 100%);
+    box-shadow:inset 0 0 0 1.5px rgba(255,235,215,.55),inset 0 0 0 5px #d8691e,inset 0 0 0 6.5px rgba(20,8,0,.45),0 50px 90px -34px rgba(0,0,0,.6),0 12px 28px -14px rgba(0,0,0,.35)}
+  .cc-screen{position:absolute;inset:calc(var(--ph) * .018) calc(var(--ph) * .0175);background:#000;border-radius:14%/6.7%;overflow:hidden}
+  .cc-screen>img,.cc-screen>canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#000}
+  .cc-screen>img{z-index:1;transition:opacity .35s}
+  .cc-screen>canvas{z-index:4;opacity:0;transition:opacity .3s}
+  .cc-screen.is-painted>canvas{opacity:1}
+  .cc-screen.is-painted>img{opacity:0}
+  .cc-iphone .island{position:absolute;top:calc(var(--ph) * .027);left:50%;width:calc(var(--ph) * .112);height:calc(var(--ph) * .031);transform:translateX(-50%);background:#000;border-radius:999px;z-index:5}
+  .cc-iphone .key{position:absolute;width:calc(var(--ph) * .011);background:linear-gradient(90deg,#b4531a,#e17a2f);border-radius:calc(var(--ph) * .004);box-shadow:0 0 0 .5px rgba(0,0,0,.35)}
+  .cc-iphone .key.l{left:calc(var(--ph) * -.009)}
+  .cc-iphone .key.r{right:calc(var(--ph) * -.009)}
+  .cc-iphone .key.act{top:19%;height:3.2%}
+  .cc-iphone .key.vu{top:25.5%;height:6.2%}
+  .cc-iphone .key.vd{top:33.5%;height:6.2%}
+  .cc-iphone .key.pw{top:26.5%;height:9.4%}
+  .cc-iphone .cc-loading{bottom:calc(var(--ph) * -.04)}
+  .cc-side{display:grid;gap:clamp(10px,1.6vh,18px);font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:clamp(11px,.9vw,14px);line-height:1.4;color:var(--cc-body)}
+  .cc-side.l{justify-self:end;text-align:right}
+  .cc-side.r{justify-self:start}
+  .cc-side .lbl{color:var(--cc-acc);font-size:.78em;letter-spacing:.1em;text-transform:uppercase}
+  .cc-side .row{white-space:nowrap}
+  .cc-side small{display:block;font-size:.78em;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+  .cc-side b{display:block;font-weight:500;color:var(--cc-ink);font-size:clamp(18px,2vw,30px);letter-spacing:-.02em;line-height:1.1;margin-top:3px;transition:opacity .4s,color .4s}
+  .cc-side .row.dim b{opacity:.4}   /* "not yet": dim, but still readable (3:1 for large text) */
+  .cc-side .row.hot b,.cc-side .row.hot small{color:var(--cc-acc);opacity:1}
+
+  @media (max-width:760px){
+    .split{grid-template-columns:1fr}
+    .stats,.loop{grid-template-columns:1fr}
+    .stats div+div,.loop div+div{border-left:0;border-top:1px solid var(--rule);padding-left:0}
+    .loop div+div{padding-left:18px}
+
+    .cc-step{grid-template-columns:1fr;gap:4px;padding:12px 14px}
+    .cc-step b{font-size:21px}
+    .cc-step p{font-size:14.5px;line-height:1.5}
+    .cc-still{aspect-ratio:9/16;width:min(100%,calc(62vh * .5625))}
+    .cc-chip{display:grid;grid-template-columns:repeat(3,auto);gap:2px 8px;padding:6px 8px;font-size:9.5px;letter-spacing:.03em;max-width:calc(100% - 8px)}
+    .cc-chip .k{grid-column:1/-1}
+    .cc-chip small{display:block;margin:0}
+    .cc-appview{grid-template-columns:1fr;justify-items:center}
+    .cc-side{display:none}   /* phones: the stage and the caption get the height */
+    .cc-f{padding:8px 14px;font-size:12px;line-height:1.45}   /* stays on phones: it is the line that says the screens show an example */
+    .cc-f-l{display:none}
+    .cc-f-s{display:inline}
+    .cc-iphone{--ph:clamp(240px,calc(var(--cc-avail) - 41px - var(--cc-cap,170px) - 34px),560px)}
+  }
+  @supports (height:100svh){@media (max-width:760px){.cc-still{width:min(100%,calc(62svh * .5625))}}}
+  /* landscape phones: keep the stills stage wide enough for the Example shot chip */
+  @media (max-width:760px) and (orientation:landscape){.cc-still{width:min(100%,max(184px,calc(62svh * .5625)))}}
+  @media (max-width:560px){[data-cc="scrub"] .cc-h .cc-scrub-only{display:none}}
+  /* the smallest phones: stack the chip so it never runs past the stage */
+  .cc-view{container-type:inline-size}
+  @container (max-width:184px){.cc-chip{grid-template-columns:auto;gap:1px}.cc-chip small{display:inline;margin-right:5px}}
+  /* touch: give the small step tabs a taller hit area */
+  @media (pointer:coarse){.cc-tab{position:relative}.cc-tab::after{content:"";position:absolute;inset:-10px -2px}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="../" aria-label="Ian Sabia, home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
+      <span class="mono" style="font-size:13px">Ian Sabia</span>
+    </a>
+    <nav aria-label="Main">
+      <span class="links">
+        <a href="../#currently">Currently</a>
+        <a href="../#work" aria-current="true">Work</a>
+        <a href="../#projects">Projects</a>
+        <a href="../#milan">Milan</a>
+        <a href="../#off">Off the clock</a>
+        <a href="../#contact">Contact</a>
+      </span>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu <i aria-hidden="true"></i></button>
+      <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
+    </nav>
+    <div class="menu" id="menu">
+      <a href="../#currently">Currently <span class="mono">01</span></a>
+      <a href="../#work" aria-current="true">Work <span class="mono">02</span></a>
+      <a href="../#projects">Projects <span class="mono">03</span></a>
+      <a href="../#milan">Milan <span class="mono">04</span></a>
+      <a href="../#off">Off the clock <span class="mono">05</span></a>
+      <a href="../#contact">Contact <span class="mono">06</span></a>
+    </div>
+  </header>
+
+  <main id="main" class="cc">
+    <header class="page-hero">
+      <div class="kicker mono"><a href="../#continuum">Work</a><span aria-hidden="true">/</span><span>Co-founder &middot; Continuum Technologies</span></div>
+      <h1>The caddy<br><em>you already own</em></h1>
+      <p class="lede">Continuum is an AI golf caddy that tracks your shots from ordinary phone video and tells you where to aim, based on where you've been missing. I&nbsp;<span class="nw">co-founded</span> it and lead <span class="nw">product and ML.</span></p>
+      <div class="facts mono"><span>Role<b>Co-founder</b></span><span>Since<b>Jul 2025</b></span><span>My part<b>Product and ML</b></span><span>Golfer conversations<b>~70</b></span></div>
+    </header>
+
+    <section class="block" id="how">
+      <div class="head reveal"><h2>How it works</h2><span class="num mono">01</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal"><span class="cc-scrub-only">Scroll to play five steps</span><span class="cc-still-only">Five steps</span>, from clamping the phone to the golf cart to finding your ball.<span class="cc-scrub-only"> Or <a class="cc-skip" href="#pivot">skip the animations</a>.</span></p>
+
+      <div class="cc-track" id="ccFilm" style="--len:420vh">
+        <div class="cc-pin">
+          <figure class="cc-fig" aria-labelledby="ccFilmLbl">
+            <figcaption class="cc-h"><span class="mono" id="ccFilmLbl">How it works<span class="cc-scrub-only"> &middot; Scroll to play</span></span>
+              <span class="cc-tabs mono"><button class="cc-tab" type="button" aria-current="step" aria-label="Step 01, clamp it to the cart">01</button><button class="cc-tab" type="button" aria-label="Step 02, it tracks the swing and the ball">02</button><button class="cc-tab" type="button" aria-label="Step 03, it reads the numbers">03</button><button class="cc-tab" type="button" aria-label="Step 04, it knows your miss">04</button><button class="cc-tab" type="button" aria-label="Step 05, then it finds your ball">05</button></span></figcaption>
+            <div class="cc-view" data-view role="img" aria-label="Scroll animation, a 3D illustration. A phone clamped to a golf cart films a golfer's swing, with a stick figure drawn over the body. The ball's flight is drawn as an arc, with example numbers for one shot, and the ball comes down near a purple oval around the flag. The cart then drives to the spot and a marker shows where the ball is.">
+              <img class="cc-poster" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" decoding="async">
+              <canvas aria-hidden="true"></canvas>
+              <div class="cc-chip mono" aria-hidden="true"><span class="k">Example shot</span><span><small>Carry</small>156&nbsp;yd</span><span><small>Ball speed</small>110&nbsp;mph</span><span><small>Launch</small>17.5&deg;</span></div>
+              <div class="cc-loading" aria-hidden="true"></div>
+            </div>
+            <ol class="cc-cap">
+              <li class="cc-step is-active">
+                <div class="cc-still"><picture><source media="(max-width:760px)" srcset="https://iansabia.github.io/continuum-caddy/assets/how4/still_0.webp"><img loading="lazy" decoding="async" src="https://iansabia.github.io/continuum-caddy/assets/how3/still_0.webp" alt="A golf cart seen from the driver's seat, with a phone clamped to the roof bar. Its screen shows a golfer."></picture></div>
+                <div class="t"><span class="mono n">01</span><b>Clamp it to the cart</b></div>
+                <p>Clamp your phone to the cart. That is the whole setup, with no launch monitor and no extra sensors.</p>
+              </li>
+              <li class="cc-step">
+                <div class="cc-still"><picture><source media="(max-width:760px)" srcset="https://iansabia.github.io/continuum-caddy/assets/how4/still_2.webp"><img loading="lazy" decoding="async" src="https://iansabia.github.io/continuum-caddy/assets/how3/still_2.webp" alt="The phone up close. Its screen shows the golfer in the middle of a swing, with a stick figure drawn over the body."></picture></div>
+                <div class="t"><span class="mono n">02</span><b>It tracks the swing and the ball</b></div>
+                <p>The phone records ordinary video. It finds your swing by following your body, then follows the ball through the air, frame by frame.</p>
+              </li>
+              <li class="cc-step">
+                <div class="cc-still"><picture><source media="(max-width:760px)" srcset="https://iansabia.github.io/continuum-caddy/assets/how4/still_3.webp"><img loading="lazy" decoding="async" src="https://iansabia.github.io/continuum-caddy/assets/how3/still_3.webp" alt="A purple arc traces the ball's flight over the grass, with a vertical line marking its height at the top."></picture><div class="cc-chip mono" aria-hidden="true"><span class="k">Example shot</span><span><small>Carry</small>156&nbsp;yd</span><span><small>Ball speed</small>110&nbsp;mph</span><span><small>Launch</small>17.5&deg;</span></div></div>
+                <div class="t"><span class="mono n">03</span><b>It reads the numbers</b></div>
+                <p>From the video it estimates the shot. The animation shows ball speed, launch angle and distance for one example shot.</p>
+              </li>
+              <li class="cc-step">
+                <div class="cc-still"><picture><source media="(max-width:760px)" srcset="https://iansabia.github.io/continuum-caddy/assets/how4/still_4.webp"><img loading="lazy" decoding="async" src="https://iansabia.github.io/continuum-caddy/assets/how3/still_4.webp" alt="The ball comes down on the grass near a purple oval around the flag."></picture></div>
+                <div class="t"><span class="mono n">04</span><b>It knows your miss</b></div>
+                <p>As shots add up, it sees which way you tend to miss and tells you where to aim. If you keep missing right, it moves your aim left.</p>
+              </li>
+              <li class="cc-step">
+                <div class="cc-still"><picture><source media="(max-width:760px)" srcset="https://iansabia.github.io/continuum-caddy/assets/how4/still_5.webp"><img loading="lazy" decoding="async" src="https://iansabia.github.io/continuum-caddy/assets/how3/still_5.webp" alt="The cart is parked next to an orange oval on the ground, and a marker shows the ball inside it."></picture></div>
+                <div class="t"><span class="mono n">05</span><b>Then it finds your ball</b></div>
+                <p>After the shot, the app helps you find your ball. In the animation, the cart drives to the spot and a marker shows where the ball is.</p>
+              </li>
+            </ol>
+            <p class="cc-f"><span class="cc-f-l">A 3D illustration. The numbers and labels on the phone screens are an example and say nothing about accuracy.</span><span class="cc-f-s">A 3D illustration. Numbers and labels are examples.</span></p>
+          </figure>
+        </div>
+      </div>
+
+      <p class="sub reveal cc-next">The same example shot on the app screen, in three steps.</p>
+
+      <div class="cc-track" id="ccApp" style="--len:280vh">
+        <div class="cc-pin">
+          <figure class="cc-fig" aria-labelledby="ccAppLbl">
+            <figcaption class="cc-h"><span class="mono" id="ccAppLbl">The app screen<span class="cc-scrub-only"> &middot; Scroll to play</span></span>
+              <span class="cc-tabs mono"><button class="cc-tab" type="button" aria-current="step" aria-label="Step 01, record the swing">01</button><button class="cc-tab" type="button" aria-label="Step 02, follow the body">02</button><button class="cc-tab" type="button" aria-label="Step 03, show the numbers">03</button></span></figcaption>
+            <div class="cc-appview">
+              <div class="cc-side l" aria-hidden="true">
+                <span class="row" id="tBody"><small>Body</small><b>Tracked</b></span>
+                <span class="row" id="tStrike"><small>Strike</small><b>Marked</b></span>
+              </div>
+              <div class="cc-iphone" role="img" aria-label="The app screen during one swing. A stick figure follows the golfer's body, then example numbers for the shot appear.">
+                <div class="cc-screen" data-view>
+                  <img src="https://iansabia.github.io/continuum-caddy/assets/app2m/seq/a_109.webp?v=2" width="400" height="871" alt="" decoding="async">
+                  <canvas aria-hidden="true"></canvas>
+                </div>
+                <div class="island" aria-hidden="true"></div>
+                <span class="key l act" aria-hidden="true"></span><span class="key l vu" aria-hidden="true"></span><span class="key l vd" aria-hidden="true"></span><span class="key r pw" aria-hidden="true"></span>
+                <div class="cc-loading" aria-hidden="true"></div>
+              </div>
+              <div class="cc-side r" aria-hidden="true">
+                <span class="lbl">Example shot</span>
+                <span class="row"><small>Ball speed</small><b data-v="110" data-u=" mph">110 mph</b></span>
+                <span class="row"><small>Launch</small><b data-v="17.5" data-u="&deg;" data-d="1">17.5&deg;</b></span>
+                <span class="row"><small>Carry</small><b data-v="156" data-u=" yd">156 yd</b></span>
+              </div>
+            </div>
+            <ol class="cc-cap">
+              <li class="cc-step is-active"><div class="t"><span class="mono n">01</span><b>Record the swing</b></div><p>The phone records ordinary video.</p></li>
+              <li class="cc-step"><div class="t"><span class="mono n">02</span><b>Follow the body</b></div><p>It finds your swing by following your body, drawn as a stick figure, and marks the strike.</p></li>
+              <li class="cc-step"><div class="t"><span class="mono n">03</span><b>Show the numbers</b></div><p>Then it shows its estimate of the shot. The numbers here are an example.</p></li>
+            </ol>
+            <p class="cc-f"><span class="cc-f-l">The app screen during one swing. The numbers and labels on it are an example and say nothing about accuracy.</span><span class="cc-f-s">Numbers and labels on this screen are examples.</span></p>
+          </figure>
+        </div>
+      </div>
+
+      <p class="loop-note reveal"><b>Why I show it this way.</b> Our first investor was not technical, so I showed what the product does instead of how the tracking works. My view: consumers and investors care that it works, the way runners trust Strava without knowing its algorithm.</p>
+    </section>
+
+    <section class="block" id="pivot">
+      <div class="head reveal"><h2>The pivot</h2><span class="num mono">02</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">We changed what we built after about 70 conversations with golfers.</p>
+      <div class="loop reveal" role="group" aria-label="Before and after the pivot">
+        <div><span class="mono who">Before</span><b>Indoor simulators</b><p>We started out building software for indoor simulators. I had done the product research and thought we had a great solution.</p></div>
+        <div><span class="mono who">What changed</span><b>About 70 conversations</b><p>Playing on the course and talking with about 70 golfers led my <span class="nw">co-founder</span> and me to pivot.</p></div>
+        <div><span class="mono who">After</span><b>On the course, on the phone</b><p>We first framed it as Strava for golf. Today it is an AI caddy. Running on the phone kept it free, with no launch monitor or hardware to buy.</p></div>
+      </div>
+      <p class="loop-note reveal">The lesson I took from it: when the evidence points somewhere else, keep your ego out of it.</p>
+    </section>
+
+    <section class="block" id="testing">
+      <div class="head reveal"><h2>How we test it</h2><span class="num mono">03</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">We test everything against hand labels before we trust it.</p>
+      <div class="split">
+        <div class="copy reveal">
+          <p><b>What I built.</b> I lead product and ML. From June to September 2026 I built our perception stack from scratch, the software that sees the ball and the swing.</p>
+          <p>My ball tracker was a neural network (a <span class="nw">U-Net</span>) in PyTorch that read 5 frames at a time and marked where the ball was. I built it from four published methods, with no pretrained weights.</p>
+        </div>
+        <div class="stats reveal" role="group" aria-label="Ball detection test">
+          <div><b>0.91</b><span>SAM 3.1, F1 score on 91 hand labeled frames</span></div>
+          <div><b>0.53</b><span>Our own tracker, same frames</span></div>
+          <div><b><small>Under</small> $1</b><span>Cost of the test</span></div>
+        </div>
+      </div>
+      <p class="loop-note reveal">On October 1, 2026 we ran rented AI models, ones we pay to use, on our own footage. On the same 91 hand labeled frames, SAM 3.1, a general purpose vision model, found the ball in flight better than our tracker, so we moved ball detection to it. F1 is an accuracy score where 1.0 is perfect. It is one comparison, not a final score.</p>
+      <div class="stats sim reveal" role="group" aria-label="Our label set">
+        <div><b>65</b><span>Real shots in our ground truth label set</span></div>
+        <div><b>7,500</b><span>Frames in it, with a note of where each label came from</span></div>
+        <div><b>5 of 65</b><span>Real shots a launch monitor missed</span></div>
+      </div>
+      <p class="loop-note reveal"><b>How we keep score.</b> Before training our own models, I froze a test split and kept it out of training. In our reports, every metric comes with a 95% confidence interval and is judged against pass or fail targets we call release gates. We now use those gates to grade rented models against human labels.</p>
+    </section>
+
+    <section class="block" id="process">
+      <div class="head reveal"><h2>How we got there</h2><span class="num mono">04</span></div>
+      <div class="rule"></div>
+      <p class="sub reveal">From indoor simulators to a caddy on your phone, and who did what.</p>
+      <ol class="ladder reveal">
+        <li><span class="mono n">01</span><div><b>Talked to golfers</b><span class="who-did">Team</span><p>About 70 conversations moved us from indoor simulator software to an AI caddy for the course.</p></div></li>
+        <li><span class="mono n">02</span><div><b>Built our own perception stack</b><span class="who-did me">Me</span><p>June to September 2026. A ball tracker built from scratch, a strike timer that listens to the audio, and a swing finder that follows the body with MediaPipe pose.</p></div></li>
+        <li><span class="mono n">03</span><div><b>Tested it against rented models</b><span class="who-did me">Me</span><p>October 1, 2026. SAM 3.1 beat our own tracker on the same hand labeled frames, so we moved ball detection to it.</p></div></li>
+        <li><span class="mono n">04</span><div><b>Where it stands now</b><span class="who-did">Team</span><p>We are building a shot detection pipeline from SAM 3.1, pose models and a vision language model that acts as judge. Any disagreement goes to a human. The target is a 100% correct shot list on five range sessions, judged on human labels plus two videos we keep sealed and run only once. We have not run them yet, so there is no final score.</p></div></li>
+      </ol>
+    </section>
+
+    <div class="back"><a class="more" href="../#continuum"><span aria-hidden="true">&larr;</span> All work</a></div>
+  </main>
+
+  <footer>
+    <p>Made in Boston. No trackers.</p>
+    <div class="stamp mono"><span>Revised<b>2026-11-04</b></span></div>
+  </footer>
+</div>
+<script src="../assets/site.js"></script>
+<script>
+  /* The two scroll scenes. Scrolling picks a step (each step gets an equal share of the scroll) and a frame inside it;
+     a canvas draws that frame. Ported from the demo page's own scrubber, without its video, theme and waitlist code. */
+  (() => {
+    'use strict';
+    // The head script picked the layout and the frame set. If the window later lands on a different choice
+    // (a phone turned sideways, a window dragged across the phone width), reload once it settles.
+    // Height alone is not watched: a phone's address bar showing and hiding moves the height while the reader scrolls.
+    const mode = window.ccMode ? window.ccMode() : 'still';
+    let settle = 0;
+    const recheck = () => { clearTimeout(settle); settle = setTimeout(() => { if (window.ccMode() !== mode) location.reload(); }, 600); };
+    const watch = window.ccMode ? ['(max-width: 760px)', '(orientation: portrait)'].map((q) => matchMedia(q)) : [];
+    watch.forEach((m) => m.addEventListener('change', recheck));
+    if (document.documentElement.dataset.cc !== 'scrub') return;   // stills layout: the markup already shows the pictures and the numbers
+
+    const BASE = 'https://iansabia.github.io/continuum-caddy/';
+    const FPS = 30, HOLD = .92;   // a scene plays over the first 92% of its pin, then holds the last frame
+    const pad = (n) => String(n).padStart(3, '0');
+    const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+    const app = document.getElementById('ccApp');
+    const portrait = document.documentElement.dataset.ccTier === 'p';
+
+    /* Frame scrubber: eases toward the target frame and always fetches the missing frame nearest the reader. */
+    function scrubber({ canvas, view, bar, list, url, W, H, onIndex, conns = 4 }) {
+      const ctx = canvas.getContext('2d'), N = list.length, fr = new Array(N), host = bar.parentElement, asked = new Uint8Array(N);
+      let started = false, loaded = 0, target = 0, cur = 0, shown = -1, raf = 0;
+      canvas.width = W; canvas.height = H;
+      const ok = (im) => im && im.complete && im.naturalWidth;
+      const near = (i) => { if (ok(fr[i])) return fr[i]; for (let d = 1; d < N; d++) { if (ok(fr[i - d])) return fr[i - d]; if (ok(fr[i + d])) return fr[i + d]; } return null; };
+      const draw = (i) => { if (i === shown) return; const im = near(i); if (!im) return; shown = i; ctx.drawImage(im, 0, 0, W, H); view.classList.add('is-painted'); };
+      const step = () => {
+        const d = target - cur;
+        if (Math.abs(d) < .01) cur = target; else { cur += Math.abs(d) > 40 ? d * .5 : d * .22; raf = requestAnimationFrame(step); }
+        const i = Math.round(cur); draw(i); if (onIndex) onIndex(i);
+      };
+      const tick = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(step); };
+      const nextIdx = () => { const c = Math.round(clamp(cur, 0, N - 1)); for (let d = 0; d < N; d++) { if (c + d < N && !asked[c + d]) return c + d; if (c - d >= 0 && !asked[c - d]) return c - d; } return -1; };
+      function load() {
+        if (started) return; started = true; host.classList.add('is-loading'); let busy = 0;
+        const pump = () => {
+          for (let j; busy < conns && (j = nextIdx()) >= 0;) {
+            const im = new Image(); im.decoding = 'async'; asked[j] = 1; busy++;
+            im.onload = im.onerror = () => {
+              busy--; loaded++; bar.style.setProperty('--p', (loaded / N).toFixed(3));
+              if (loaded >= N) host.classList.remove('is-loading');
+              if (Math.abs(j - cur) < 3) { shown = -1; tick(); }
+              pump();
+            };
+            im.src = url(list[j]); fr[j] = im;
+          }
+        };
+        pump();
+      }
+      return { load, go(i) { target = clamp(i, 0, N - 1); tick(); } };
+    }
+
+    /* One pinned scene: scroll progress, then the step (equal shares), then the frame between that step's anchors. */
+    function scene(track, cfg) {
+      const pin = track.querySelector('.cc-pin'), view = track.querySelector('[data-view]'), cap = track.querySelector('.cc-cap'), foot = track.querySelector('.cc-f');
+      const steps = [...track.querySelectorAll('.cc-step')], tabs = [...track.querySelectorAll('.cc-tab')];
+      const n = steps.length, last = cfg.list.length - 1;
+      const eng = scrubber({ ...cfg, canvas: view.querySelector('canvas'), view, bar: track.querySelector('.cc-loading') });
+      let on = -1, pinTop = 0;
+      const measure = () => {   // the caption slot and the footer line; the stage gets the height that is left
+        pinTop = parseFloat(getComputedStyle(pin).top) || 0;
+        pin.style.setProperty('--cc-cap', cap.offsetHeight + (foot ? foot.offsetHeight : 0) + 'px');
+      };
+      const setStep = (k) => {
+        if (k === on) return; on = k; view.dataset.on = k;
+        steps.forEach((s, i) => s.classList.toggle('is-active', i === k));
+        tabs.forEach((t, i) => (i === k ? t.setAttribute('aria-current', 'step') : t.removeAttribute('aria-current')));
+      };
+      const update = () => {
+        const r = track.getBoundingClientRect(), dist = track.offsetHeight - pin.offsetHeight;
+        if (r.bottom < -innerHeight || r.top > innerHeight * 2.5 || !(dist > 0)) return;
+        const u = clamp((pinTop - r.top) / dist / HOLD), k = Math.min(n - 1, Math.floor(u * n));
+        const a = cfg.anchors[k], b = k + 1 < n ? cfg.anchors[k + 1] : last;
+        eng.go(a + (b - a) * Math.min(1, u * n - k)); setStep(k);
+      };
+      tabs.forEach((t, k) => t.addEventListener('click', () => {   // jump to the start of that step
+        const r = track.getBoundingClientRect(), dist = track.offsetHeight - pin.offsetHeight;
+        scrollTo({ top: scrollY + r.top - pinTop + ((k + .02) / n) * HOLD * dist, behavior: 'smooth' });
+      }));
+      // start fetching frames only after the page has loaded, so the frames never hold up the load event
+      const arm = () => new IntersectionObserver((es, io) => { if (es.some((e) => e.isIntersecting)) { eng.load(); io.disconnect(); } }, { rootMargin: '150% 0px' }).observe(track);
+      if (document.readyState === 'complete') setTimeout(arm, 0); else addEventListener('load', () => setTimeout(arm, 0), { once: true });
+      setStep(0); measure();
+      return { update, measure };
+    }
+
+    const scenes = [];
+
+    /* The film: every 2nd frame of the 22.4 s render (283 frames), landscape on wide screens and portrait on phones. */
+    const SKIP = [[192, 205], [224, 231], [242, 249], [269, 276]], FSTEP = 2;   // the stretches the demo page skips too
+    const list = []; for (let q = 0; q <= 320; q++) if (!SKIP.some(([a, b]) => q >= a && q <= b)) list.push(q);
+    const FILM = portrait ? { dir: 'assets/how4/seqm/', W: 720, H: 1280, v: 15 } : { dir: 'assets/how3/seq1m/', W: 960, H: 600, v: 14 };
+    const filmUrl = (q) => BASE + FILM.dir + 's_' + pad(q) + '.webp?v=' + FILM.v;
+    document.querySelector('#ccFilm .cc-poster').src = filmUrl(list[0]);
+    const t0 = [0, 5.8, 8.8, 13.2, 15.2];   // seconds into the film where each step starts
+    const anchors = t0.map((t) => list.findIndex((q) => q * FSTEP / FPS >= t));
+    scenes.push(scene(document.getElementById('ccFilm'), { list, anchors, W: FILM.W, H: FILM.H, url: filmUrl }));
+
+    /* The phone: 110 frames of the app screen, every 3rd frame. The readouts light up as the scrub passes them. */
+    const appUrl = (i) => BASE + 'assets/app2m/seq/a_' + pad(i) + '.webp?v=2';
+    app.querySelector('.cc-screen img').src = appUrl(0);   // the markup holds the last frame for the stills layout; the scrub starts at the first
+    const ASTEP = 3, ai = (v) => Math.round(v * 2 / ASTEP);   // the demo page writes its marks in 2-frame units
+    const tB = document.getElementById('tBody'), tS = document.getElementById('tStrike');
+    const rows = [...app.querySelectorAll('.cc-side.r .row')];
+    // The readouts fade in their final values instead of counting up, so they never show a different number from the phone screen.
+    let numsOn = null;
+    const showNums = (on) => {
+      if (on === numsOn) return; numsOn = on;
+      rows.forEach((r, k) => {
+        const b = r.querySelector('b'), d = +(b.dataset.d || 0);
+        b.style.transitionDelay = on ? k * 90 + 'ms' : '0ms';
+        r.classList.toggle('dim', !on);
+        b.textContent = (on ? +b.dataset.v : 0).toFixed(d) + b.dataset.u;
+      });
+    };
+    const onIndex = (i) => {
+      const t = i * ASTEP / FPS;
+      tB.classList.toggle('dim', t < 1.4);
+      tS.classList.toggle('dim', t < 6.53); tS.classList.toggle('hot', t >= 6.53 && t < 7.6);
+      showNums(i >= ai(100));
+    };
+    onIndex(0);
+    scenes.push(scene(app, { list: Array.from({ length: 110 }, (_, i) => i), anchors: [0, ai(36), ai(100)], W: 400, H: 871, onIndex, url: appUrl }));
+
+    let queued = false;
+    const frame = () => { queued = false; scenes.forEach((s) => s.update()); };
+    const queue = () => { if (!queued) { queued = true; requestAnimationFrame(frame); } };
+    addEventListener('scroll', queue, { passive: true });
+    addEventListener('resize', () => { scenes.forEach((s) => s.measure()); queue(); });
+    if (document.fonts) document.fonts.ready.then(() => { scenes.forEach((s) => s.measure()); queue(); });
+    queue();
+  })();
+</script>
+</body>
+</html>

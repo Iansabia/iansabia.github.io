@@ -43,7 +43,8 @@ export function createDemo(app) {
   const statEl = document.querySelector(".stat-card");
 
   // on the phone the sheet sits at peek during the demo: never scroll the controls out of view there
-  const canScroll = () => !app.phone || app.sheet !== "peek";
+  // (a phone on its side shows the panel as a full-height column, so scrolling is fine there)
+  const canScroll = () => !app.phone || app.land || app.sheet !== "peek";
   const scrollOpts = () => ({ block: "nearest", behavior: reducedMotion() ? "auto" : "smooth" });
   function clearTimers() { st.timers.forEach(clearTimeout); st.timers = []; }
   function later(ms, fn) { st.timers.push(setTimeout(fn, reducedMotion() ? Math.min(ms, 50) : ms)); }
@@ -92,7 +93,7 @@ export function createDemo(app) {
       const q = new URLSearchParams(location.search);
       q.set("demo", String(s + 1));
       if (b != null) q.set("beat", String(b + 1)); else q.delete("beat");
-      history.replaceState(null, "", `${location.pathname}?${q.toString()}`);
+      history.replaceState(history.state, "", `${location.pathname}?${q.toString()}`); // keep the entry's Back level
     } catch (e) { /* optional */ }
   }
 
@@ -357,13 +358,15 @@ export function createDemo(app) {
     const head = `<div class="scene-no">Scene ${s + 1} of ${scenes.length} · ${esc(sc.title)}</div>`;
     const kbd = st.step === 0 ? `<div class="kbd"><kbd>Right</kbd> next · <kbd>Left</kbd> back · <kbd>P</kbd> autoplay · <kbd>R</kbd> restart · <kbd>Esc</kbd> exit</div>` : "";
     const html = app.phone
-      ? `<div class="view demo-rail">${head}<h1 class="caption">${esc(cap)}</h1>${ctrls}<div class="demo-progress" style="margin-top:12px">${prog}</div><p class="dsub">${esc(sub)}</p><div class="demo-extra">${extras()}</div>${footerNote()}</div>`
+      ? `<div class="view demo-rail">${head}<h1 class="caption">${esc(cap)}</h1>${ctrls}<div class="demo-progress below">${prog}</div><p class="dsub">${esc(sub)}</p><div class="demo-extra">${extras()}</div>${footerNote()}</div>`
       : `<div class="view demo-rail">${head}<div class="demo-progress">${prog}</div><h1 class="caption">${esc(cap)}</h1><p class="dsub">${esc(sub)}</p>${ctrls}` +
         `${kbd}<div class="demo-extra">${extras()}</div></div>`;
     // keep the scroll position only when re-rendering the same step (for example after a tap)
     const same = st.renderedStep === st.step;
     st.renderedStep = st.step;
     app.setPanelHtml(html, { keepScroll: same });
+    // phones: the peek grows to fit this scene's title, caption, controls and dots
+    if (app.fitDemoPeek) app.fitDemoPeek();
   }
 
   return {
@@ -385,7 +388,7 @@ export function createDemo(app) {
       if (m) { m.setCarrier(null); m.setHighlightSegment(null); m.setExtraPins([]); m.setBeads([]); m.setThreads([]); m.setLabelsDimmed(false); m.clearDemoExplode(); m.setArcScale(1); m.noOrbit = false; }
       try {
         const q = new URLSearchParams(location.search);
-        if (q.has("demo")) { q.delete("demo"); q.delete("beat"); const qs = q.toString(); history.replaceState(null, "", `${location.pathname}${qs ? `?${qs}` : ""}`); }
+        if (q.has("demo")) { q.delete("demo"); q.delete("beat"); const qs = q.toString(); history.replaceState(history.state, "", `${location.pathname}${qs ? `?${qs}` : ""}`); }
       } catch (e) { /* optional */ }
     },
     refit() { if (st.fit) st.fit(300); },

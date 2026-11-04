@@ -265,7 +265,8 @@ function cmp(a, b) {
 }
 
 export function footerNote() {
-  return `<div class="footer-note"><p>Prototype with made-up students. Not affiliated with Boston University.</p><p>Map data © OpenStreetMap contributors</p></div>`;
+  // the link back to the write-up only shows on phones (desktop has it in the footer bar)
+  return `<div class="footer-note"><a class="about-link phone-only" href="../">&larr; About this project</a><p>Prototype with made-up students. Not affiliated with Boston University.</p><p>Map data © OpenStreetMap contributors</p></div>`;
 }
 
 export function emptyState(title, body, btn) {

@@ -31,9 +31,36 @@ const $ = (s) => document.querySelector(s);
 const panel = $("#panel");
 const scroller = $("#panel-scroll");
 const planEl = $("#plan");
+const topbarEl = $(".topbar");
+const tabbarEl = $("#tabbar");
+
+// Phones on their side (short and wide): the sheet becomes a side column so the map keeps real space.
+const LAND_Q = "(orientation: landscape) and (max-height: 500px)";
+const landQ = window.matchMedia(LAND_Q);
+// safe areas (notch, home indicator), read from CSS
+const safeProbe = document.createElement("div");
+safeProbe.setAttribute("aria-hidden", "true");
+safeProbe.style.cssText = "position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
+document.body.appendChild(safeProbe);
+function safe() {
+  const s = getComputedStyle(safeProbe);
+  return { t: parseFloat(s.paddingTop) || 0, r: parseFloat(s.paddingRight) || 0, b: parseFloat(s.paddingBottom) || 0, l: parseFloat(s.paddingLeft) || 0 };
+}
+/** Where the top bar ends and how tall the bottom tab bar is, as laid out (safe areas included). */
+function bars() {
+  const H = window.innerHeight;
+  const t = topbarEl && topbarEl.getBoundingClientRect();
+  const b = tabbarEl && tabbarEl.getBoundingClientRect();
+  return {
+    top: t && t.height ? t.bottom : TOPH,
+    // on its side the tabs are a rail on the left, so nothing sits along the bottom but the safe area
+    tab: app.land ? safe().b : b && b.height ? Math.max(0, H - b.top) : TABH,
+  };
+}
 
 const app = {
   phone,
+  land: phone && !EMBED && root.classList.contains("land"),
   route: { tab: "explore" },
   stack: [],
   ui: { search: "", filter: "all", openLoop: null, hotRoom: null, focusLoop: null },
@@ -145,16 +172,21 @@ app.setPanelHtml = (html, { keepScroll = false } = {}) => {
 
 function sheetHeights() {
   const H = window.innerHeight;
-  const top = TOPH, tab = TABH;
-  return { peek: app.route.tab === "demo" ? 176 : 156, half: Math.round(H * 0.5), full: H - top - tab - 8 };
+  const b = bars();
+  const full = Math.max(200, Math.round(H - b.top - b.tab - 8));
+  // the demo's peek is measured so the scene title, the controls and the scene dots always fit (fitDemoPeek)
+  const peek = app.route.tab === "demo" ? Math.min(full, app.demoPeek || 176) : 156;
+  return { peek, half: Math.round(H * 0.5), full };
 }
 function setSheet(name, h) {
   if (!phone) return;
+  if (app.noMap) name = "full"; // no map to show: the lists get the whole screen
   app.sheet = name;
   const hs = sheetHeights();
   const px = h != null ? h : hs[name] || hs.peek;
   root.style.setProperty("--sheet-h", `${px}px`);
   $("#grabber").setAttribute("aria-label", name === "full" ? "Collapse panel" : "Expand panel");
+  syncCover();
 }
 app.setSheet = (name) => setSheet(name);
 app.setSheetFor = (tab, sub) => {
@@ -163,10 +195,36 @@ app.setSheetFor = (tab, sub) => {
   if (tab === "demo") { void sub; setSheet("peek"); }
 };
 
+/**
+ * Phones: size the Chain Demo's peek to its content (scene title, caption, controls, scene dots) so
+ * nothing slides under the tab bar when a caption wraps. Called after every demo render.
+ */
+app.fitDemoPeek = () => {
+  if (!phone || app.land || app.route.tab !== "demo") return;
+  const prog = scroller.querySelector(".demo-progress");
+  const view = prog && prog.closest(".view");
+  if (!view) return;
+  // measured inside the view, so its slide-in transform cancels out
+  const below = prog.getBoundingClientRect().bottom - view.getBoundingClientRect().top;
+  const need = Math.ceil(scroller.offsetTop + below + 10);
+  const peek = Math.max(156, Math.min(need, Math.round(window.innerHeight * 0.45)));
+  if (peek === app.demoPeek) return;
+  app.demoPeek = peek;
+  if (app.sheet === "peek") setSheet("peek");
+};
+
+/** Phones: tell the map when the sheet or the Ask panel covers all of it, so it can stop drawing. */
+function syncCover() {
+  if (!app.map || !app.map.setCovered) return;
+  const sheetOver = phone && !app.land && app.sheet === "full" && !panel.classList.contains("dragging");
+  app.map.setCovered(sheetOver || (phone && chat.isOpen()));
+}
+
 function sheetDrag() {
   if (!phone) return;
   let start = null;
   const onDown = (e) => {
+    if (app.land) return; // on its side the sheet is a fixed column
     const zone = e.target.closest("#grabber, [data-drag]");
     if (!zone) return;
     start = { y: e.clientY, h: panel.getBoundingClientRect().height, t: performance.now(), moved: false, id: e.pointerId, last: e.clientY, lt: performance.now(), v: 0 };
@@ -175,7 +233,7 @@ function sheetDrag() {
     if (!start || e.pointerId !== start.id) return;
     const dy = e.clientY - start.y;
     if (!start.moved && Math.abs(dy) < 6) return;
-    if (!start.moved) { start.moved = true; panel.classList.add("dragging"); try { panel.setPointerCapture(e.pointerId); } catch (err) { /* ok */ } }
+    if (!start.moved) { start.moved = true; panel.classList.add("dragging"); syncCover(); try { panel.setPointerCapture(e.pointerId); } catch (err) { /* ok */ } }
     const hs = sheetHeights();
     const h = Math.max(110, Math.min(hs.full, start.h - dy));
     const now = performance.now();
@@ -223,9 +281,15 @@ function freeArea(wide = false) {
   const W = window.innerWidth, H = window.innerHeight;
   const demo = app.route.tab === "demo";
   if (phone) {
-    const sh = parseFloat(getComputedStyle(root).getPropertyValue("--sheet-h")) || 156;
+    const b = bars();
     const cb = demo ? counterBottom() : 0;
-    return { left: 0, right: W, top: cb ? cb + 4 : TOPH, bottom: H - TABH - sh };
+    if (app.land) {
+      // the map is everything right of the side column, from the top bar down
+      const s = safe(), pr = panel.getBoundingClientRect();
+      return { left: Math.min(W - 160, Math.round(pr.right)), right: W - s.r, top: cb ? cb + 4 : b.top, bottom: H - b.tab };
+    }
+    const sh = parseFloat(getComputedStyle(root).getPropertyValue("--sheet-h")) || 156;
+    return { left: 0, right: W, top: cb ? cb + 4 : b.top, bottom: H - b.tab - sh };
   }
   const left = 16 + (demo ? 440 : 400) + 16;
   // in the demo the counter card sits top right; keep the action below it
@@ -278,11 +342,11 @@ function flipPill(dormId, from) {
   const tr = range.getBoundingClientRect();
   if (!tr.width) return;
   let top = tr.top - 10; // the panel view is still 10px into its slide-up
-  if (phone) {
+  if (phone && !app.land) {
     // the sheet is still moving: aim for where the title will be when it settles
     const pr = panel.getBoundingClientRect();
     const sh = parseFloat(getComputedStyle(root).getPropertyValue("--sheet-h")) || pr.height;
-    top += window.innerHeight - TABH - sh - pr.top;
+    top += window.innerHeight - bars().tab - sh - pr.top;
   }
   const pill = document.createElement("div");
   pill.className = "flip-pill";
@@ -337,7 +401,98 @@ app.back = () => {
   if (r.tab === "demo") return app.go({ tab: "explore" });
 };
 
+// ---------------- system Back (phones) ----------------
+// Every level you open (a building, a tower, a floor, a room, a profile, the Ask panel, a Post step)
+// adds one browser history entry, so the phone's Back gesture goes up one level at a time. Tabs are the
+// top level: Back from there leaves the app as usual. Going up inside the app removes the extra entries.
+const HIST = phone && !EMBED && !!(window.history && history.pushState);
+const hist = { ready: false, depth: 0, unwinding: 0, lock: false, timer: 0 };
+
+/** How many levels deep the app is right now. */
+function navDepth() {
+  const r = app.route;
+  let d = 0;
+  if (r.tab === "explore") {
+    if (r.dormId) {
+      d = 1;
+      const dm = dormsById.get(r.dormId);
+      if (r.towerId && dm && dm.towers.length) d += 1;
+      if (r.floor != null) d += app.map && app.map.room ? 2 : 1;
+    } else if (r.loopKey) d = 1;
+  } else if (r.tab === "post") {
+    const s = app.post.step;
+    if (typeof s === "number") d = s;
+    else if (s === "searching") d = app.post.mode === "noor" ? 1 : 3;
+    else if (s) d = 1; // noor, noorresult, none
+  }
+  if (r.personId) d += 1;
+  if (chat.isOpen()) d += 1;
+  return d;
+}
+
+/** Make the history entries match the app's depth: add one per new level, drop the ones it left. */
+function syncHistory() {
+  if (!HIST || !hist.ready || hist.lock || hist.unwinding) return;
+  const d = navDepth();
+  if (d > hist.depth) {
+    try { for (let i = hist.depth + 1; i <= d; i++) history.pushState({ sc: i }, ""); } catch (e) { return; }
+    hist.depth = d;
+  } else if (d < hist.depth) {
+    const n = hist.depth - d;
+    hist.depth = d;
+    histGo(-n);
+  }
+}
+/** Move through our own entries; the popstate it causes is ours, not the user's. */
+function histGo(n) {
+  hist.unwinding += 1;
+  clearTimeout(hist.timer);
+  hist.timer = setTimeout(() => { hist.unwinding = 0; syncHistory(); }, 1500); // never stay stuck if no popstate comes
+  history.go(n);
+}
+
+/** One level up: the same step as the Back button on screen. */
+function upOne() {
+  if (chat.isOpen()) { chat.setOpen(false); return; }
+  const r = app.route;
+  if (r.personId || r.dormId || r.loopKey) { app.back(); return; }
+  if (r.tab === "post" && app.post.step !== 0) postAction(app, app.post.step === "noorresult" ? "pdone" : "pback", {});
+}
+
+window.addEventListener("popstate", (e) => {
+  if (!HIST || !hist.ready) return;
+  const sc = e.state && typeof e.state.sc === "number" ? e.state.sc : 0;
+  if (hist.unwinding) {
+    // our own history.go(): the app is already there
+    hist.unwinding -= 1;
+    if (!hist.unwinding) clearTimeout(hist.timer);
+    hist.depth = sc;
+    syncHistory();
+    return;
+  }
+  if (sc < hist.depth) {
+    hist.lock = true;
+    try {
+      for (let i = hist.depth - sc; i > 0 && navDepth() > sc; i--) {
+        const before = navDepth();
+        upOne();
+        if (navDepth() >= before) break; // nothing to go up from (a post being searched)
+      }
+    } finally { hist.lock = false; }
+    hist.depth = sc;
+    syncHistory(); // if the app could not go all the way up, put the entries back
+  } else if (sc > hist.depth) {
+    // Forward (an edge swipe on iOS): there is no forward step in the app, so go back to where it is
+    histGo(hist.depth - sc);
+  }
+});
+
 app.render = () => {
+  renderView();
+  syncHistory();
+  syncCover();
+};
+function renderView() {
   const r = app.route;
   app.world = store.world;
   updateTabs();
@@ -347,7 +502,7 @@ app.render = () => {
   else if (r.tab === "matches") html = matchesView(app);
   else if (r.tab === "post") html = postView(app);
   else if (r.tab === "profile") html = profileTab(app);
-  else if (r.tab === "demo") { if (!phone) live.update(app.world); if (app.demo) app.demo.render(); else app.setPanelHtml(`<div class="view"><p class="sub">The Chain Demo needs the 3D map.</p></div>`); syncChrome(); return; }
+  else if (r.tab === "demo") { if (!phone) live.update(app.world); if (app.demo) app.demo.render(); else app.setPanelHtml(`<div class="view"><p class="sub">The Chain Demo needs the 3D map.</p>${phone ? `<p class="sub"><a class="about-link" href="../">&larr; About this project</a></p>` : ""}</div>`); syncChrome(); return; }
   const same = app._lastKey === routeKey(r);
   app.setPanelHtml(html, { keepScroll: same });
   if (!same && r.tab === "explore" && r.floor != null) {
@@ -358,7 +513,7 @@ app.render = () => {
   syncMap();
   syncChrome();
   if (!phone) live.update(app.world);
-};
+}
 const routeKey = (r) => `${r.tab}|${r.loopKey || ""}|${r.dormId || ""}|${r.towerId || ""}|${r.floor ?? ""}|${r.personId || ""}|${r.tab === "post" ? app.post.step : ""}`;
 
 function syncChrome() {
@@ -637,18 +792,45 @@ document.addEventListener("keydown", (e) => {
 
 function bindInputs() {
   const s = document.getElementById("search");
-  if (s) s.addEventListener("input", (e) => {
-    app.ui.search = e.target.value;
-    const pos = e.target.selectionStart;
-    app.render();
-    const n = document.getElementById("search");
-    if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (err) { /* ok */ } }
-  });
+  if (s && !s.dataset.bound) {
+    s.dataset.bound = "1";
+    s.addEventListener("input", (e) => {
+      app.ui.search = e.target.value;
+      // phones: keep this same text field and only redraw what is around it, so the keyboard's
+      // autocorrect, word suggestions and swipe typing are not reset on every letter
+      if (phone) { if (!e.isComposing) refreshExplore(); return; }
+      const pos = e.target.selectionStart;
+      app.render();
+      const n = document.getElementById("search");
+      if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (err) { /* ok */ } }
+    });
+    if (phone) s.addEventListener("compositionend", () => { app.ui.search = s.value; refreshExplore(); });
+  }
   scroller.querySelectorAll("[data-field]").forEach((inp) => {
     const ev = inp.tagName === "SELECT" ? "change" : "input";
     inp.addEventListener(ev, (e) => postInput(app, inp.dataset.field, e.target.value));
   });
   // hover a dorm row -> highlight on the map, with a line from the row to the building
+  live.wireHover(scroller, "[data-hover]", (n) => n.dataset.hover);
+}
+
+/** Explore search on phones: swap everything in the view except the search field itself. */
+function refreshExplore() {
+  const r = app.route;
+  const view = scroller.querySelector(".view");
+  const keep = view && view.querySelector("label.search");
+  if (!keep || r.tab !== "explore" || r.dormId || r.loopKey || r.personId) { app.render(); return; }
+  const tpl = document.createElement("div");
+  tpl.innerHTML = exploreHome(app);
+  const nv = tpl.querySelector(".view");
+  const nl = nv && nv.querySelector("label.search");
+  if (!nl) { app.render(); return; }
+  [...view.childNodes].forEach((n) => { if (n !== keep) n.remove(); });
+  let before = true;
+  [...nv.childNodes].forEach((n) => {
+    if (n === nl) { before = false; return; }
+    if (before) view.insertBefore(n, keep); else view.appendChild(n);
+  });
   live.wireHover(scroller, "[data-hover]", (n) => n.dataset.hover);
 }
 
@@ -717,6 +899,8 @@ async function boot() {
       if (webglAvailable()) {
         app.map = new CampusMap({
           container: $("#map"), overlay: $("#overlay"), phone,
+          // real phones save power (the desktop's phone preview keeps the always-moving map)
+          lowPower: phone && !EMBED,
           freeArea,
           onDorm: (dormId, towerId) => {
             const r = app.route;
@@ -738,10 +922,12 @@ async function boot() {
             }
           },
           onHover: onMapHover,
+          onRoomChange: () => syncHistory(),
         });
         mapOk = true;
         app.map.obstacleEls = [document.querySelector(".counter-box"), document.getElementById("live")];
         onThemeChange(() => { app.map.setTheme(); updateThemeBtn(); });
+        syncCover();
       }
     }
   } catch (err) {
@@ -749,6 +935,9 @@ async function boot() {
   }
   if (!mapOk) {
     $("#map").innerHTML = `<div class="nogl"><div><b>Your browser can't show the 3D map.</b><br>The lists still work.</div></div>`;
+    // phones: with no map behind it, the sheet opens all the way so the lists are in view
+    app.noMap = true;
+    if (phone) setSheet("full");
   }
   setTimeout(() => $("#loading").classList.add("done"), mapOk ? 450 : 0);
   if (mapOk) app.demo = createDemo(app);
@@ -763,27 +952,66 @@ async function boot() {
   if (demoQ && app.demo) start = { tab: "demo", scene: Math.max(0, app.demo.sceneIndexFor(Number(demoQ) - 1, Math.max(0, Number(params.get("beat") || 1) - 1))) };
   else if (params.get("tab") && TABS.some((t) => t.id === params.get("tab"))) start = { tab: params.get("tab") };
   if (params.get("dorm") && dormsById.has(params.get("dorm"))) start = { tab: "explore", dormId: params.get("dorm"), towerId: (dormsById.get(params.get("dorm")).towers || []).some((t) => t.id === params.get("tower")) ? params.get("tower") : null, floor: params.get("floor") ? Number(params.get("floor")) : null };
+  if (HIST) { try { history.replaceState({ sc: 0 }, ""); } catch (e) { /* optional */ } }
   app.route = { tab: "__boot" };
   app.go(start, { push: false });
+  hist.ready = true;
+  syncHistory();
   if (params.get("preview") === "phone" && !phone) setTimeout(openPreview, 600);
 
   // layout switch on resize (desktop <-> phone) reloads so both layouts stay simple and correct
   if (!EMBED) {
-    const mq = matchMedia("(min-width: 1024px)");
-    mq.addEventListener("change", () => location.reload());
+    const isPhone = () => !matchMedia("(min-width: 1024px)").matches || matchMedia("(max-height: 500px) and (pointer: coarse)").matches;
+    const check = () => { if (isPhone() !== phone && !params.get("phone")) location.reload(); };
+    matchMedia("(min-width: 1024px)").addEventListener("change", check);
+    matchMedia("(max-height: 500px) and (pointer: coarse)").addEventListener("change", check);
+  }
+  // phones: turning the phone switches between the bottom sheet and the side column (no reload)
+  if (phone && !EMBED) {
+    let pendLand = null;
+    const applyLand = () => {
+      const want = landQ.matches;
+      // never while typing: a keyboard can make a portrait screen look short and wide
+      const typing = document.activeElement && /input|textarea|select/i.test(document.activeElement.tagName);
+      if (typing) { pendLand = want; return; }
+      pendLand = null;
+      if (want === app.land) return;
+      app.land = want;
+      root.classList.toggle("land", want);
+      setSheet(app.sheet);
+      syncCover();
+      app.fitDemoPeek();
+      // keep the open floor's row in view in the reshaped panel
+      const row = scroller.querySelector('.floorrow[aria-pressed="true"]');
+      if (row) row.scrollIntoView({ block: "start" });
+      if (app.map) { app.map.topMin = null; app.map.kick(); }
+      reframe(0);
+    };
+    landQ.addEventListener("change", applyLand);
+    document.addEventListener("focusout", () => setTimeout(() => { if (pendLand != null) applyLand(); }, 50));
   }
   let rzT = 0;
   window.addEventListener("resize", () => {
-    if (phone) setSheet(app.sheet);
+    if (phone) { app.fitDemoPeek(); setSheet(app.sheet); }
     if ($("#preview").classList.contains("on")) openPreview();
-    // re-frame the camera for the new window size
+    reframe(250);
+  });
+  // a late web font can rewrap the demo caption
+  if (phone && document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", () => app.fitDemoPeek());
+
+  /** Re-frame the camera for the new window size. */
+  function reframe(delay) {
     clearTimeout(rzT);
     rzT = setTimeout(() => {
       if (!app.map) return;
-      if (app.route.tab === "demo" && app.demo) app.demo.refit();
-      else if (app.route.tab === "explore" && !app.route.dormId) app.map.goHome(300);
-    }, 250);
-  });
+      const r = app.route;
+      if (phone) app.map.topMin = null;
+      if (r.tab === "demo" && app.demo) app.demo.refit();
+      else if (r.tab === "explore" && !r.dormId && (!phone || (!r.loopKey && !(app.ui.chat && app.ui.chat.ids.length)))) app.map.goHome(300);
+      else if (phone && r.tab === "explore" && r.dormId) app.map.refitSelection(300);
+      else if (phone) { app._fitKey = null; syncMap(); }
+    }, delay);
+  }
 }
 
 boot();

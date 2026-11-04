@@ -21,9 +21,9 @@
 <style>
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   .btn{white-space:nowrap;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;background:var(--ink);color:var(--bg);border:0;padding:9px 14px;cursor:pointer;transition:background .2s,transform .15s}
-  .btn:hover{background:var(--acc);color:#fff}
+  @media (hover:hover){.btn:hover{background:var(--acc);color:#fff}}
   .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
-  .btn.ghost:hover{border-color:var(--ink);background:transparent;color:var(--ink)}
+  @media (hover:hover){.btn.ghost:hover{border-color:var(--ink);background:transparent;color:var(--ink)}}
 
   /* ---------- demo panel ---------- */
   .demo .panel-h{flex-wrap:wrap}
@@ -47,7 +47,7 @@
     background-size:12px 12px;background-position:-1px -1px;box-shadow:0 1px 0 rgba(11,8,23,.06),0 12px 22px -16px rgba(11,8,23,.5);
     transform:rotate(var(--tilt,0deg));transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
   .paper:nth-child(1){--tilt:-1.4deg}.paper:nth-child(2){--tilt:1deg}.paper:nth-child(3){--tilt:-.7deg}
-  .paper:hover .sheet{transform:rotate(0deg) translateY(-2px)}
+  @media (hover:hover){.paper:hover .sheet{transform:rotate(0deg) translateY(-2px)}}
   .paper[aria-pressed="true"] .sheet{transform:none;box-shadow:0 1px 0 rgba(11,8,23,.06),0 16px 28px -16px rgba(11,8,23,.6)}
   :root[data-theme="dark"] .sheet{background-color:#ECE8DE}
   .sheet svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
@@ -98,7 +98,7 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 calc(2.5 * var(--k)) 0 #0d0c12;transition:transform .08s,box-shadow .08s,filter .2s}
   .key.fn{background:linear-gradient(180deg,#4c4863,#3a3650);font-size:calc(12.5 * var(--k))}
   button.key{cursor:pointer}
-  button.key:hover{filter:brightness(1.15)}
+  @media (hover:hover){button.key:hover{filter:brightness(1.15)}}
   .key:active,.key.down{transform:translateY(calc(2 * var(--k)));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 calc(.5 * var(--k)) 0 #0d0c12}
   .np{position:relative;width:calc(112 * var(--k));height:calc(112 * var(--k));border-radius:50%;
     background:radial-gradient(circle at 50% 36%,#47435c,#2a2836 72%);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 calc(3 * var(--k)) 0 #0d0c12}
@@ -113,7 +113,7 @@
   .np-b.left::before{border-left:0;border-right:calc(8 * var(--k)) solid #7f7b95}
   .np-b.right::before{border-right:0;border-left:calc(8 * var(--k)) solid #7f7b95}
   button.np-b{cursor:pointer}
-  button.np-b:hover{background:rgba(255,255,255,.07)}
+  @media (hover:hover){button.np-b:hover{background:rgba(255,255,255,.07)}}
   button.np-b:active::before,button.np-b.down-now::before{transform:scale(.85)}
   .np-c{position:absolute;inset:calc(38 * var(--k));border-radius:50%;background:radial-gradient(circle at 50% 40%,#3c394d,#26242f);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
   .keys{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:calc(10 * var(--k)) calc(9 * var(--k));margin-top:calc(20 * var(--k))}
@@ -189,7 +189,7 @@
   .wire{list-style:none;background:var(--nbg);color:var(--nink);transition:background-color .35s}
   .wire li + li{border-top:1px solid var(--nrule)}
   .wire button{display:flex;gap:10px;width:100%;padding:11px 14px;text-align:left;background:none;border:0;color:inherit;font:inherit;cursor:pointer;opacity:.64;transition:opacity .3s,background-color .2s}
-  .wire button:hover{background:color-mix(in srgb,var(--nink) 7%,transparent)}
+  @media (hover:hover){.wire button:hover{background:color-mix(in srgb,var(--nink) 7%,transparent)}}
   .wire button:focus-visible{outline:2px solid var(--nacc);outline-offset:-2px}
   .wire li.done button,.wire li.on button{opacity:1}
   .wire li.on button{background:color-mix(in srgb,var(--nacc) 16%,transparent);box-shadow:inset 3px 0 0 var(--nacc)}
@@ -210,23 +210,33 @@
     .wire .say{display:block}
     .strip{border-top:1px solid var(--rule);border-bottom:0}
   }
-  @media (max-width:900px) and (min-height:740px){
-    .strip{position:sticky;top:var(--bar);box-shadow:0 10px 18px -16px rgba(11,8,23,.45)}
+  @media (max-width:900px){
+    /* the short caption at every phone height, so the strip keeps one height through the run (each step's text is in the log) */
     .strip .lbl,.strip .cap p{display:none}
     .strip .cap{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;min-height:0}
     .strip .cap b{margin:0}
   }
+  @media (max-width:900px) and (min-height:740px){
+    .strip{position:sticky;top:var(--bar);box-shadow:0 10px 18px -16px rgba(11,8,23,.45)}
+  }
+  @media (max-width:900px), (pointer:coarse){
+    /* phones: body text at least 15px, labels at least 11px, and steps that have not run yet stay readable */
+    .hint,.calc-note,.wire .say,.wire q{font-size:15px}
+    .link small,.pkt{font-size:11px}
+    .key.fn,.key.enter{font-size:max(11px,calc(12.5 * var(--k)))}
+    .wire button{opacity:.82}
+  }
   @media (max-width:640px){
     .papers-area{padding:16px 14px 18px}
     .papers{gap:10px}
-    .plabel{margin-top:9px;font-size:10px;letter-spacing:.05em}
+    .plabel{margin-top:9px}
     .strip{padding:14px 14px 14px}
     .calc-area{padding:18px 8px 16px}
     .wire-area{padding:16px 14px 18px}
     .node{padding:8px 7px 7px;flex-basis:96px}
     .node svg{width:20px;height:20px;margin-bottom:4px}
     .node b{font-size:12.5px}
-    .node span{font-size:10.5px}
+    .node span{font-size:11px}
     .link{min-width:22px}
     .link .ln{top:27px}
     .pkt{top:28px;font-size:0;padding:5px;border-radius:50%}
@@ -237,6 +247,15 @@
     .cap p{font-size:14px;line-height:1.45}
     .wire button{padding:10px 12px}
     .wire .n{width:22px}
+  }
+  @media (max-width:520px){
+    /* narrow phones: two problems on top and one under them, so the handwriting is big enough to read */
+    .papers{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 14px}
+    .paper:nth-child(3){grid-column:1/-1;justify-self:center;width:calc(50% - 7px)}
+  }
+  @media (max-width:359px){
+    /* too narrow for the step count and a long title on one line: always two lines, so the height stays put */
+    .strip .cap{flex-direction:column;align-items:flex-start;gap:2px}
   }
 
   /* ---------- how it works ---------- */
@@ -260,7 +279,7 @@
   .part code,.models code{font-family:var(--mono);font-size:.84em;background:var(--tile);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
   .pr{margin-top:28px;color:var(--body);max-width:720px}
   .pr a{color:var(--ink);text-underline-offset:3px;text-decoration-color:var(--acc)}
-  .pr a:hover{color:var(--acc)}
+  @media (hover:hover){.pr a:hover{color:var(--acc)}}
   .more2{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:0;margin-top:34px;border:1px solid var(--rule)}
   .models{padding:20px 22px}
   .models .mono,.note .mono{color:var(--acc);display:block;margin-bottom:12px}
@@ -277,7 +296,7 @@
   details.cmds summary::-webkit-details-marker{display:none}
   details.cmds summary .mono{color:var(--acc);transition:transform .3s var(--ease)}
   details.cmds[open] summary .mono{transform:rotate(45deg)}
-  details.cmds summary:hover{background:var(--tile)}
+  @media (hover:hover){details.cmds summary:hover{background:var(--tile)}}
   .tbl{overflow-x:auto;border-top:1px solid var(--rule)}
   .tbl table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.45}
   .tbl th,.tbl td{padding:9px 18px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
@@ -298,6 +317,25 @@
     .tbl th,.tbl td{padding:8px 12px}
     details.cmds summary{padding:13px 14px}
     .cmds-note{padding:12px 14px 14px}
+  }
+  @media (max-width:900px), (pointer:coarse){
+    .models p,.cmds-note,.tbl table{font-size:15px}
+    .ver.mine .ver-top .tag{color:color-mix(in srgb,var(--acc) 88%,var(--ink))}
+    .ver .by a{white-space:nowrap}
+  }
+  @media (pointer:coarse){
+    /* touch screens: tap areas of at least 44px. An invisible ::after grows each one, so nothing moves.
+       The calculator buttons grow into the empty body around them, never onto another key. */
+    .calc{touch-action:manipulation}
+    .calc span.np-b,.calc .np-c{pointer-events:none}
+    .btn,.ver .by a{position:relative}
+    .calc button.key::after,.calc button.np-b::after,.btn::after,.ver .by a::after{content:"";position:absolute}
+    #kEsc::after{inset:-17px -6px -4px}
+    #kUp::after{inset:-17px -7px calc(-19 * var(--k))}
+    #kDown::after{inset:calc(-19 * var(--k)) -7px -17px}
+    #kEnter::after{inset:-6px -6px -17px}
+    .btn::after{inset:-6px -4px}
+    .ver .by a::after{inset:-13px -6px}
   }
 </style>
 </head>
@@ -730,12 +768,14 @@
     },
   ];
 
-  /* on phones the diagram sticks under the header; if it is covering the screen, scroll the screen back out from under it */
-  const strip = document.querySelector('.strip');
+  /* on phones the diagram sticks under the header; if it is covering the screen, scroll the screen back out from under it.
+     When it does not stick (short screens, phones held sideways), bring the calculator screen fully into view under the header. */
+  const strip = document.querySelector('.strip'), phone = matchMedia('(max-width:900px), (pointer:coarse)');
   function keepScreenInView() {
-    if (getComputedStyle(strip).position !== 'sticky') return;
-    const below = strip.getBoundingClientRect().bottom + 8, top = screen.getBoundingClientRect().top;
-    if (top < below) scrollBy({ top: top - below, behavior: reduce ? 'auto' : 'smooth' });
+    const sticky = getComputedStyle(strip).position === 'sticky';
+    if (!sticky && !phone.matches) return;
+    const below = (sticky ? strip : document.querySelector('header.top')).getBoundingClientRect().bottom + 8, r = screen.getBoundingClientRect();
+    if (r.top < below || r.bottom > innerHeight) scrollBy({ top: r.top - below, behavior: reduce ? 'auto' : 'smooth' });
   }
 
   async function snap() {

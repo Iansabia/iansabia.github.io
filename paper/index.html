@@ -41,13 +41,14 @@
   .seg{display:inline-flex;align-self:flex-start;border:1px solid var(--rule)}
   .seg button{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:8px 11px;background:none;border:0;color:var(--body);cursor:pointer;transition:background .2s,color .2s}
   .seg button + button{border-left:1px solid var(--rule)}
-  .seg button:hover{color:var(--ink)}
+  @media (hover:hover){.seg button:hover{color:var(--ink)}}
   .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
   .rungs{display:grid}
   .tier{font-size:10.5px;color:var(--acc);padding:9px 0 3px}
   .tier:first-child{padding-top:2px}
   .rung{display:grid;grid-template-columns:136px minmax(0,1fr) 78px;gap:12px;align-items:center;width:100%;padding:5px 6px;background:none;border:0;border-radius:3px;color:var(--ink);font:500 14px/1.25 var(--sans);text-align:left;cursor:default;transition:background .2s}
-  .rung:hover,.rung.on{background:var(--tile)}
+  .rung.on{background:var(--tile)}
+  @media (hover:hover){.rung:hover{background:var(--tile)}}
   .rung.me{font-weight:600}
   .rung .t{height:10px;background:var(--ghost);position:relative}
   .rung .t i{position:absolute;left:0;top:0;bottom:0;width:var(--w);background:color-mix(in srgb,var(--body) 58%,var(--bg));transition:width .9s var(--ease)}
@@ -69,9 +70,22 @@
     .ladder-body{padding:12px 14px 14px}
     .gap div{padding:10px 10px}
     .gap b{font-size:21px}
-    .gap span{font-size:11.5px}
-    .rung{grid-template-columns:118px minmax(0,1fr) 70px;gap:9px;font-size:13px;padding:5px 4px}
-    .rung .v{font-size:11.5px}
+    .rung{grid-template-columns:118px minmax(0,1fr) 76px;gap:9px;font-size:13px;padding:5px 4px}
+  }
+  /* phones, upright or sideways: no label under 11px, the readout at body size */
+  @media (max-width:960px){
+    .tier{font-size:11px}
+    .ladder-read{font-size:15px}
+  }
+  /* sideways phones: the list is taller than the screen, so the readout rides along the bottom edge while the list is in view */
+  @media (max-width:960px) and (max-height:540px){
+    .ladder-read{position:sticky;bottom:0;z-index:2;background:var(--bg);padding-bottom:8px}
+  }
+  /* touch: the measure buttons and the model rows are at least 44px tall */
+  @media (pointer:coarse){
+    .seg button{position:relative;padding-top:13px;padding-bottom:13px}
+    .seg button::after{content:"";position:absolute;left:0;right:0;top:-5px;bottom:-5px}
+    .rung{min-height:44px}
   }
 
   /* reading layout */
@@ -92,8 +106,10 @@
   /* the paper itself */
   .prose h2 .no,.prose h3 .no{color:var(--acc)}
   .prose h3{scroll-margin-top:calc(var(--bar) + 16px)}
+  /* the html scroll-padding already clears the sticky bar on phones, as for h2 in site.css */
+  @media (max-width:960px){.prose h3{scroll-margin-top:0}}
   .anchor{margin-left:.35em;font-family:var(--mono);font-weight:500;font-size:.55em;color:var(--body);text-decoration:none;opacity:0;transition:opacity .2s;vertical-align:.12em}
-  .prose h2:hover .anchor,.prose h3:hover .anchor{opacity:1}
+  @media (hover:hover){.prose h2:hover .anchor,.prose h3:hover .anchor{opacity:1}}
   .prose code{overflow-wrap:anywhere}
   .prose a:has(code){text-decoration-color:var(--acc)}
   .prose a code{color:var(--ink)}
@@ -109,19 +125,34 @@
   .prose .tbl td.n{white-space:nowrap}
   .prose .tbl thead th{font-size:10px;letter-spacing:.05em}
   .prose .tbl tbody th{font-family:var(--sans);font-weight:500;font-size:14.5px;letter-spacing:0;text-transform:none;color:var(--ink);background:none;min-width:8.4em}
-  .prose .tbl tbody tr:hover > *{background:var(--tile)}
+  @media (hover:hover){.prose .tbl tbody tr:hover > *{background:var(--tile)}}
   .prose .tbl tbody tr:last-child > *{border-bottom:0}
+  .tbl-hint{display:none}
+  @media (max-width:960px){
+    .prose .tbl thead th{font-size:11px}
+    /* when the table is wider than the screen (the script adds .scrolls): a line that says so, and a fade on the edge that still has columns */
+    .tbl.scrolls .tbl-hint{display:block;margin:0 0 8px;color:var(--body);font-size:11px;line-height:1.4;text-align:right}
+    .tbl.scrolls:not(.end) .table{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 40px),rgba(0,0,0,.12));mask-image:linear-gradient(to right,#000 calc(100% - 40px),rgba(0,0,0,.12))}
+    .tbl.scrolls .table:focus-visible{outline-offset:-2px}
+  }
   @media (max-width:760px){
-    .prose .tbl tr > :first-child{position:sticky;left:0;z-index:1;width:46px;min-width:46px;background:var(--bg)}
-    .prose .tbl tr > :nth-child(2){position:sticky;left:46px;z-index:1;background:var(--bg);box-shadow:1px 0 0 var(--rule)}
+    /* only the Model column stays put, so more numbers fit beside it while the table scrolls */
+    .prose .tbl tr > :first-child{width:46px;min-width:46px;background:var(--bg)}
+    .prose .tbl tr > :nth-child(2){position:sticky;left:0;z-index:1;background:var(--bg);box-shadow:1px 0 0 var(--rule)}
     .prose .tbl thead tr > th:nth-child(n){background:var(--tile)}
     .prose .tbl tbody th{min-width:8.4em}
   }
   .fig{margin:2.4em 0}
   .fig .zoom-link{display:block;position:relative;cursor:zoom-in;text-decoration:none}
   .fig .zoom-link::after{content:"Enlarge";position:absolute;right:10px;top:10px;font:500 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;background:var(--nbg);color:var(--nink);padding:6px 8px;opacity:0;transition:opacity .2s}
-  .fig .zoom-link:hover::after,.fig .zoom-link:focus-visible::after{opacity:1}
+  .fig .zoom-link:focus-visible::after{opacity:1}
+  @media (hover:hover){.fig .zoom-link:hover::after{opacity:1}}
   .prose .fig img{border-radius:3px}
+  /* touch screens cannot hover, so the cue is always on: a tab on the frame's top edge, where it covers none of the chart */
+  @media (hover:none){
+    .fig .zoom-link::after{content:"Tap to enlarge";opacity:1;top:auto;bottom:100%;right:0;font-size:11px;padding:6px 9px 5px;background:var(--tile);color:var(--body);border:1px solid var(--rule);border-bottom:0;border-radius:3px 3px 0 0}
+    .prose .fig img{border-top-right-radius:0}
+  }
   .prose figcaption a{color:var(--ink)}
   .fig:target figcaption b,.tbl:target figcaption b{background:color-mix(in srgb,var(--acc) 22%,transparent)}
   .prose .refs{font-size:16px;line-height:1.55;padding-left:2.1em}
@@ -129,6 +160,17 @@
   .refs li:target{background:color-mix(in srgb,var(--acc) 14%,transparent)}
   .ack{font-size:16px}
   .back .right{display:flex;flex-wrap:wrap;gap:12px 22px}
+  @media (pointer:coarse){.back .right{row-gap:24px}}
+  @media (max-width:960px){.prose figcaption,.prose .tbl figcaption{font-size:15px}}
+
+  /* phones, below the contents: a button back up to them (the script shows it while the reader scrolls up) */
+  .toc-jump{display:none}
+  @media (max-width:960px){
+    .toc-jump{display:inline-flex;align-items:center;gap:8px;position:fixed;right:var(--gut);bottom:16px;z-index:30;height:44px;padding:0 16px;
+      border:1.5px solid var(--rule);border-radius:999px;background:var(--bg);color:var(--ink);font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+      text-decoration:none;box-shadow:0 10px 24px -12px rgba(11,8,23,.5);transition:opacity .25s,transform .25s var(--ease),visibility 0s}
+    .js .toc-jump:not(.show){opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .25s,transform .25s var(--ease),visibility 0s .25s}
+  }
 
   /* full-size figure viewer */
   .zoom{border:1px solid var(--rule);background:var(--bg);color:var(--ink);padding:0;width:min(1240px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;overflow:hidden;flex-direction:column}
@@ -137,11 +179,25 @@
   .zoom-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--rule);background:var(--tile)}
   .zoom-bar .mono{color:var(--acc)}
   .zoom-close{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:9px 14px;background:var(--ink);color:var(--bg);border:0;cursor:pointer}
-  .zoom-close:hover{background:var(--acc);color:#fff}
+  @media (hover:hover){.zoom-close:hover{background:var(--acc);color:#fff}}
   .zoom-img{overflow:auto;background:#fff;flex:1;min-height:0}
   .zoom-img img{display:block;width:100%;height:auto;margin:0 auto}
   .zoom-cap{padding:10px 14px 12px;border-top:1px solid var(--rule);color:var(--body);font-size:14px;line-height:1.5}
-  @media (max-width:640px){.zoom-img img{width:max(100%,780px);max-width:none}.zoom-cap{font-size:13px}}
+  .zoom-hint{display:none}
+  @media (max-width:640px){.zoom-img img{width:max(100%,780px);max-width:none}}
+  @media (max-width:960px){.zoom-cap{font-size:15px}}
+  @media (pointer:coarse){
+    /* touch: a 44px Close, the page behind stays still, and a line that says the figure pans when it is bigger than the screen */
+    .zoom-close{position:relative}
+    .zoom-close::after{content:"";position:absolute;inset:-7px -6px}
+    body:has(.zoom[open]){overflow:hidden}
+    .zoom-img{overscroll-behavior:contain}
+    .zoom.pans .zoom-hint{display:block;flex:1;min-width:0;text-align:right;color:var(--body);font-size:11px;line-height:1.3}
+  }
+  /* the accent on the tinted bars is 4.26:1 in light mode, under the 4.5:1 that small text needs; a shade darker on phones */
+  @media (max-width:960px),(pointer:coarse){
+    :root:not([data-theme="dark"]) .panel-h .mono.acc,:root:not([data-theme="dark"]) .zoom-bar .mono:not(.zoom-hint){color:#6445E0}
+  }
   @media (prefers-reduced-motion:reduce){.js .ladder:not(.in) .rung .t i{width:var(--w)}}
 </style>
 </head>
@@ -227,7 +283,7 @@
 
     <div class="read-top" id="paper"><span class="mono">The full paper</span><span class="mono">12 pages &middot; about 25 min</span></div>
     <div class="read">
-      <nav class="toc" aria-label="Paper contents">
+      <nav class="toc" id="contents" aria-label="Paper contents">
         <span class="mono">Contents</span>
         <a href="#abstract">Abstract</a>
         <a href="#s1">1. Introduction</a>
@@ -294,6 +350,7 @@
 <p><a class="xref" href="#table-1">Table&nbsp;1</a> reports the single-split backtest at a 2 pp signal threshold on the full 1,673-row test set. All numbers come directly from a canonical results file (<a href="https://github.com/Iansabia/DS340-Project/blob/master/experiments/results/canonical/headline.json"><code>experiments/results/canonical/headline.json</code></a>) generated under a fixed seed (42), the 2 pp threshold, and a $100 position size. The two leading columns are per-trade Sharpe ratio and per-trade alpha in basis points; cumulative dollar P&amp;L follows.</p>
 <figure class="tbl" id="table-1">
 <figcaption id="table-1-cap"><b>Table&nbsp;1:</b> Single-split backtest (canonical, 2 pp signal threshold, 1,673-row test set).</figcaption>
+<p class="tbl-hint mono" aria-hidden="true" data-touch="Swipe sideways for more columns">Scroll sideways for more columns</p>
 <div class="table" role="region" aria-labelledby="table-1-cap" tabindex="0">
 <table>
 <thead><tr>
@@ -384,6 +441,7 @@
 <figure class="fig" id="fig-11"><a class="zoom-link" href="img/fig11-ensemble-weight-sweep.webp" data-zoom aria-label="Fig. 11, open full size"><img src="img/fig11-ensemble-weight-sweep.webp" width="956" height="751" alt="Line chart of P&amp;L at 2 pp fees against the linear-regression weight in the ensemble, from 0 to 1. The filtered (concordance) line stays between about $199.5 and $204.2; the unfiltered line ranges from about $201.6 to $207.2." loading="lazy" decoding="async"></a><figcaption><b>Fig.&nbsp;11.</b> Walk-forward P&amp;L across the 11-point LR-weight sweep (<a class="xref" href="#s3-4">§3.4</a>). Spread of $4.68 is essentially flat.</figcaption></figure>
       </article>
     </div>
+    <a class="toc-jump" href="#contents"><span aria-hidden="true">&uarr;</span> Contents</a>
 
     <div class="back"><a class="more" href="../#projects"><span aria-hidden="true">&larr;</span> All projects</a><span class="right"><a class="more quiet" href="Complexity_Is_Not_An_Edge.pdf" download>Download the PDF <span aria-hidden="true">&darr;</span></a><a class="more quiet" href="https://github.com/Iansabia/DS340-Project">View the code on GitHub <span aria-hidden="true">&nearr;</span></a></span></div>
   </main>
@@ -395,7 +453,7 @@
 </div>
 
 <dialog class="zoom" id="zoom" aria-labelledby="zoomNum">
-  <div class="zoom-bar"><span class="mono" id="zoomNum">Figure</span><button class="zoom-close" type="button" id="zoomClose">Close</button></div>
+  <div class="zoom-bar"><span class="mono" id="zoomNum">Figure</span><span class="zoom-hint mono" aria-hidden="true">Swipe to see more</span><button class="zoom-close" type="button" id="zoomClose">Close</button></div>
   <div class="zoom-img"><img id="zoomImg" alt="" src="data:," width="956" height="750"></div>
   <p class="zoom-cap" id="zoomCap"></p>
 </dialog>
@@ -431,20 +489,44 @@
       seg.forEach((x) => x.setAttribute('aria-pressed', x === b));
       paint();
     }));
-    const show = (r) => {
-      rungs.forEach((x) => x.classList.toggle('on', x === r));
+    const line = (r) => {
       const d = r.dataset, b = document.createElement('b');
       b.textContent = d.full;
-      read.replaceChildren(b, document.createTextNode(
+      return [b, document.createTextNode(
         ' (Tier ' + d.tier + '): Sharpe ' + (+d.sharpe).toFixed(3) + ', ' + fmt.alpha(+d.alpha) + ' per trade, ' + fmt.pnl(+d.pnl) +
-        ' total, ' + d.win + ' win rate over ' + (+d.trades).toLocaleString('en-US') + ' trades.' + (d.note ? ' ' + d.note : '')));
+        ' total, ' + d.win + ' win rate over ' + (+d.trades).toLocaleString('en-US') + ' trades.' + (d.note ? ' ' + d.note : ''))];
+    };
+    const show = (r) => {
+      rungs.forEach((x) => x.classList.toggle('on', x === r));
+      read.replaceChildren(...line(r));
     };
     const reset = () => { rungs.forEach((x) => x.classList.remove('on')); read.replaceChildren(...intro.map((n) => n.cloneNode(true))); };
     rungs.forEach((r) => {
       r.addEventListener('mouseenter', () => show(r));
       r.addEventListener('focus', () => show(r));
-      r.addEventListener('click', () => show(r));
+      r.addEventListener('click', () => {
+        show(r);
+        /* touch: on a short screen the readout can sit below the fold, so bring it up after a tap */
+        if (coarse && read.getBoundingClientRect().bottom > innerHeight) read.scrollIntoView({ block: 'nearest' });
+      });
     });
+    /* phones: the readout keeps the height of its longest text, so the numbers under it never jump between taps */
+    const narrow = matchMedia('(max-width: 960px)');
+    const fit = () => {
+      read.style.minHeight = '';
+      if (!narrow.matches) return;
+      const probe = read.cloneNode(false);
+      probe.removeAttribute('id'); probe.removeAttribute('aria-live'); probe.setAttribute('aria-hidden', 'true');
+      probe.style.cssText = 'position:absolute;visibility:hidden;min-height:0;width:' + read.offsetWidth + 'px';
+      read.after(probe);
+      let h = 0;
+      [intro, ...rungs.map(line)].forEach((nodes) => { probe.replaceChildren(...nodes.map((n) => n.cloneNode(true))); h = Math.max(h, probe.offsetHeight); });
+      probe.remove();
+      read.style.minHeight = h + 'px';
+    };
+    let fitW = -1;
+    new ResizeObserver(() => { if (read.offsetWidth !== fitW) { fitW = read.offsetWidth; fit(); } }).observe(lad);
+    if (document.fonts) document.fonts.ready.then(fit);
     lad.querySelector('.rungs').addEventListener('mouseleave', () => { if (!lad.contains(document.activeElement) || !document.activeElement.classList.contains('rung')) reset(); });
     lad.querySelector('.rungs').addEventListener('focusout', (e) => { if (!e.relatedTarget || !e.relatedTarget.classList.contains('rung')) reset(); });
     paint();
@@ -456,6 +538,9 @@
   const dlg = document.getElementById('zoom');
   if (dlg && typeof dlg.showModal === 'function') {
     const img = document.getElementById('zoomImg'), num = document.getElementById('zoomNum'), cap = document.getElementById('zoomCap');
+    const pane = dlg.querySelector('.zoom-img');
+    /* "pans" shows the swipe line on touch screens when the figure is bigger than the viewer */
+    const pans = () => dlg.classList.toggle('pans', pane.scrollWidth > pane.clientWidth + 1 || pane.scrollHeight > pane.clientHeight + 1);
     let from = null;
     document.querySelectorAll('a[data-zoom]').forEach((a) => a.addEventListener('click', (e) => {
       e.preventDefault();
@@ -465,10 +550,40 @@
       num.textContent = text.slice(0, text.indexOf('.', 5) + 1);
       cap.textContent = text.slice(text.indexOf('.', 5) + 1).trim();
       dlg.showModal();
+      pane.scrollTo(0, 0);
+      pans();
     }));
+    img.addEventListener('load', pans);
+    addEventListener('resize', () => { if (dlg.open) pans(); });
     document.getElementById('zoomClose').addEventListener('click', () => dlg.close());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener('close', () => { if (from) from.focus(); });
+  }
+
+  /* the results table: on a narrow screen, say that it scrolls sideways and fade the edge until the last column is in view */
+  const tbl = document.getElementById('table-1'), sc = tbl && tbl.querySelector('.table');
+  if (sc) {
+    const upd = () => {
+      tbl.classList.toggle('scrolls', sc.scrollWidth > sc.clientWidth + 1);
+      tbl.classList.toggle('end', sc.scrollLeft + sc.clientWidth >= sc.scrollWidth - 2);
+    };
+    sc.addEventListener('scroll', upd, { passive: true });
+    const ro = new ResizeObserver(upd);
+    ro.observe(sc); ro.observe(sc.querySelector('table'));
+  }
+
+  /* phones: the contents sit near the top of a long page, so a button leads back to them. It shows while the reader
+     scrolls up (the way back), stays out of the text while they scroll down, and hides near the contents and the page end. */
+  const jump = document.querySelector('.toc-jump'), contents = document.getElementById('contents'), back = document.querySelector('.back');
+  if (jump && contents && back) {
+    let queued = false, lastY = scrollY, up = false;
+    const set = () => {
+      queued = false;
+      if (Math.abs(scrollY - lastY) > 24) { up = scrollY < lastY; lastY = scrollY; }
+      jump.classList.toggle('show', up && contents.getBoundingClientRect().bottom < 0 && back.getBoundingClientRect().top > innerHeight);
+    };
+    const later = () => { if (!queued) { queued = true; requestAnimationFrame(set); } };
+    addEventListener('scroll', later, { passive: true }); addEventListener('resize', later); set();
   }
 })();
 </script>

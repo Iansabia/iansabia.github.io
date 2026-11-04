@@ -98,7 +98,11 @@ export function setMode(m, persist = true) {
   if (mode === "auto") root.removeAttribute("data-theme");
   else root.setAttribute("data-theme", mode);
   if (persist) {
-    try { localStorage.setItem("swapchain.theme", mode); } catch (e) { /* optional */ }
+    try {
+      localStorage.setItem("swapchain.theme", mode);
+      // the rest of the site keeps its choice under "theme" (light or dark only), so both stay in step
+      if (mode === "auto") localStorage.removeItem("theme"); else localStorage.setItem("theme", mode);
+    } catch (e) { /* optional */ }
   }
   listeners.forEach((fn) => fn(isDark()));
 }
@@ -106,7 +110,11 @@ export function setMode(m, persist = true) {
 export function initTheme(forced) {
   let m = forced;
   if (!m) {
-    try { m = localStorage.getItem("swapchain.theme"); } catch (e) { m = null; }
+    // the site's choice first (you may have just picked it on the project page), then the app's own
+    try {
+      m = localStorage.getItem("theme");
+      if (m !== "light" && m !== "dark") m = localStorage.getItem("swapchain.theme");
+    } catch (e) { m = null; }
   }
   setMode(m || "auto", false);
   MQ.addEventListener("change", () => { if (mode === "auto") listeners.forEach((fn) => fn(isDark())); });
