@@ -1,0 +1,93 @@
+/* Short first-visit intro for the project pages (assets/page-intro.js).
+   Colors: the site tokens for the title reveal, the SwapChain map ground for the 3D intros
+   (#EFEAE3 by day, #120E24 by night), the same glass Skip pill as the room intro. */
+
+/* Set by page-intro.js in <head>: a plain cover until the intro overlay is up. */
+html.pi-on::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: var(--bg, #F6F1E6);
+  pointer-events: none;
+  /* failsafe: if the script dies, the page shows anyway */
+  animation: pi-cover 0s linear 6s forwards;
+}
+html.pi-on.pi-3d::after { background: #EFEAE3; }
+html.pi-on.pi-3d[data-theme="dark"]::after { background: #120E24; }
+@keyframes pi-cover { to { visibility: hidden; } }
+
+.pi {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483001;
+  --pi-rgb: 246, 241, 230;
+  opacity: 1;
+  transition: opacity .24s cubic-bezier(.4, 0, .2, 1);
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+.pi.pi-3d { --pi-rgb: 239, 234, 227; }
+.pi.pi-3d.pi-dark { --pi-rgb: 18, 14, 36; }
+.pi.is-out { opacity: 0; pointer-events: none; }
+
+.pi-bg { position: absolute; inset: 0; background: var(--bg, #F6F1E6); }
+.pi.pi-3d .pi-bg { background: rgb(var(--pi-rgb)); }
+.pi-stage { position: absolute; inset: 0; opacity: 0; }
+.pi-stage canvas { display: block; }
+/* keeps the title readable over the map: the ground color, fading out toward the 3D */
+.pi-scrim {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(90deg, rgba(var(--pi-rgb), .94) 0%, rgba(var(--pi-rgb), .78) 34%, rgba(var(--pi-rgb), 0) 62%);
+}
+@media (max-width: 760px) {
+  .pi-scrim { background: linear-gradient(180deg, rgba(var(--pi-rgb), .95) 0%, rgba(var(--pi-rgb), .82) 38%, rgba(var(--pi-rgb), 0) 64%); }
+}
+
+/* the title: copies of the page's own kicker and heading, laid exactly over them */
+.pi-title { position: absolute; inset: 0; pointer-events: none; }
+.pi-clip { position: absolute; overflow: hidden; }
+.pi-clip > * { margin: 0 !important; max-width: none !important; will-change: transform, opacity; }
+
+/* Apple-style glass pill, same as the room intro */
+.pi-skip {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  appearance: none;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(29, 24, 48, .09);
+  background: rgba(255, 253, 250, .74);
+  -webkit-backdrop-filter: saturate(1.8) blur(20px);
+  backdrop-filter: saturate(1.8) blur(20px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .06);
+  color: #1D1830;
+  font: 500 14px/1.2 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Inter", sans-serif;
+  letter-spacing: -.01em;
+  cursor: pointer;
+  transition: transform .2s cubic-bezier(.32, .72, 0, 1), background-color .2s;
+}
+@media (hover: hover) { .pi-skip:hover { background: rgba(255, 253, 250, .9); } }
+.pi-skip:active { transform: scale(.96); }
+.pi-skip:focus-visible { outline: 2px solid #604C9C; outline-offset: 3px; }
+.pi.pi-dark .pi-skip {
+  border-color: rgba(182, 166, 204, .22);
+  background: rgba(25, 19, 51, .86);
+  color: #F4F0FA;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
+}
+@media (hover: hover) { .pi.pi-dark .pi-skip:hover { background: rgba(25, 19, 51, .9); } }
+.pi.pi-dark .pi-skip:focus-visible { outline-color: #B6A6CC; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pi { display: none; }
+  html.pi-on::after { display: none; }
+}
+@media print {
+  .pi { display: none; }
+  html.pi-on::after { display: none; }
+}
