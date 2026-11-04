@@ -67,20 +67,26 @@
   .nw{white-space:nowrap}
 
   /* ===== The 3D hole: the demo in hole/, framed like the figures on this page. Its ground colour follows the theme. ===== */
-  .hole-fig{--hg:#EFEAE3;margin:clamp(20px,3vw,28px) 0 0;border:1px solid var(--rule);background:var(--hg);color:var(--ink);overflow:hidden}
-  :root[data-theme="dark"] .hole-fig{--hg:#120E24}
+  .hole-fig{--hg:#EFEAE3;--poster:url(hole/poster-light.webp);margin:clamp(20px,3vw,28px) 0 0;border:1px solid var(--rule);background:var(--hg);color:var(--ink);overflow:hidden}
+  :root[data-theme="dark"] .hole-fig{--hg:#120E24;--poster:url(hole/poster-dark.webp)}
+  /* the anchor target must not move after a jump lands on it: no reveal slide, and it stops a little under the bar */
+  #ccHole{scroll-margin-top:8px}
+  .hole-fig.reveal{transform:none}
+  /* dark: the header and footer take the map's purple, so the frame reads as one object */
+  :root[data-theme="dark"] .hole-h,:root[data-theme="dark"] .hole-f{background:var(--hg);border-color:rgba(143,127,247,.18)}
   .hole-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 14px;min-height:41px;border-bottom:1px solid var(--rule);background:var(--bg);color:var(--body)}
   .hole-h>.mono{font-size:11px;letter-spacing:.06em}
   .hole-full{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.06em;color:var(--acc);text-decoration:none;white-space:nowrap;padding:4px 0}
   .hole-full svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s var(--ease)}
   .hole-full:hover{text-decoration:underline;text-underline-offset:3px}
   .hole-full:hover svg{transform:translate(1px,-1px)}
-  .hole-view{position:relative;height:clamp(520px,calc(100vh - var(--bar) - 150px),720px)}
+  .hole-view{position:relative;background:var(--hg) var(--poster) center/cover no-repeat;height:clamp(520px,calc(100vh - var(--bar) - 150px),720px)}
   @supports (height:100svh){.hole-view{height:clamp(520px,calc(100svh - var(--bar) - 150px),720px)}}
   .hole-view iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:transparent;opacity:0;transition:opacity .5s var(--ease)}
   .hole-view.is-on iframe{opacity:1}
-  .hole-wait{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:12px;color:var(--body);font-size:14px}
-  .hole-wait svg{width:46px;height:46px;color:var(--acc)}
+  .hole-wait{position:absolute;left:12px;bottom:12px;display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 9px;border-radius:999px;background:color-mix(in srgb,var(--hg) 82%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 0 0 .5px var(--rule);color:var(--body);font-size:12.5px;transition:opacity .4s var(--ease)}
+  .hole-wait svg{width:18px;height:18px;color:var(--acc)}
+  .hole-view.is-on .hole-wait{opacity:0}
   .hole-f{padding:10px 14px;border-top:1px solid var(--rule);background:var(--bg);color:var(--body);font-size:13px;line-height:1.5}
   .hole-f a{color:inherit;text-underline-offset:2px}
   .hole-tag{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--warm);margin-right:2px}
@@ -123,7 +129,8 @@
   [data-cc="scrub"] .cc-step.is-active{opacity:1;transform:none;pointer-events:auto;transition-delay:.08s}
 
   /* the phone: a CSS iPhone whose screen scrubs through the app, with a readout on each side */
-  .cc-next{margin-top:clamp(44px,6vw,72px)}
+  .cc-next{margin-top:clamp(64px,8vw,104px);font-family:var(--serif);font-weight:600;font-size:clamp(22px,2.4vw,30px);line-height:1.15;letter-spacing:-.015em;color:var(--ink)}
+  .cc-next+.sub{margin-top:8px}
   .cc-appview{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:clamp(16px,3vw,48px);padding:12px 16px}
   .cc-iphone{--ph:clamp(280px,calc(var(--cc-avail) - 41px - var(--cc-cap,150px) - 34px),720px);position:relative;height:var(--ph);aspect-ratio:78/163.4;border-radius:17%/8.1%;
     background:linear-gradient(135deg,#f6a35c 0%,#e77a2c 42%,#c95c16 100%);
@@ -167,13 +174,13 @@
     .cc-f{padding:8px 14px;font-size:12px;line-height:1.45}   /* stays on phones: it is the line that says the screens show an example */
     .cc-f-l{display:none}
     .cc-f-s{display:inline}
-    .hole-view{height:clamp(540px,calc(100vh - var(--bar) - 110px),760px)}
+    .hole-view{height:clamp(480px,calc(100vh - var(--bar) - 170px),640px)}
     .hole-f{font-size:12px;padding:8px 12px}
     .hole-f-l{display:none}
     .hole-f-s{display:inline}
     .cc-iphone{--ph:clamp(240px,calc(var(--cc-avail) - 41px - var(--cc-cap,170px) - 34px),560px)}
   }
-  @supports (height:100svh){@media (max-width:760px){.hole-view{height:clamp(540px,calc(100svh - var(--bar) - 110px),760px)}}}
+  @supports (height:100svh){@media (max-width:760px){.hole-view{height:clamp(480px,calc(100svh - var(--bar) - 170px),640px)}}}
   @media (max-width:560px){[data-cc="scrub"] .cc-h .cc-scrub-only{display:none}}
   /* touch: give the small step tabs a taller hit area */
   @media (pointer:coarse){.cc-tab{position:relative}.cc-tab::after{content:"";position:absolute;inset:-10px -2px}}
@@ -231,10 +238,11 @@
           <iframe id="ccHoleFrame" title="3D example play of Miacomet hole 10" allow="fullscreen" referrerpolicy="same-origin"></iframe>
           <noscript><iframe src="hole/?embed=1" loading="lazy" title="3D example play of Miacomet hole 10"></iframe></noscript>
         </div>
-        <p class="hole-f"><span class="hole-tag">Illustrative example</span> <span class="hole-f-l">The golfer, the shots and the yardages are made up to show how the app works. The course is real, built from OpenStreetMap outlines and real elevation.</span><span class="hole-f-s">The golfer and the shots are made up. The course is real.</span> <span class="nw">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a></span></p>
+        <p class="hole-f"><span class="hole-tag">Illustrative example, not real tracked data</span> <span class="hole-f-l">The golfer, the shots and the yardages are made up to show how the app works. The course is real, built from OpenStreetMap outlines and real elevation.</span><span class="hole-f-s">The golfer and the shots are made up. The course is real.</span> <span class="nw">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> &middot;</span> <span class="nw">Elevation: AWS Terrain Tiles</span></p>
       </figure>
 
-      <p class="sub reveal cc-next">The app screen during a real swing, in three steps.</p>
+      <h3 class="cc-next reveal">The app on a real swing</h3>
+      <p class="sub reveal">The app screen during a real swing, in three steps.</p>
 
       <div class="cc-track" id="ccApp" style="--len:280vh">
         <div class="cc-pin">
@@ -342,7 +350,10 @@
     const theme = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');   // the site is light unless the reader picked dark
     const send = (msg) => { try { frame.contentWindow.postMessage({ type: 'cc-hole', ...msg }, location.origin); } catch (e) {} };
     let loaded = false;
-    frame.addEventListener('load', () => { if (!loaded) return; view.classList.add('is-on'); send({ theme: theme() }); });
+    // the poster shows until the hole says it is drawn (or a slow machine has had 40s), so the reader never sees a blank frame
+    const show = () => view.classList.add('is-on');
+    window.addEventListener('message', (e) => { if (e.origin === location.origin && e.source === frame.contentWindow && e.data && e.data.type === 'cc-hole-ready') show(); });
+    frame.addEventListener('load', () => { if (!loaded) return; send({ theme: theme() }); setTimeout(show, 40000); });
     const load = () => { if (loaded) return; loaded = true; frame.src = 'hole/?embed=1&theme=' + theme(); };
     if ('IntersectionObserver' in window) {
       new IntersectionObserver((es, io) => { if (es.some((e) => e.isIntersecting)) { load(); io.disconnect(); } }, { rootMargin: '100% 0px' }).observe(view);

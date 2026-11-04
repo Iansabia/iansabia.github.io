@@ -106,6 +106,11 @@ html.embed .track { height: 100vh; }
 html.embed .about { display: none; }
 /* embedded: the page around it has the name, the way back and the theme switch */
 html.embed .topbar .brand, html.embed #theme-btn, html.embed .hint { display: none; }
+/* embedded: the frame header and footer already name the hole, say it is an example and give the credits */
+html.embed .hole-pill, html.embed .example-pill, html.embed .attr { display: none; }
+/* embedded: one play button before the start (the card's), then the control bar fades in */
+html.embed .controls { transition: opacity 0.3s var(--ease), transform 0.3s var(--ease); }
+html.embed:not(.started) .controls { opacity: 0; pointer-events: none; transform: translate(-50%, 8px); }
 #map { position: absolute; inset: 0; }
 #map canvas { outline: none; }
 /* a soft fade under the top bar, like the SwapChain map */
@@ -165,6 +170,7 @@ html.embed .topbar .brand, html.embed #theme-btn, html.embed .hint { display: no
 .cap-steps i { position: relative; height: 4px; border-radius: 2px; background: var(--accent-soft-2); overflow: hidden; }
 .cap-steps i::after { content: ""; position: absolute; inset: 0; transform-origin: left; transform: scaleX(var(--p, 0)); background: var(--accent); border-radius: inherit; }
 .kicker { display: block; color: var(--accent-strong); font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.cap-body h1, .card h2 { text-wrap: balance; }
 .caption h1 { font-size: 24px; line-height: 1.15; letter-spacing: -0.025em; font-weight: 700; margin-bottom: 8px; text-wrap: balance; }
 .caption p { color: var(--muted); font-size: 15px; line-height: 1.5; }
 .cap-more { display: none; }
@@ -401,6 +407,8 @@ html[data-layout="phone"] .pip-chips span { height: 20px; font-size: 9.5px; padd
 html[data-layout="phone"] .pip-chips svg { width: 9px; height: 9px; }
 html[data-layout="phone"] .rec { font-size: 9px; height: 18px; padding: 0 7px; }
 html[data-layout="phone"] .pip-top { top: 8px; }
+html.embed .legend { top: 16px; }
+html[data-layout="phone"] .lbl.small { height: 24px; padding: 0 8px; font-size: 11px; }
 html[data-layout="phone"] .readout { top: 96px; left: var(--gutter); transform: none; }
 html[data-layout="phone"] .readout .chip { justify-self: start; }
 html[data-layout="phone"] .readout .chip { padding: 8px 12px; gap: 8px; }

@@ -83,7 +83,7 @@ window.addEventListener("scroll", () => {
 ["wheel", "touchstart"].forEach((ev) => window.addEventListener(ev, () => { progY = null; }, { passive: true }));
 
 // ---------- controls ----------
-function markStarted() { if (!started) { started = true; $("caption").classList.add("started"); measureCaption(); needDraw = true; } }
+function markStarted() { if (!started) { started = true; $("caption").classList.add("started"); root.classList.add("started"); measureCaption(); needDraw = true; } }
 function play() {
   markStarted();
   if (t >= TOTAL - 0.05) { goTo(0, true); return; }
@@ -179,8 +179,9 @@ function placeLabels(items) {
     const L = label(it.id, it.html, it.cls);
     seen.add(it.id);
     const lift = it.lift == null ? 12 : it.lift;
-    const x = Math.round(clamp(s[0] - L.w / 2 + (it.dx || 0), 6, Math.max(6, W - L.w - 6))); // keep wide labels inside a narrow frame
+    const x = Math.round(clamp(s[0] - L.w / 2 + (it.dx || 0), 12, Math.max(12, W - L.w - 12))); // keep wide labels inside a narrow frame
     let y = Math.round(s[1] - L.h - lift);
+    if (embed && y < 50) { L.el.style.opacity = "0"; continue; } // embedded, the legend sits at the top: keep labels clear of it
     if (it.a > 0.3) {
       for (let k = 0; k < 4; k++) {
         const hit = placed.find((r) => x < r.x + r.w + 6 && x + L.w + 6 > r.x && y < r.y + r.h + 4 && y + L.h + 4 > r.y);
@@ -206,6 +207,8 @@ function viewFor(cam, S) {
   const off = phone ? [0, -(parseFloat(getComputedStyle(root).getPropertyValue("--cap-h")) || 200) * 0.42 + 18] : [W > 1100 ? 70 : 40, -10];
   // on a phone the camera inset sits top right: slide the golfer left so the inset never covers him
   if (phone && S && S.pip > 0.001) { off[0] -= S.pip * Math.min(W * 0.2, 80); off[1] -= S.pip * 30; }
+  // embedded on a phone the frame is narrow: during the tee shot, slide the tee in from the right edge
+  if (phone && embed && S) off[0] -= smooth((S.t - 3) / 3) * (1 - smooth((S.t - 18) / 3)) * W * 0.15;
   // on a phone the caddy and summary cards sit at the top: slide the action down under them
   if (phone && S) {
     const a = Math.max(S.caddy || 0, S.summary || 0);
@@ -372,9 +375,12 @@ onThemeChange(() => { if (scene) scene.setTheme(); needDraw = true; kick(); });
 function webgl2() {
   try { const c = document.createElement("canvas"); return !!c.getContext("webgl2"); } catch (e) { return false; }
 }
+// embedded: tell the page the hole is drawn, so it swaps its poster for the live frame
+function ready() { if (embed && parent !== window) { try { parent.postMessage({ type: "cc-hole-ready" }, location.origin); } catch (e) {} } }
 function fallback() {
   root.classList.add("nogl-mode");
   $("loading").classList.add("done");
+  ready();
   ["controls", "caption", "legend", "pip", "caddy", "summary", "readout"].forEach((id) => { const el = $(id); if (el) el.style.display = "none"; });
   renderFallback($("nogl"));
   track.style.height = "auto";
@@ -394,7 +400,7 @@ async function boot() {
   if (!window.deck) { fallback(); return; }
   try {
     const { Scene } = await import("./scene.js");
-    scene = new Scene($("map"), { phone, onReady: () => { setTimeout(() => $("loading").classList.add("done"), 120); needDraw = true; kick(); } });
+    scene = new Scene($("map"), { phone, onReady: () => { setTimeout(() => { $("loading").classList.add("done"); ready(); }, 120); needDraw = true; kick(); } });
   } catch (e) {
     console.warn(e);
     fallback();

@@ -23,7 +23,7 @@ export const CAPTIONS = [
   },
   {
     kicker: "Step 1 of 4",
-    title: "The phone on the cart sees the tee shot",
+    title: "The phone on\u00a0the\u00a0cart sees the tee shot",
     text: "The phone clipped to the golf cart films ordinary video. It follows the golfer's body and club, drawn here as a stick figure, then follows the ball and estimates where it landed.",
   },
   {
