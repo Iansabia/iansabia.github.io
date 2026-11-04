@@ -54,13 +54,13 @@ const PAL = {
     dorm: '#FFFDFA', edge: '#604C9C', edgeA: .84, wire: '#8F7FF7', wireA: .5,
     glass: '#D8DDEA', lit: '#D8DDEA', litB: '#DFE2EC', mine: '#D2D2F2', door: '#604C9C', ndoor: '#CFC6BA',
     canopy: '#D1DABF', canopyB: '#C8D3B6', trunk: '#C9C1B8', ink: '#3A3742', inkA: .4, car: '#E9E4DC', carB: '#DCD5CB', carGlass: '#C9CFDE',
-    lantern: '#FFFDFA', glowA: 0,
+    lantern: '#FFFDFA', glowA: 0, post: '#B3ABBF',
     wall: '#FFFDFA', floor: '#EAE4DB', trim: '#FFFFFF', wood: '#DED6CB', woodDeep: '#D1C8BC', woodFront: '#E8E2D9',
     chair: '#604C9C', couch: '#D6CCF0', duvet: '#D3DCC4', throw: '#FFFDFA', dark: '#3A3742', metal: '#C9C1B8',
     pale: '#FFFDFA', leaf: '#AFC39A', pot: '#FFFDFA', rugBase: '#F8F4EE', rugInk: '#A597F2',
     furnEdge: '#604C9C', furnEdgeA: .3, led: '#8F7FF7', ledA: .32, blob: '#3A3742', blobA: .12,
     screenBg: '#F6F3EE', screenPane: '#FFFDFA', screenLine: 'rgba(29,24,48,.12)', screenBar: 'rgba(255,253,250,.8)',
-    amb: .8 * .84, sun: .9 * .42, fill: .18 * .42, lift: { _: .06, dorm: .2, wall: .22, trim: .22, pale: .14, floor: .14, wood: .12, woodDeep: .12, woodFront: .12, throw: .16, couch: .1, duvet: .1, stone: .12 },
+    amb: .8 * .84, sun: .9 * .42, fill: .18 * .42, lift: { _: .06, dorm: .2, building: .22, buildingB: .2, buildingC: .22, trunk: .08, wall: .1, trim: .16, green: .05, pale: .14, floor: .14, wood: .12, woodDeep: .12, woodFront: .12, throw: .16, couch: .1, duvet: .1, stone: .12 },
   },
   dark: {
     sky: '#0C0918', horizon: '#1A1434', ground: '#120E24', grid: '#8F7FF7', gridA: .3,
@@ -69,13 +69,13 @@ const PAL = {
     dorm: '#CEC4E8', edge: '#B6A6CC', edgeA: .84, wire: '#8F7FF7', wireA: .55,
     glass: '#2E2654', lit: '#FFE2BC', litB: '#E2ECFF', mine: '#CFC4FF', door: '#8F7FF7', ndoor: '#3A3166',
     canopy: '#26303C', canopyB: '#2C3744', trunk: '#3A3166', ink: '#B6A6CC', inkA: .4, car: '#3A3166', carB: '#2F2850', carGlass: '#1A1434',
-    lantern: '#FFD9A8', glowA: .75,
+    lantern: '#FFD9A8', glowA: .75, post: '#3A3166',
     wall: '#38305A', floor: '#221A42', trim: '#4E4474', wood: '#4E4474', woodDeep: '#42396A', woodFront: '#564C80',
     chair: '#A99BFF', couch: '#7E6EC8', duvet: '#3C4A4E', throw: '#CEC4E8', dark: '#191333', metal: '#685E8C',
     pale: '#CEC4E8', leaf: '#4E6A50', pot: '#CEC4E8', rugBase: '#2D2452', rugInk: '#B6A6CC',
     furnEdge: '#B6A6CC', furnEdgeA: .3, led: '#8F7FF7', ledA: .6, blob: '#000000', blobA: .3,
     screenBg: '#100C20', screenPane: '#191333', screenLine: 'rgba(182,166,204,.18)', screenBar: 'rgba(25,19,51,.8)',
-    amb: 1.0 * .84, sun: .5 * .42, fill: .18 * .42, lift: { _: 0, dorm: .16, wall: .1, trim: .08, pale: .1, throw: .1 },
+    amb: 1.0 * .84, sun: .5 * .42, fill: .18 * .42, lift: { _: 0, dorm: .16, wall: .1, trim: .08, pale: .1, throw: .1, green: .25 },
   },
 };
 
@@ -206,6 +206,7 @@ function run(opts, done) {
       const m = o.basic ? new T.MeshBasicMaterial({ side: o.side || T.FrontSide, transparent: !!o.alpha, depthWrite: !o.alpha })
         : new T.MeshLambertMaterial({ side: o.side || T.FrontSide, flatShading: !!o.flat, transparent: !!o.alpha, depthWrite: !o.alpha });
       if (o.alpha) m.opacity = o.alpha;
+      m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1;
       themed.push(() => {
         m.color.set(P[key]);
         if (m.emissive) m.emissive.set(P[key]).multiplyScalar(P.lift[key] ?? P.lift._);
@@ -250,6 +251,18 @@ function run(opts, done) {
       const mesh = new T.Mesh(g, m); mesh.position.set(x, y, z); parent.add(mesh);
       if (line) mesh.add(new T.LineSegments(edgesOf(g, 'b' + w.toFixed(3) + h.toFixed(3) + d.toFixed(3)), line));
       return mesh;
+    }
+    // iron railings as thin solid bars (hairlines read as glitches up close)
+    const railGeo = new T.BoxGeometry(1, 1, 1);
+    function rails(p, r = .022) {
+      const n = p.length / 6, im = new T.InstancedMesh(railGeo, M('post'), n), o = new T.Object3D();
+      const a = new T.Vector3(), b = new T.Vector3();
+      for (let i = 0; i < n; i++) {
+        a.fromArray(p, i * 6); b.fromArray(p, i * 6 + 3);
+        o.position.copy(a).add(b).multiplyScalar(.5); o.scale.set(r * 2, r * 2, Math.max(a.distanceTo(b), 1e-3));
+        o.lookAt(b); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+      }
+      return im;
     }
     function C(parent, rt, rb, h, m, x, y, z, seg = 20) {
       const mesh = new T.Mesh(new T.CylinderGeometry(rt, rb, h, seg), m); mesh.position.set(x, y, z); parent.add(mesh); return mesh;
@@ -379,7 +392,6 @@ function run(opts, done) {
         }
       }
       buildTrees(g, trees);
-      buildCars(g);
       buildLamps(g, lamps);
     }
 
@@ -406,36 +418,8 @@ function run(opts, done) {
       list.forEach(([x, z, s]) => blob(g, 3.6 * s, 3.6 * s, x, z, .8, YS + .006));
     }
 
-    // parked cars: soft two-box massing along both curbs
-    function buildCars(g) {
-      const spots = [];
-      for (let z = -22; z < 58; z += 5.6 + rand() * 5) {
-        if (rand() > .38 && (z < -10 || z > 9)) spots.push([ROAD[0] + 1.1, z, rand()]);   // keep the way to my door clear
-        if (rand() > .45) spots.push([ROAD[1] - 1.1, z + 2.5, rand()]);
-      }
-      const body = new T.BoxGeometry(1.75, .62, 4.3), cab = new T.BoxGeometry(1.55, .52, 2.3), win = new T.BoxGeometry(1.58, .32, 2.1);
-      const o = new T.Object3D();
-      const meshes = [['car', body, .2 + .31], ['carB', body, .2 + .31], ['car', cab, .82 + .26], ['carB', cab, .82 + .26]].map(([k, geo]) => new T.InstancedMesh(geo, M(k), spots.length));
-      const wins = new T.InstancedMesh(win, M('carGlass'), spots.length);
-      const wheels = new T.InstancedMesh(new T.CylinderGeometry(.33, .33, 1.8, 14), M('dark'), spots.length * 2);
-      const cnt = [0, 0];
-      spots.forEach(([x, z, r], i) => {
-        const v = r > .5 ? 1 : 0;
-        o.rotation.set(0, 0, 0); o.scale.set(1, 1, 1);
-        o.position.set(x, .6 + .51, z); o.updateMatrix(); meshes[v].setMatrixAt(cnt[v], o.matrix);
-        o.position.set(x, .6 + 1.08, z - .2); o.updateMatrix(); meshes[2 + v].setMatrixAt(cnt[v], o.matrix);
-        o.position.set(x, .6 + 1.12, z - .2); o.updateMatrix(); wins.setMatrixAt(i, o.matrix);
-        cnt[v]++;
-        o.rotation.set(0, 0, Math.PI / 2);
-        [-1.35, 1.35].forEach((dz, k) => { o.position.set(x, .6 + .33, z + dz); o.updateMatrix(); wheels.setMatrixAt(i * 2 + k, o.matrix); });
-      });
-      meshes.forEach((m, k) => { m.count = cnt[k % 2]; g.add(m); });
-      g.add(wins, wheels);
-      spots.forEach(([x, z]) => blob(g, 2.6, 5.4, x, z, .7, .61));
-    }
-
     function buildLamps(g, list) {
-      const postM = M('dark');
+      const postM = M('post');
       const lantern = M('lantern', { basic: true });
       list.forEach(([x, z]) => {
         C(g, .045, .07, 2.5, postM, x, YS + 1.25, z, 10);
@@ -547,8 +531,7 @@ function run(opts, done) {
         rp.push(.1, top + .9, z + dzz, .85, top + .9, z + dzz, .85, top + .9, z + dzz, x1 - .1, YS + .9, z + dzz);
         for (let i = 0; i <= 6; i++) { const xx = lerp(.85, x1 - .1, i / 6), yy = lerp(top, YS, i / 6); rp.push(xx, yy, z + dzz, xx, yy + .9, z + dzz); }
       }
-      const rg = new T.BufferGeometry(); rg.setAttribute('position', new T.Float32BufferAttribute(rp, 3));
-      grp.add(new T.LineSegments(rg, L('ink', 'inkA')));
+      grp.add(rails(rp, .015));
     }
     function fence(grp, za, zb, zDoor) {
       const x = GARDEN[1] - FX - .1, y = YS, h = .85, p = [];
@@ -559,8 +542,7 @@ function run(opts, done) {
       };
       const lo = Math.min(zDoor - .7, zDoor + .7), hi = Math.max(zDoor - .7, zDoor + .7);
       run(za, lo); run(hi, zb);
-      const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(p, 3));
-      grp.add(new T.LineSegments(g, L('ink', 'inkA')));
+      grp.add(rails(p, .011));
     }
     function paneMeshes(g, panes, side) {
       const geo = new T.BoxGeometry(.05, 1, 1), o = new T.Object3D();
@@ -639,13 +621,12 @@ function run(opts, done) {
       // the walk from the curb to the steps
       // the garden fence, open at the well and the stoop
       const rp = [];
-      [[z0 + .1, DOOR.z0 - .05]].forEach(([a, b]) => {
+      [[z0 + .1, 1.2]].forEach(([a, b]) => {
         const x = GARDEN[1] - .1;
         rp.push(x, YS + .85, a, x, YS + .85, b, x, YS + .12, a, x, YS + .12, b);
         for (let zz = a; zz <= b; zz += .32) rp.push(x, YS, zz, x, YS + .9, zz);
       });
-      const rg = new T.BufferGeometry(); rg.setAttribute('position', new T.Float32BufferAttribute(rp, 3));
-      g.add(new T.LineSegments(rg, L('ink', 'inkA')));
+      g.add(rails(rp, .011));
       // my front door: purple, swings in as the camera arrives
       const hinge = new T.Group(); hinge.position.set(FX - .16, 0, DOOR.z1); g.add(hinge);
       const leaf = B(hinge, .05, DOOR.y1 - .02, DOOR.z1 - DOOR.z0 - .02, M('door'), 0, DOOR.y1 / 2, -(DOOR.z1 - DOOR.z0) / 2, edgeL);
@@ -1050,7 +1031,7 @@ function run(opts, done) {
       { t: 5.85, p: [-1.07, 1.06, 1.2], l: [-1.62, 1.06, 1.2], f: 0, fill: true },
     ];
     const PORTRAIT_P = { 0: [11.6, 2.6, -30], 1: [11.6, 2.6, -13.5], 2: [8.4, 2.3, .2], 5: [1.15, 1.46, 3.2], 6: [.95, 1.32, 2.3], 7: [-.2, 1.11, 1.2] };
-    const PORTRAIT_L = { 0: [9.6, 2.9, -6], 1: [5.2, 2.7, 3.4], 5: [-1.4, 1.1, 1.3] };
+    const PORTRAIT_L = { 0: [9.6, 3.9, -6], 1: [5.2, 3.5, 3.4], 2: [2.2, 2.1, 3.6], 5: [-1.4, 1.1, 1.3] };
     const DOOR_OPEN = [2.35, 3.25], BEND = [4.3, 5.4], END = 5.85;
     let posC, lookC, keyU;
     const setupPath = () => {

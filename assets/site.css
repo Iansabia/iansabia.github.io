@@ -5,8 +5,8 @@
   --acc:#6D4FE8; --warm:#c0632f;
   --nbg:#0B0817; --ntile:#15102A; --nghost:#1B1533; --nink:#EFEAF8; --nbody:#A79FBF; --nrule:#2A2342; --nacc:#9B85FF; --nwarm:#e08a55;
   --serif:"Fraunces",Georgia,serif;
-  --sans:"Instrument Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Instrument Sans","Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono","JetBrains Mono",Menlo,monospace;
   --ease:cubic-bezier(.22,1,.36,1);
   --gut:clamp(16px,4vw,48px);
   --max:1120px;
