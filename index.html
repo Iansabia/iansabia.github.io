@@ -112,7 +112,7 @@
   .hero{display:grid;grid-template-columns:1fr 290px;background:var(--nbg);color:var(--nink);border:1px solid var(--nbg);position:relative;overflow:hidden;min-height:440px;transition:background-color .35s}
   .hero-main{position:relative;padding:clamp(28px,5vw,60px);display:flex;flex-direction:column;justify-content:flex-end;min-height:440px;cursor:crosshair}
   #tracer{position:absolute;inset:0;width:100%;height:100%}
-  .hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(54px,9vw,112px);line-height:.96;letter-spacing:-.03em;position:relative;pointer-events:none}
+  .hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(54px,9vw,112px);line-height:.92;letter-spacing:-.03em;position:relative;pointer-events:none}
   .hero .me{position:relative;width:clamp(88px,9vw,124px);height:auto;aspect-ratio:1;border-radius:50%;object-fit:cover;margin-bottom:22px;border:2px solid var(--nacc);box-shadow:0 0 0 5px var(--nbg);pointer-events:none}
   .hero h1 em{font-style:italic;font-weight:500;color:var(--nacc)}
   .hero .tag{position:relative;max-width:430px;margin-top:18px;color:var(--nbody);font-size:18px;pointer-events:none}
@@ -807,8 +807,11 @@
       <div class="likes">
         <span class="mono" style="color:var(--acc)">Usually doing one of these</span>
         <ul>
-          <li>Skiing</li><li>Golf</li><li>Chess</li><li>Soccer</li><li>Running</li><li>Homemade pasta</li><li>Oysters</li><li>The NFL</li><li>Too many fantasy leagues</li>
+          <li class="has-ph"><button type="button" data-gallery="skiing" aria-label="Skiing, see photos"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-photo"/></svg>Skiing</button></li><li class="has-ph"><button type="button" data-gallery="golf" aria-label="Golf, see photos"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-photo"/></svg>Golf</button></li><li>Chess</li><li class="has-ph"><button type="button" data-gallery="soccer" aria-label="Soccer, see a photo"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-photo"/></svg>Soccer</button></li><li class="has-ph"><button type="button" data-gallery="running" aria-label="Running, see photos"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-photo"/></svg>Running</button></li><li class="has-ph"><button type="button" data-gallery="pasta" aria-label="Homemade pasta, see photos"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-photo"/></svg>Homemade pasta</button></li><li class="has-ph"><button type="button" data-gallery="oysters" aria-label="Oysters, see a photo"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-photo"/></svg>Oysters</button></li><li class="has-ph"><button type="button" data-gallery="nfl" aria-label="The NFL, see a clip"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-play"/></svg>The NFL</button></li><li class="has-jump"><a href="#currently" data-jump aria-label="Too many fantasy leagues, see my fantasy scores"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-up"/></svg>Too many fantasy leagues</a></li>
         </ul>
+        <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-photo" viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.5" cy="6.5" r="1.4" fill="currentColor"/><path d="M2.5 12.5l3.8-3.6 2.6 2.3 2-1.8 2.6 2.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol><symbol id="i-play" viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 5.5v5l4-2.5z" fill="currentColor"/></symbol><symbol id="i-up" viewBox="0 0 16 16"><path d="M8 13.5v-11M3.5 7L8 2.5 12.5 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol></svg>
+        <link rel="stylesheet" href="assets/interests/interests.css">
+        <script src="assets/interests/interests.js" defer></script>
       </div>
     </div>
   </section>
