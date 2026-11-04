@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en" data-layout="desktop">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Continuum Hole Demo</title>
+  <meta name="description" content="One illustrative play of hole 10 at Miacomet Golf Club on Nantucket with Continuum, an AI golf caddy on your phone. Built in 3D from OpenStreetMap and real elevation.">
+  <meta name="theme-color" content="#F6F3EE">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23100C20'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%238F7FF7' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23C0632F'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="styles/hole.css">
+  <script>
+    // Before first paint: layout, embed mode and theme (the site's choice under "theme" wins, as on the other pages).
+    (function () {
+      var q = new URLSearchParams(location.search), root = document.documentElement;
+      var phone = !matchMedia("(min-width: 900px)").matches || matchMedia("(max-height: 520px) and (pointer: coarse)").matches;
+      root.setAttribute("data-layout", phone ? "phone" : "desktop");
+      if (q.get("embed") === "1") root.classList.add("embed");
+      var t = q.get("theme");
+      if (t !== "light" && t !== "dark") { try { t = localStorage.getItem("theme"); } catch (e) { t = null; } }
+      if (t === "light" || t === "dark") root.setAttribute("data-theme", t);
+      root.classList.add("js");
+    })();
+  </script>
+  <!-- deck.gl is the same vendored build the SwapChain demo uses; the CDN copy is only a backup -->
+  <script src="../../swapchain/app/vendor/deck.gl-9.1.14.min.js" defer onerror="var s=document.createElement('script');s.src='https://unpkg.com/deck.gl@9.1.14/dist.min.js';s.onload=function(){window.dispatchEvent(new Event('deckready'))};document.head.appendChild(s);"></script>
+  <script type="module" src="src/app.js"></script>
+</head>
+<body>
+  <main>
+    <section class="track" id="track" aria-label="Hole 10 play-through. Scroll or press play.">
+      <div class="stage" id="stage">
+        <div id="map" aria-hidden="true"></div>
+        <div class="labels" id="labels" aria-hidden="true"></div>
+
+        <header class="topbar">
+          <a class="brand" href="../" title="Back to the Continuum project page">
+            <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#100C20"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#8F7FF7" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#C0632F"/></svg>
+            <span>Continuum</span>
+          </a>
+          <div class="hole-pill" id="hole-pill"><b id="hole-name">Hole 10</b><span id="hole-sub">Miacomet Golf Club</span></div>
+          <div class="topright">
+            <span class="example-pill" title="The golfer, the shots and the pattern are made up to show how the app works."><i aria-hidden="true"></i>Illustrative example, not real tracked data</span>
+            <button class="icon-btn" id="theme-btn" aria-label="Switch between light and dark">
+              <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+              <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.6A8.2 8.2 0 0 1 9.4 4a8.2 8.2 0 1 0 10.6 10.6z"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="readout" id="readout" aria-live="polite"></div>
+
+        <aside class="pip" id="pip" aria-label="What the phone on the cart sees">
+          <div class="pip-phone">
+            <canvas id="pip-canvas"></canvas>
+            <div class="pip-top"><span class="rec"><i></i>Phone on the cart</span></div>
+            <div class="pip-chips">
+              <span data-chip="body"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Body tracked</span>
+              <span data-chip="strike"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Strike marked</span>
+              <span data-chip="ball"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Ball followed</span>
+            </div>
+          </div>
+        </aside>
+
+        <aside class="card caddy" id="caddy" aria-live="polite">
+          <div class="caddy-head"><span class="ai-dot" aria-hidden="true"></span><b>Caddy</b><span class="muted">Next shot</span></div>
+          <div class="caddy-big"><span class="num" id="to-pin">0</span><span class="unit">yd to the pin</span></div>
+          <div class="pattern">
+            <div class="dots" id="past-dots" aria-hidden="true"></div>
+            <p id="past-text">Looking at your last 12 approach shots</p>
+          </div>
+          <div class="advice"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M14 10H5M8.5 6.5 5 10l3.5 3.5"/></svg><p><b>Aim at the left side of the green.</b> <span class="more">Your usual miss brings the ball back toward the flag.</span></p></div>
+          <p class="fine">Example pattern for a made-up golfer.</p>
+        </aside>
+
+        <aside class="card summary" id="summary" aria-live="polite">
+          <div class="sum-head"><div><span class="muted" id="sum-kicker">Miacomet, hole 10</span><h2 id="sum-title">3 shots on a par 4</h2></div><span class="badge" id="sum-badge">Birdie</span></div>
+          <div class="shot-dots" id="shot-dots" aria-hidden="true"></div>
+          <ol class="shots" id="shot-list"></ol>
+          <p class="fine">Every shot joins the pattern the caddy learns from. Example round, not real data.</p>
+        </aside>
+
+        <div class="caption" id="caption">
+          <div class="cap-steps" id="cap-steps" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <div class="cap-body" id="cap-body" aria-live="polite">
+            <span class="kicker" id="cap-kicker"></span>
+            <h1 id="cap-title"></h1>
+            <p id="cap-text"></p>
+            <span class="cap-more" aria-hidden="true">Tap to read more</span>
+          </div>
+          <button class="btn primary start" id="start-btn" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6L12.8 8z"/></svg>Play the hole</button>
+          <span class="hint" id="hint">or scroll</span>
+        </div>
+
+        <nav class="controls" id="controls" aria-label="Play-through controls">
+          <button class="ctl" id="prev-btn" aria-label="Previous step"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 5 7.5 10l5 5"/></svg></button>
+          <button class="ctl play" id="play-btn" aria-label="Play"><svg class="i-play" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 4.2v11.6L16 10z"/></svg><svg class="i-pause" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4.5h2.6v11H6zM11.4 4.5H14v11h-2.6z"/></svg></button>
+          <button class="ctl" id="next-btn" aria-label="Next step"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 5l5 5-5 5"/></svg></button>
+          <span class="sep" aria-hidden="true"></span>
+          <div class="steps" id="steps" role="tablist" aria-label="Steps">
+            <button role="tab" data-step="1">Tee shot</button>
+            <button role="tab" data-step="2">Caddy</button>
+            <button role="tab" data-step="3">Approach</button>
+            <button role="tab" data-step="4">Putt</button>
+          </div>
+          <span class="sep" aria-hidden="true"></span>
+          <button class="ctl" id="replay-btn" aria-label="Replay from the start"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10a5.5 5.5 0 1 0 1.7-4"/><path d="M4.2 3.6v3.2h3.2"/></svg></button>
+        </nav>
+
+        <div class="legend" id="legend" aria-hidden="true">
+          <span><i class="k-fair"></i>Fairway</span>
+          <span><i class="k-green"></i>Green</span>
+          <span><i class="k-bunker"></i>Bunker</span>
+          <span><i class="k-cart"></i>Cart path</span>
+          <span class="k-opt"><i class="k-flight"></i>Ball flight</span>
+        </div>
+        <div class="attr">Map data © OpenStreetMap contributors · Elevation: AWS Terrain Tiles</div>
+        <div class="loading" id="loading"><div><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M12 50 C 22 8, 44 6, 52 30" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#C0632F"/></svg><span>Building the hole</span></div></div>
+        <div class="nogl" id="nogl" hidden></div>
+      </div>
+    </section>
+
+    <footer class="about" id="about">
+      <div class="about-in">
+        <h2>About this demo</h2>
+        <p>The course is real: hole 10 at Miacomet Golf Club, a public course on Nantucket. Its tees, fairway, bunkers, green and cart paths are OpenStreetMap outlines, and the ground uses real elevation from AWS Terrain Tiles, drawn twice as steep so the gentle slopes show. Par and the hole number come from the OpenStreetMap hole line.</p>
+        <p>The play is an illustration. The golfer, the three shots, the yardages and the miss pattern are made up to show what the app does: the phone on the cart films the swing, follows the ball, and the caddy suggests where to aim based on how you usually miss. None of it is real tracked data, and it says nothing about accuracy.</p>
+        <p class="links"><a href="../">&larr; Back to Continuum</a><span aria-hidden="true">·</span><a href="data/SOURCES.md">Data sources</a><span aria-hidden="true">·</span><span>Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, ODbL</span></p>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

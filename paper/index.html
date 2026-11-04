@@ -19,7 +19,7 @@
 <meta name="citation_pdf_url" content="https://iansabia.github.io/paper/Complexity_Is_Not_An_Edge.pdf">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
 <style>
   /* hero: the title block as printed, minus the student ID numbers */
@@ -39,7 +39,7 @@
   .minute-body b{color:var(--ink);font-weight:600}
   .ladder-body{padding:14px 18px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
   .seg{display:inline-flex;align-self:flex-start;border:1px solid var(--rule)}
-  .seg button{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:8px 11px;background:none;border:0;color:var(--body);cursor:pointer;transition:background .2s,color .2s}
+  .seg button{font:500 11px/1 var(--sans);letter-spacing:.01em;text-transform:none;padding:8px 11px;background:none;border:0;color:var(--body);cursor:pointer;transition:background .2s,color .2s}
   .seg button + button{border-left:1px solid var(--rule)}
   @media (hover:hover){.seg button:hover{color:var(--ink)}}
   .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
@@ -61,7 +61,7 @@
   .gap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);margin-top:auto}
   .gap div{padding:12px 16px;border-right:1px solid var(--rule)}
   .gap div:last-child{border-right:0}
-  .gap b{display:block;font-family:var(--serif);font-weight:500;font-size:26px;line-height:1.05;letter-spacing:-.01em}
+  .gap b{display:block;font-family:var(--serif);font-weight:500;font-size:26px;line-height:1.05;letter-spacing:-.015em}
   .gap div:first-child b{color:var(--acc)}
   .gap span{color:var(--body);font-size:12.5px;line-height:1.35;display:block;margin-top:3px}
   @media (max-width:900px){.brief{grid-template-columns:1fr}}
@@ -144,7 +144,7 @@
   }
   .fig{margin:2.4em 0}
   .fig .zoom-link{display:block;position:relative;cursor:zoom-in;text-decoration:none}
-  .fig .zoom-link::after{content:"Enlarge";position:absolute;right:10px;top:10px;font:500 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;background:var(--nbg);color:var(--nink);padding:6px 8px;opacity:0;transition:opacity .2s}
+  .fig .zoom-link::after{content:"Enlarge";position:absolute;right:10px;top:10px;font:500 10.5px/1 var(--sans);letter-spacing:.01em;text-transform:none;background:var(--nbg);color:var(--nink);padding:6px 8px;opacity:0;transition:opacity .2s}
   .fig .zoom-link:focus-visible::after{opacity:1}
   @media (hover:hover){.fig .zoom-link:hover::after{opacity:1}}
   .prose .fig img{border-radius:3px}
@@ -167,7 +167,7 @@
   .toc-jump{display:none}
   @media (max-width:960px){
     .toc-jump{display:inline-flex;align-items:center;gap:8px;position:fixed;right:var(--gut);bottom:16px;z-index:30;height:44px;padding:0 16px;
-      border:1.5px solid var(--rule);border-radius:999px;background:var(--bg);color:var(--ink);font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+      border:1.5px solid var(--rule);border-radius:999px;background:var(--bg);color:var(--ink);font:500 12px/1 var(--sans);letter-spacing:.01em;text-transform:none;
       text-decoration:none;box-shadow:0 10px 24px -12px rgba(11,8,23,.5);transition:opacity .25s,transform .25s var(--ease),visibility 0s}
     .js .toc-jump:not(.show){opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .25s,transform .25s var(--ease),visibility 0s .25s}
   }
@@ -178,7 +178,7 @@
   .zoom::backdrop{background:rgba(11,8,23,.74)}
   .zoom-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--rule);background:var(--tile)}
   .zoom-bar .mono{color:var(--acc)}
-  .zoom-close{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:9px 14px;background:var(--ink);color:var(--bg);border:0;cursor:pointer}
+  .zoom-close{font:500 12px/1 var(--sans);letter-spacing:.01em;text-transform:none;padding:9px 14px;background:var(--ink);color:var(--bg);border:0;cursor:pointer}
   @media (hover:hover){.zoom-close:hover{background:var(--acc);color:#fff}}
   .zoom-img{overflow:auto;background:#fff;flex:1;min-height:0}
   .zoom-img img{display:block;width:100%;height:auto;margin:0 auto}

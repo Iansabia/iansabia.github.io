@@ -1,0 +1,407 @@
+// Continuum hole demo: one continuous play-through of Miacomet hole 10.
+// Time runs from scroll (the stage is pinned while the track scrolls past) or from Play.
+// When playing, the page scroll follows the time so both stay in step. Step buttons glide there, no cuts.
+import { initTheme, onThemeChange, toggleTheme, sceneColors, reducedMotion } from "./theme.js";
+import { HOLE, NUM, SHOTS, PAST, PAST_RIGHT, height, dist, toLL, clamp, smooth, YD, add, mul, norm, sub, right } from "./world.js";
+import { TOTAL, STAGES, CAPTIONS, stateAt, stageAt, T } from "./story.js";
+import { Pip } from "./pip.js";
+import { renderFallback } from "./fallback.js";
+
+initTheme();
+const $ = (id) => document.getElementById(id);
+const root = document.documentElement;
+const phone = root.dataset.layout === "phone";
+const embed = root.classList.contains("embed");
+const RM = () => reducedMotion();
+
+// ---------- static text ----------
+const par = HOLE.par;
+$("hole-name").textContent = `Hole ${HOLE.ref} · Par ${par}`;
+$("hole-sub").textContent = "Miacomet Golf Club, Nantucket";
+$("to-pin").textContent = NUM.toPinYd;
+const dotsEl = $("past-dots");
+dotsEl.innerHTML = PAST.map((d) => `<i class="${d.right ? "r" : ""}"></i>`).join("");
+const dotEls = [...dotsEl.children];
+const strokes = 3;
+const names = { "-3": "Albatross", "-2": "Eagle", "-1": "Birdie", "0": "Par", "1": "Bogey" };
+$("sum-kicker").textContent = `Miacomet, hole ${HOLE.ref}`;
+$("sum-title").textContent = `${strokes} shots on a par ${par}`;
+$("sum-badge").textContent = names[String(strokes - par)] || `${strokes - par > 0 ? "+" : ""}${strokes - par}`;
+$("shot-dots").innerHTML = Array.from({ length: Math.max(par, strokes) }, (_, i) => `<i class="${i < strokes ? "" : "par"}"></i>`).join("");
+$("shot-list").innerHTML = [
+  ["Tee shot", `Carry ${NUM.teeCarryYd} yd, stops in the fairway`, `${NUM.teeTotalYd} yd`],
+  ["Approach", "Aimed left, drifted right onto the green", `${NUM.toPinYd} yd`],
+  ["Putt", `Holed from ${NUM.leftFt} ft`, `${NUM.leftFt} ft`],
+].map(([b, s, v], i) => `<li><span class="n">${i + 1}</span><span><b>${b}</b><small>${s}</small></span><span class="v">${v}</span></li>`).join("");
+
+// ---------- state ----------
+let t = 0;
+let playing = false;
+let seek = null; // { to, speed, thenPlay }
+let scrollT = null;
+let started = false;
+let visible = true;
+let raf = 0;
+let scene = null;
+let lastStage = -1;
+let lastFrameT = -1;
+let needDraw = true;
+let progY = null; // the last scroll position this code set itself
+const pip = new Pip($("pip-canvas"), {
+  body: document.querySelector('[data-chip="body"]'),
+  strike: document.querySelector('[data-chip="strike"]'),
+  ball: document.querySelector('[data-chip="ball"]'),
+});
+
+// ---------- scroll <-> time ----------
+const track = $("track");
+function trackSpan() {
+  const r = track.getBoundingClientRect();
+  const top = r.top + window.scrollY;
+  return { top, len: Math.max(1, track.offsetHeight - window.innerHeight) };
+}
+function timeFromScroll() {
+  const { top, len } = trackSpan();
+  return clamp((window.scrollY - top) / len, 0, 1) * TOTAL;
+}
+function scrollToTime(tt) {
+  if (embed) return;
+  const { top, len } = trackSpan();
+  const y = Math.round(top + (tt / TOTAL) * len);
+  if (Math.abs(window.scrollY - y) >= 1) { progY = y; window.scrollTo(0, y); }
+}
+window.addEventListener("scroll", () => {
+  if (embed) return;
+  if (progY != null && Math.abs(window.scrollY - progY) < 3) return; // our own scroll
+  progY = null;
+  if (playing || seek) { playing = false; seek = null; }
+  if (RM()) { t = STAGES[stageAt(timeFromScroll())].still; needDraw = true; kick(); return; }
+  scrollT = timeFromScroll();
+  if (scrollT > 0.2) markStarted();
+  kick();
+}, { passive: true });
+["wheel", "touchstart"].forEach((ev) => window.addEventListener(ev, () => { progY = null; }, { passive: true }));
+
+// ---------- controls ----------
+function markStarted() { if (!started) { started = true; $("caption").classList.add("started"); measureCaption(); needDraw = true; } }
+function play() {
+  markStarted();
+  if (t >= TOTAL - 0.05) { goTo(0, true); return; }
+  playing = true; seek = null; scrollT = null; kick();
+}
+function pause() { playing = false; seek = null; kick(); }
+function goTo(tt, thenPlay = false) {
+  markStarted();
+  scrollT = null;
+  if (RM()) { t = tt; playing = false; seek = null; needDraw = true; scrollToTime(t); kick(); if (thenPlay) rmPlay(); return; }
+  const d = Math.abs(tt - t);
+  seek = { to: tt, speed: Math.max(4, d / 1.8), thenPlay };
+  playing = false;
+  kick();
+}
+function goStage(i) {
+  i = clamp(i, 0, STAGES.length - 1);
+  goTo(RM() ? STAGES[i].still : STAGES[i].key, !RM());
+}
+let rmTimer = 0;
+function rmPlay() {
+  // reduced motion: still frames, one per step, a few seconds each
+  clearInterval(rmTimer);
+  playing = true; updateButtons();
+  rmTimer = setInterval(() => {
+    const i = stageAt(t);
+    if (!playing || i >= STAGES.length - 1) { clearInterval(rmTimer); playing = false; updateButtons(); return; }
+    t = STAGES[i + 1].still; needDraw = true; scrollToTime(t); kick();
+  }, 6000);
+}
+$("play-btn").addEventListener("click", () => {
+  if (playing) { pause(); clearInterval(rmTimer); }
+  else if (RM()) { markStarted(); if (stageAt(t) >= STAGES.length - 1) { t = STAGES[0].still; } rmPlay(); }
+  else play();
+  updateButtons();
+});
+$("start-btn").addEventListener("click", () => { if (RM()) { markStarted(); rmPlay(); } else play(); updateButtons(); });
+$("prev-btn").addEventListener("click", () => { const i = stageAt(t); const into = t - STAGES[i].t0; goStage(into > 1.5 && i > 0 ? i : i - 1); });
+$("next-btn").addEventListener("click", () => goStage(stageAt(t) + 1));
+$("replay-btn").addEventListener("click", () => goTo(0, !RM()));
+document.querySelectorAll("#steps [data-step]").forEach((b) => b.addEventListener("click", () => goStage(+b.dataset.step)));
+$("theme-btn").addEventListener("click", () => toggleTheme());
+// phones: the caption shows two lines of text; tap it to read the rest
+$("cap-body").addEventListener("click", () => { if (phone) { capEl.classList.toggle("open"); measureCaption(); needDraw = true; kick(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest && e.target.closest("button, a, input")) return;
+  if (e.key === " " || e.key === "k") { e.preventDefault(); $("play-btn").click(); }
+});
+function updateButtons() {
+  root.classList.toggle("playing", playing || (seek && seek.thenPlay));
+  $("play-btn").setAttribute("aria-label", playing ? "Pause" : "Play");
+}
+
+// ---------- labels over the 3D ----------
+const labelsEl = $("labels");
+const pool = new Map();
+function label(id, html, cls) {
+  let L = pool.get(id);
+  if (!L) {
+    const el = document.createElement("div");
+    el.className = "lbl " + (cls || "");
+    labelsEl.appendChild(el);
+    L = { el, html: null, w: 0, h: 0 };
+    pool.set(id, L);
+  }
+  if (L.html !== html) { L.el.innerHTML = html; L.html = html; L.w = L.el.offsetWidth; L.h = L.el.offsetHeight; }
+  return L;
+}
+let vpCache = null;
+function project(p) {
+  if (!vpCache) return null;
+  const ll = toLL(p);
+  const z = p.length > 2 ? p[2] : height(p[0], p[1]);
+  const [x, y] = vpCache.project([ll[0], ll[1], z]);
+  return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+}
+function placeLabels(items) {
+  const seen = new Set();
+  const W = labelsEl.clientWidth, H = labelsEl.clientHeight;
+  const placed = []; // visible boxes so far: later labels step up out of the way instead of overlapping
+  for (const it of items) {
+    if (it.a <= 0.01) continue;
+    const s = project(it.p);
+    if (!s || s[0] < -50 || s[0] > W + 50 || s[1] < 40 || s[1] > H + 20) continue;
+    const L = label(it.id, it.html, it.cls);
+    seen.add(it.id);
+    const lift = it.lift == null ? 12 : it.lift;
+    const x = Math.round(s[0] - L.w / 2 + (it.dx || 0));
+    let y = Math.round(s[1] - L.h - lift);
+    if (it.a > 0.3) {
+      for (let k = 0; k < 4; k++) {
+        const hit = placed.find((r) => x < r.x + r.w + 6 && x + L.w + 6 > r.x && y < r.y + r.h + 4 && y + L.h + 4 > r.y);
+        if (!hit) break;
+        y = hit.y - L.h - 6;
+      }
+      placed.push({ x, y, w: L.w, h: L.h });
+    }
+    L.el.style.transform = `translate(${x}px, ${y}px)`;
+    L.el.style.opacity = it.a.toFixed(3);
+  }
+  for (const [id, L] of pool) if (!seen.has(id)) L.el.style.opacity = "0";
+}
+
+// ---------- camera framing ----------
+function viewFor(cam, S) {
+  const W = $("map").clientWidth || window.innerWidth, H = $("map").clientHeight || window.innerHeight;
+  const zAdj = phone ? clamp(Math.log2(Math.min((W / 390) * 0.56, H / 900)), -1.4, -0.5) : clamp(Math.log2(Math.min(W / 1440, H / 900)), -1.2, 0.25);
+  const ll = toLL(cam.c);
+  const zc = height(cam.c[0], cam.c[1]);
+  const v = { longitude: ll[0], latitude: ll[1], zoom: cam.zoom + zAdj, pitch: cam.pitch, bearing: cam.bearing, position: [0, 0, zc], maxPitch: 75, maxZoom: 24 };
+  // put the action in the free part of the screen (away from the caption and the cards)
+  const off = phone ? [0, -(parseFloat(getComputedStyle(root).getPropertyValue("--cap-h")) || 200) * 0.42 + 18] : [W > 1100 ? 70 : 40, -10];
+  // on a phone the camera inset sits top right: slide the golfer left so the inset never covers him
+  if (phone && S && S.pip > 0.001) { off[0] -= S.pip * Math.min(W * 0.2, 80); off[1] -= S.pip * 30; }
+  // on a phone the caddy and summary cards sit at the top: slide the action down under them
+  if (phone && S) {
+    const a = Math.max(S.caddy || 0, S.summary || 0);
+    if (a > 0.001) { const ch = Math.max($("caddy").offsetHeight, $("summary").offsetHeight * (S.summary > S.caddy ? 1 : 0)); off[1] += a * Math.min(ch, H * 0.42) * 0.62; }
+  }
+  try {
+    const vp = new window.deck.WebMercatorViewport({ width: W, height: H, ...v });
+    const q = vp.unproject([W / 2 - off[0], H / 2 - off[1]], { targetZ: zc });
+    if (Number.isFinite(q[0]) && Number.isFinite(q[1])) { v.longitude = q[0]; v.latitude = q[1]; }
+    vpCache = new window.deck.WebMercatorViewport({ width: W, height: H, ...v });
+  } catch (e) { vpCache = null; }
+  return v;
+}
+
+// ---------- per frame ----------
+const capEl = $("caption"), capBody = $("cap-body");
+const stepBars = [...$("cap-steps").children];
+const stepBtns = [...document.querySelectorAll("#steps [data-step]")];
+let capSwapTimer = 0;
+function setCaption(i, instant) {
+  const c = CAPTIONS[i];
+  const apply = () => {
+    $("cap-kicker").textContent = c.kicker;
+    $("cap-title").textContent = c.title;
+    $("cap-text").textContent = c.text;
+    capBody.classList.remove("swap");
+    measureCaption();
+  };
+  clearTimeout(capSwapTimer);
+  if (instant || RM()) { apply(); return; }
+  capBody.classList.add("swap");
+  capSwapTimer = setTimeout(apply, 220);
+}
+function measureCaption() {
+  root.style.setProperty("--cap-h", capEl.offsetHeight + "px");
+}
+
+const readout = $("readout");
+readout.innerHTML = `
+  <div class="chip" id="r-fly"><small>In the air</small><b class="num" id="r-fly-v">0</b><span>yd</span></div>
+  <div class="chip" id="r-carry"><small>Example shot</small><b class="num">${NUM.teeCarryYd}</b><span>yd carry</span><em>estimated from the video</em></div>
+  <div class="chip" id="r-green"><small>On the green</small><b class="num">${NUM.leftFt}</b><span>ft from the pin</span></div>`;
+const rFly = $("r-fly"), rFlyV = $("r-fly-v"), rCarry = $("r-carry"), rGreen = $("r-green");
+
+function frameUI(S) {
+  const C = sceneColors();
+  const st = S.stage;
+  if (st !== lastStage) {
+    setCaption(st, lastStage === -1);
+    lastStage = st;
+    stepBtns.forEach((b) => b.setAttribute("aria-selected", String(+b.dataset.step === st)));
+  }
+  stepBars.forEach((b, i) => {
+    const s = STAGES[i + 1];
+    b.style.setProperty("--p", clamp((S.t - s.t0) / (s.t1 - s.t0), 0, 1).toFixed(3));
+  });
+  // cards
+  const pipOn = S.pip > 0.5;
+  $("pip").classList.toggle("on", pipOn);
+  if (S.pip > 0.01) pip.draw(S, C);
+  $("caddy").classList.toggle("on", S.caddy > 0.5);
+  $("summary").classList.toggle("on", S.summary > 0.5);
+  const chipOn = (S.t >= T.IMP1 && S.t < 21.6) || (S.t >= T.IMP2 && S.t < T.LAND2 + 0.3) || (S.greenPin > 0.5 && S.t < 46.5);
+  $("legend").style.opacity = S.summary > 0.5 || S.caddy > 0.5 || (phone && (S.pip > 0.2 || chipOn)) ? "0" : "1";
+  // pattern dots: a count you can watch
+  const n = S.pastN;
+  let r = 0;
+  dotEls.forEach((el, i) => { const on = i < n; el.classList.toggle("on", on); if (on && PAST[i].right) r++; });
+  const pt = $("past-text");
+  const txt = n === 0 ? "Looking at your last 12 approach shots" : n < PAST.length ? `<b>${r} of ${n}</b> finished right of the target` : `<b>${PAST_RIGHT} of your last ${PAST.length}</b> approach shots finished right of the target.`;
+  if (pt.innerHTML !== txt) pt.innerHTML = txt;
+
+  // readouts
+  const inAir1 = S.t >= T.IMP1 && S.t < T.LAND1 + 0.3;
+  const inAir2 = S.t >= T.IMP2 && S.t < T.LAND2 + 0.3;
+  rFly.classList.toggle("on", (S.t >= T.IMP1 && S.t < T.LAND1 + 0.1) || (S.t >= T.IMP2 && S.t < T.LAND2 + 0.3));
+  if (inAir1 || inAir2) {
+    const from = inAir1 ? SHOTS.tee.from : SHOTS.approach.from;
+    rFlyV.textContent = Math.round(dist(from, S.ball.p) * YD);
+  }
+  // one chip at a time: the carry chip waits until "In the air" has gone (see the CSS delay)
+  rCarry.classList.toggle("on", S.t >= T.LAND1 + 0.5 && S.t < 21.6);
+  rGreen.classList.toggle("on", S.greenPin > 0.5 && S.t < 46.5);
+
+  // labels
+  const items = [];
+  const intro = 1 - smooth((S.t - 5) / 1.2);
+  items.push({ id: "tee", p: SHOTS.tee.from, html: `Tee <span class="tag">Hole ${HOLE.ref}</span>`, a: intro });
+  items.push({ id: "green", p: SHOTS.pin, html: "Green", a: intro, lift: 26 });
+  items.push({ id: "hole-len", p: lerpP(SHOTS.tee.from, SHOTS.pin, 0.5), html: `About <span class="tag">${NUM.holeLineYd} yd</span> from tee to green (measured on the map)`, a: intro * 0.95, cls: "small" });
+  for (const k of S.ticks) items.push({ id: "tick" + k.yd, p: k.p, html: `${k.yd} yd`, a: k.a, cls: "small", lift: 8 });
+  items.push({ id: "landed", p: SHOTS.tee.land, html: `Landed <span class="tag">${NUM.teeCarryYd} yd</span>`, a: S.landPin * (1 - S.finder), cls: "accent", lift: 16 });
+  if (S.finder > 0.01) {
+    items.push({ id: "finder", p: SHOTS.tee.rest, html: "Your ball", a: S.finder, cls: "accent", lift: 16 });
+  }
+  // the flag label rides above the pennant; "Aim here" sits off to the left of it so the two never touch
+  items.push({ id: "pin", p: [SHOTS.pin[0], SHOTS.pin[1], height(SHOTS.pin[0], SHOTS.pin[1]) + 3.2], html: `Flag <span class="tag">${NUM.toPinYd} yd</span>`, a: S.caddy, lift: 14 });
+  items.push({ id: "aim", p: SHOTS.aim, html: "Aim here", a: S.aimA * smooth((S.aimU - 0.6) / 0.4) * (1 - smooth((S.t - T.LAND2) / 0.6)), cls: "accent", lift: 12, dx: -34 });
+  items.push({ id: "usual", p: add(SHOTS.pin, mul(right(SHOTS.dir2), 13)), html: "Your usual miss", a: S.disp * 0.95, cls: "small warm", lift: 0 });
+  items.push({ id: "drift", p: SHOTS.approach.land, html: "Drifted right, as usual", a: smooth((S.t - T.LAND2) / 0.4) * (1 - smooth((S.t - 43.6) / 0.6)), cls: "small warm", lift: -38, dx: 110 });
+  items.push({ id: "near", p: SHOTS.approach.rest, html: `${NUM.leftFt} ft`, a: S.greenPin * (1 - smooth((S.t - T.IMP3) / 0.4)), cls: "small", lift: 10 });
+  items.push({ id: "holed", p: [SHOTS.pin[0], SHOTS.pin[1], height(SHOTS.pin[0], SHOTS.pin[1]) + 3.2], html: "In the hole", a: smooth((S.t - (T.IMP3 + T.PUTT_T)) / 0.3) * (1 - S.summary), cls: "accent", lift: 16 });
+  placeLabels(items);
+  void norm; void sub;
+}
+const lerpP = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+
+function draw() {
+  const S = stateAt(t);
+  if (scene) scene.render(S, viewFor(S.camera, S));
+  frameUI(S);
+  lastFrameT = t;
+}
+
+// Frame-time probe: while the scene moves, average the frame time; if it stays slow, step quality
+// down (pixel ratio first, then the edge fog and the buildings). It never steps back up.
+const probe = { sum: 0, n: 0, level: 0 };
+function probeFrame(ms) {
+  if (!scene || ms > 250) return; // a tab switch or a stall, not a slow frame
+  probe.sum += ms; probe.n++;
+  if (probe.n < 45) return;
+  const avg = probe.sum / probe.n;
+  probe.sum = 0; probe.n = 0;
+  if (avg > 24 && probe.level < 2) { probe.level++; scene.setQuality(probe.level); needDraw = true; }
+}
+
+let lastNow = 0;
+function tick(now) {
+  raf = 0;
+  if (lastNow) probeFrame(now - lastNow);
+  const dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 1 / 60;
+  lastNow = now;
+  let moving = false;
+  if (seek) {
+    const d = seek.to - t, step = seek.speed * dt;
+    if (Math.abs(d) <= step) { t = seek.to; const tp = seek.thenPlay; seek = null; if (tp) playing = true; }
+    else t += Math.sign(d) * step;
+    moving = true;
+    scrollToTime(t);
+  } else if (playing) {
+    t = Math.min(TOTAL, t + dt);
+    if (t >= TOTAL) playing = false;
+    moving = true;
+    scrollToTime(t);
+  } else if (scrollT != null) {
+    const d = scrollT - t;
+    if (Math.abs(d) < 0.004) { t = scrollT; scrollT = null; }
+    else t += d * Math.min(1, dt * 7);
+    moving = true;
+  }
+  updateButtons();
+  if (moving || needDraw || t !== lastFrameT) { draw(); needDraw = false; }
+  if (visible && !document.hidden && (moving || playing || seek || scrollT != null)) kick();
+  else lastNow = 0;
+}
+function kick() { if (!raf && visible && !document.hidden) raf = requestAnimationFrame(tick); }
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { needDraw = true; kick(); } });
+new IntersectionObserver((es) => { visible = es[0].isIntersecting; if (visible) { needDraw = true; kick(); } }, { threshold: 0 }).observe($("stage"));
+window.addEventListener("resize", () => { pip.resize(); measureCaption(); needDraw = true; kick(); });
+
+onThemeChange(() => { if (scene) scene.setTheme(); needDraw = true; kick(); });
+
+// ---------- boot ----------
+function webgl2() {
+  try { const c = document.createElement("canvas"); return !!c.getContext("webgl2"); } catch (e) { return false; }
+}
+function fallback() {
+  root.classList.add("nogl-mode");
+  $("loading").classList.add("done");
+  ["controls", "caption", "legend", "pip", "caddy", "summary", "readout"].forEach((id) => { const el = $(id); if (el) el.style.display = "none"; });
+  renderFallback($("nogl"));
+  track.style.height = "auto";
+}
+async function boot() {
+  setCaption(0, true);
+  measureCaption();
+  if (!webgl2()) { fallback(); return; }
+  if (!window.deck) {
+    await new Promise((res) => {
+      const done = () => res();
+      window.addEventListener("deckready", done, { once: true });
+      const iv = setInterval(() => { if (window.deck) { clearInterval(iv); done(); } }, 100);
+      setTimeout(() => { clearInterval(iv); done(); }, 9000);
+    });
+  }
+  if (!window.deck) { fallback(); return; }
+  try {
+    const { Scene } = await import("./scene.js");
+    scene = new Scene($("map"), { phone, onReady: () => { setTimeout(() => $("loading").classList.add("done"), 120); needDraw = true; kick(); } });
+  } catch (e) {
+    console.warn(e);
+    fallback();
+    return;
+  }
+  const q = new URLSearchParams(location.search);
+  if (q.has("t")) t = clamp(parseFloat(q.get("t")) || 0, 0, TOTAL);
+  else if (!embed) t = RM() ? STAGES[stageAt(timeFromScroll())].still : timeFromScroll();
+  if (t > 0.2) markStarted();
+  if (q.has("t") && !embed) scrollToTime(t);
+  needDraw = true;
+  draw();
+  kick();
+  if (embed && q.get("autoplay") === "1" && !RM()) play();
+  // for screenshots and tests
+  window.__hole = { probe, get scene() { return scene; }, seekNow: (x) => { t = clamp(x, 0, TOTAL); if (t > 0.2) markStarted(); playing = false; seek = null; scrollT = null; needDraw = true; draw(); }, get t() { return t; }, TOTAL, STAGES };
+}
+boot();

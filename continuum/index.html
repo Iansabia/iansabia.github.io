@@ -28,7 +28,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
 <noscript><style>.reveal{opacity:1;transform:none}.rule{transform:none}</style></noscript>
 <style>
@@ -62,7 +62,7 @@
   .ladder .n{color:var(--acc);padding-top:3px}
   .ladder b{font-weight:600;color:var(--ink)}
   .ladder p{color:var(--body);font-size:15px;margin-top:4px;max-width:70ch}
-  .who-did{display:inline-block;font:500 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px 3px;margin-left:8px;vertical-align:2px;border:1px solid var(--rule);color:var(--body)}
+  .who-did{display:inline-block;font:500 10.5px/1 var(--sans);letter-spacing:.01em;text-transform:none;padding:4px 6px 3px;margin-left:8px;vertical-align:2px;border:1px solid var(--rule);color:var(--body)}
   .who-did.me{background:var(--acc);border-color:var(--acc);color:var(--bg)}
   .nw{white-space:nowrap}
   .cc-skip{color:var(--acc);text-underline-offset:3px;white-space:nowrap}
@@ -117,7 +117,7 @@
   .cc-step{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:6px 28px;align-items:start;padding:16px;border-top:1px solid var(--cc-rule)}
   .cc-step:first-child{border-top:0}
   .cc-step .n{display:flex;align-items:center;gap:10px;color:var(--cc-acc);margin-bottom:4px}
-  .cc-step b{display:block;font-family:var(--serif);font-weight:700;font-size:clamp(20px,2.2vw,26px);line-height:1.15;letter-spacing:-.01em;color:var(--cc-ink)}
+  .cc-step b{display:block;font-family:var(--serif);font-weight:600;font-size:clamp(20px,2.2vw,26px);line-height:1.15;letter-spacing:-.015em;color:var(--cc-ink)}
   .cc-step p{color:var(--cc-body);font-size:15px;max-width:60ch}
   .cc-f{padding:10px 16px;border-top:1px solid var(--cc-rule);color:var(--cc-body);font-size:13px}
   .cc-f-s{display:none}   /* phones get the one line version, so the stage keeps its height */
@@ -154,9 +154,9 @@
   .cc-side{display:grid;gap:clamp(10px,1.6vh,18px);font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:clamp(11px,.9vw,14px);line-height:1.4;color:var(--cc-body)}
   .cc-side.l{justify-self:end;text-align:right}
   .cc-side.r{justify-self:start}
-  .cc-side .lbl{color:var(--cc-acc);font-size:.78em;letter-spacing:.1em;text-transform:uppercase}
+  .cc-side .lbl{color:var(--cc-acc);font-size:.78em;letter-spacing:.01em;text-transform:none}
   .cc-side .row{white-space:nowrap}
-  .cc-side small{display:block;font-size:.78em;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+  .cc-side small{display:block;font-size:.78em;letter-spacing:.01em;text-transform:none;opacity:.75}
   .cc-side b{display:block;font-weight:500;color:var(--cc-ink);font-size:clamp(18px,2vw,30px);letter-spacing:-.02em;line-height:1.1;margin-top:3px;transition:opacity .4s,color .4s}
   .cc-side .row.dim b{opacity:.4}   /* "not yet": dim, but still readable (3:1 for large text) */
   .cc-side .row.hot b,.cc-side .row.hot small{color:var(--cc-acc);opacity:1}
@@ -228,6 +228,7 @@
       <h1>The caddy<br><em>you already own</em></h1>
       <p class="lede">Continuum is an AI golf caddy that tracks your shots from ordinary phone video and tells you where to aim, based on where you've been missing. I&nbsp;<span class="nw">co-founded</span> it and lead <span class="nw">product and ML.</span></p>
       <div class="facts mono"><span>Role<b>Co-founder</b></span><span>Since<b>Jul 2025</b></span><span>My part<b>Product and ML</b></span><span>Golfer conversations<b>~70</b></span></div>
+      <p class="hole-link" style="margin-top:22px"><a class="more" href="hole/">See a 3D example hole <span aria-hidden="true">&rarr;</span></a></p>
     </header>
 
     <section class="block" id="how">

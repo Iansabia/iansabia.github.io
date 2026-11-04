@@ -14,7 +14,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
 <style>
   /* page: A fix inside Omi. Warm means the old, broken path. Violet means the fix. */
@@ -22,7 +22,7 @@
   /* --bad and --acc-ink keep small warm and violet text above 4.5:1 on cream and tile, in both themes */
   main :not(pre) > code{font-family:var(--mono);font-size:.84em;background:var(--tile);color:var(--ink);padding:1px 5px;border-radius:3px}
   .sub code{overflow-wrap:anywhere}
-  .btn{white-space:nowrap;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;background:var(--ink);color:var(--bg);border:0;padding:10px 14px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
+  .btn{white-space:nowrap;font-family:var(--sans);font-size:12px;letter-spacing:.01em;text-transform:none;font-weight:500;background:var(--ink);color:var(--bg);border:0;padding:10px 14px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
   @media (hover:hover){.btn:hover{background:var(--acc);color:var(--bg)}}
   .btn:active{transform:translateY(1px)}
   .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
@@ -51,7 +51,7 @@
   .down-h .mono:last-child{color:var(--nwarm)}
   .down-h .mono:last-child::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--nwarm);margin-right:7px;vertical-align:1px}
   .feat{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 16px;border-bottom:1px solid var(--nrule)}
-  .feat b{font-family:var(--serif);font-weight:700;font-size:clamp(20px,2.2vw,24px);letter-spacing:-.01em;line-height:1.15}
+  .feat b{font-family:var(--serif);font-weight:600;font-size:clamp(20px,2.2vw,24px);letter-spacing:-.015em;line-height:1.15}
   .feat .mono{color:var(--nwarm);white-space:nowrap}
   .err{padding:16px}
   .err .mono{color:var(--nbody);font-size:11px}
@@ -71,7 +71,7 @@
   .tx .panel-h{flex-wrap:wrap}
   .tx .panel-h > .mono{color:var(--body)}
   .switch{display:inline-flex;border:1px solid var(--rule);background:var(--bg)}
-  .switch button{font:500 11.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:9px 11px;border:0;background:none;color:var(--body);cursor:pointer;transition:background .25s,color .25s}
+  .switch button{font:500 11.5px/1 var(--sans);letter-spacing:.01em;text-transform:none;padding:9px 11px;border:0;background:none;color:var(--body);cursor:pointer;transition:background .25s,color .25s}
   .switch button + button{border-left:1px solid var(--rule)}
   @media (hover:hover){.switch button:hover{color:var(--ink)}}
   .switch button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
@@ -101,11 +101,11 @@
   .frame.active{border-color:var(--ink)}
   .frame[data-state="crash"].active{border-color:var(--warm)}
   .frame.pushed{animation:push .45s var(--ease)}
-  .tag{flex:none;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border:1px solid var(--rule);color:var(--body);white-space:nowrap;background:var(--bg)}
+  .tag{flex:none;font-family:var(--sans);font-size:10.5px;letter-spacing:.01em;text-transform:none;padding:4px 7px;border:1px solid var(--rule);color:var(--body);white-space:nowrap;background:var(--bg)}
   .tag.ok{background:var(--acc);border-color:var(--acc);color:var(--bg)}
   .tag.bad{background:color-mix(in srgb,var(--warm) 16%,var(--bg));border-color:color-mix(in srgb,var(--warm) 60%,transparent);color:var(--bad)}
   .slot{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px dashed var(--rule);margin-bottom:10px;transition:border-color .3s}
-  .slot b{font-family:var(--serif);font-size:34px;line-height:1;font-weight:700;min-width:20px;transition:color .3s}
+  .slot b{font-family:var(--serif);font-size:34px;line-height:1;font-weight:600;min-width:20px;transition:color .3s}
   .slot span{font-size:13.5px;color:var(--ink);line-height:1.3}
   .slot small{display:block;font-size:12.5px;color:var(--body)}
   .slot[data-open="1"]{border-style:solid;border-color:var(--acc)}
@@ -115,7 +115,7 @@
   .sql li{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 9px;border:1px solid var(--rule);background:var(--bg);min-width:0}
   .sql li.new{animation:push .4s var(--ease)}
   .sql code{font-family:var(--mono);font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .sql .meta{flex:none;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--body)}
+  .sql .meta{flex:none;font-family:var(--sans);font-size:10px;letter-spacing:.01em;text-transform:none;color:var(--body)}
   .kl code,.sql code,.check code{background:none;padding:0;border-radius:0}
   code,pre,.kl,.sql{font-variant-ligatures:none;font-feature-settings:"calt" 0,"liga" 0}
   .sql li.ok .st{color:var(--acc)}
@@ -125,7 +125,7 @@
   .check{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;padding:10px 12px;border:1px solid var(--rule);background:var(--tile)}
   .check .mono{color:var(--body);font-size:11px}
   .check code{font-family:var(--mono);font-size:13px;color:var(--ink)}
-  .check b{font-family:var(--serif);font-size:26px;line-height:1;font-weight:700;min-width:16px}
+  .check b{font-family:var(--serif);font-size:26px;line-height:1;font-weight:600;min-width:16px}
   .check .gnote{font-size:13.5px;color:var(--body)}
   .check.bad b,.check.bad .gnote{color:var(--bad)}
   .check.good b{color:var(--acc)}
@@ -138,14 +138,14 @@
   .kl .k.on{color:var(--nink);background:color-mix(in srgb,var(--nacc) 16%,transparent);border-left-color:var(--nacc)}
   .kl .k.on.bad{background:color-mix(in srgb,var(--nwarm) 18%,transparent);border-left-color:var(--nwarm)}
   .kl .k:not(.on) .tk,.kl .k:not(.on) .ts,.kl .k:not(.on) .tt,.kl .k:not(.on) .tn{color:inherit}
-  .chip{font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border:1px solid var(--nrule);color:var(--nbody);white-space:nowrap}
+  .chip{font-size:10px;letter-spacing:.01em;text-transform:none;padding:1px 6px;border:1px solid var(--nrule);color:var(--nbody);white-space:nowrap}
   .chip.ok{color:var(--nacc);border-color:color-mix(in srgb,var(--nacc) 55%,transparent)}
   .chip.bad{color:var(--nwarm);border-color:color-mix(in srgb,var(--nwarm) 55%,transparent)}
   .story{border-left:1px solid var(--rule);background:var(--tile);padding:18px;display:flex;flex-direction:column;gap:16px;min-width:0}
   .story .live{min-height:178px}
   .story .step{color:var(--acc-ink)}
   .tx[data-mode="before"] .story .step{color:var(--bad)}
-  .story h3{font-family:var(--serif);font-weight:700;font-size:clamp(22px,2.3vw,27px);line-height:1.12;letter-spacing:-.01em;margin:8px 0 10px}
+  .story h3{font-family:var(--serif);font-weight:600;font-size:clamp(22px,2.3vw,27px);line-height:1.12;letter-spacing:-.015em;margin:8px 0 10px}
   .story p{color:var(--body);font-size:15.5px}
   .story p code{font-size:.82em}
   .ctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:auto}
@@ -214,7 +214,7 @@
   .proof li.red::before{background:var(--warm)}
   .proof .st{align-self:flex-start;padding:3px 8px;font-size:11px;background:var(--acc);color:var(--bg)}
   .proof li.red .st{background:color-mix(in srgb,var(--warm) 16%,var(--bg));color:var(--bad);border:1px solid color-mix(in srgb,var(--warm) 60%,transparent)}
-  .proof b{font-family:var(--serif);font-weight:700;font-size:22px;line-height:1.15;letter-spacing:-.01em}
+  .proof b{font-family:var(--serif);font-weight:600;font-size:22px;line-height:1.15;letter-spacing:-.015em}
   .proof p{color:var(--body);font-size:15px}
   .proof-copy{margin-top:34px}
 
@@ -222,11 +222,11 @@
   .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--rule);background:var(--tile);margin-bottom:34px}
   .stats div{padding:16px 18px;border-right:1px solid var(--rule)}
   .stats div:last-child{border-right:0}
-  .stats b{display:block;font-family:var(--serif);font-weight:500;font-size:clamp(26px,3vw,34px);line-height:1.05;letter-spacing:-.01em;white-space:nowrap}
+  .stats b{display:block;font-family:var(--serif);font-weight:500;font-size:clamp(26px,3vw,34px);line-height:1.05;letter-spacing:-.015em;white-space:nowrap}
   .stats div > span{color:var(--body);font-size:13.5px}
   .changelog{border-left:3px solid var(--acc);padding:4px 0 4px 18px}
   .changelog .mono{color:var(--body);font-size:11px}
-  .changelog blockquote{font-family:var(--serif);font-weight:500;font-size:clamp(20px,2.2vw,24px);line-height:1.3;letter-spacing:-.01em;margin:8px 0}
+  .changelog blockquote{font-family:var(--serif);font-weight:500;font-size:clamp(20px,2.2vw,24px);line-height:1.3;letter-spacing:-.015em;margin:8px 0}
   .changelog figcaption{color:var(--body);font-size:14px}
   .result-actions{display:flex;flex-wrap:wrap;gap:12px 22px;margin-top:22px}
 
