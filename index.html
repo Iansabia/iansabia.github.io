@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ian Sabia</title>
 <script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<link rel="stylesheet" href="room/intro.css">
+<script>/* room intro: hide the page until room/intro.js decides whether to play */
+(function(){try{var d=document.documentElement,q=location.search;if(location.hash||/[?&]nointro\b/.test(q)||sessionStorage.getItem('ian-intro-played')||matchMedia('(prefers-reduced-motion: reduce)').matches)return;d.classList.add('intro-on')}catch(e){}})();
+</script>
 <meta name="description" content="Ian Sabia. Data science at Boston University. I build AI products people actually use, then check that they tell the truth.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://iansabia.github.io/">
@@ -388,6 +392,8 @@
   footer .stamp span+span{border-left:1px solid var(--rule)}
   footer .stamp b{color:var(--ink);font-weight:500;margin-left:6px}
   footer p{color:var(--body);font-size:14px}
+  footer .replay-intro{color:var(--body);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--rule);margin-left:6px;white-space:nowrap}
+  footer .replay-intro:hover{color:var(--ink);text-decoration-color:currentColor}
 
   @media (max-width:900px){
     .hero{grid-template-columns:1fr}
@@ -799,7 +805,7 @@
   </main>
 
   <footer>
-    <p>Made in Boston. No trackers.</p>
+    <p>Made in Boston. No trackers. <a class="replay-intro" href="room/">Replay intro</a></p>
     <div class="stamp mono"><span>Revised<b>2026-10-23</b></span><span>Shots hit<b id="shotCount">0</b></span></div>
   </footer>
 </div>
@@ -1457,5 +1463,6 @@
   });
 })();
 </script>
+<script type="module" src="room/intro.js"></script>
 </body>
 </html>

@@ -1,0 +1,69 @@
+/* Intro overlay for the home page (room/intro.js). Colors follow SwapChain's map ground. */
+
+/* Set by the small <head> snippet: hold a plain cover until the first 3D frame is drawn. */
+html.intro-on::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: #EFEAE3;
+  pointer-events: none;
+  /* failsafe: if the script never arrives, the page shows anyway */
+  animation: ian-intro-cover 0s linear 4.5s forwards;
+}
+@keyframes ian-intro-cover { to { visibility: hidden; } }
+html.intro-on[data-theme="dark"]::after { background: #1A1434; }
+
+html.intro-lock,
+html.intro-lock body { overflow: hidden !important; }
+html.intro-lock { scroll-behavior: auto !important; }
+
+.ian-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483001;
+  opacity: 1;
+  transition: opacity .38s cubic-bezier(.4, 0, .2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+.ian-intro.is-out { opacity: 0; pointer-events: none; }
+.ian-intro.is-fast { transition-duration: .24s; }
+.ian-intro-stage { position: absolute; inset: 0; touch-action: none; }
+.ian-intro-stage canvas { display: block; width: 100%; height: 100%; }
+
+/* Apple-style glass pill */
+.ian-intro-skip {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  appearance: none;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(29, 24, 48, .09);
+  background: rgba(255, 253, 250, .74);
+  -webkit-backdrop-filter: saturate(1.8) blur(20px);
+  backdrop-filter: saturate(1.8) blur(20px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .06);
+  color: #1D1830;
+  font: 500 14px/1.2 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Inter", sans-serif;
+  letter-spacing: -.01em;
+  cursor: pointer;
+  transition: transform .2s cubic-bezier(.32, .72, 0, 1), background-color .2s;
+}
+.ian-intro-skip:hover { background: rgba(255, 253, 250, .9); }
+.ian-intro-skip:active { transform: scale(.96); }
+.ian-intro-skip:focus-visible { outline: 2px solid #604C9C; outline-offset: 3px; }
+.ian-intro.is-dark .ian-intro-skip {
+  border-color: rgba(182, 166, 204, .22);
+  background: rgba(25, 19, 51, .86);
+  color: #F4F0FA;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
+}
+.ian-intro.is-dark .ian-intro-skip:hover { background: rgba(25, 19, 51, .9); }
+.ian-intro.is-dark .ian-intro-skip:focus-visible { outline-color: #B6A6CC; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ian-intro { display: none; }
+  html.intro-on::after { display: none; }
+}
