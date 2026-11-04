@@ -1,0 +1,63 @@
+/* Desk transition between pages (about 0.6s).
+   Clicking a link to another page on the site: the page shrinks back into the monitor on Ian's desk
+   (a still from room/intro.js), slides out to the left while the next page slides in from the right,
+   like switching macOS desktops, then zooms back in until it fills the screen. Back plays it mirrored.
+   Cross-document View Transitions: Chrome, Edge and Safari. Other browsers just navigate.
+   Both pages need this file; assets/desk-transition.js sets the direction and skips reloads.
+
+   Geometry: the desk still is drawn with its height fit to the viewport and centered, and the
+   monitor's inner screen is exactly --dt-s of the image height, centered. So the page scaled by
+   --dt-s about the viewport center sits exactly on the screen. Stills: assets/desk/*.webp. */
+
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+}
+
+:root { --dt-s: .4; --dt-dir: 1; }
+:root[data-dt-back] { --dt-dir: -1; }
+@media (orientation: portrait) { :root { --dt-s: .3; } }
+
+::view-transition {
+  background: url(desk/desk-light.webp) 50% 50% / auto 100% no-repeat,
+              linear-gradient(#E9E8E5 0 76%, #FAF1E5 76%);
+}
+:root[data-theme="dark"]::view-transition {
+  background: url(desk/desk-dark.webp) 50% 50% / auto 100% no-repeat,
+              linear-gradient(#39315C 0 76%, #52477A 76%);
+}
+@media (orientation: portrait) {
+  ::view-transition {
+    background: url(desk/phone-light.webp) 50% 50% / auto 100% no-repeat,
+                linear-gradient(#D2CED3 0 70%, #D0C8BE 70%);
+  }
+  :root[data-theme="dark"]::view-transition {
+    background: url(desk/phone-dark.webp) 50% 50% / auto 100% no-repeat,
+                linear-gradient(#191333 0 70%, #483F6B 70%);
+  }
+}
+
+::view-transition-group(root) { animation: none; }
+::view-transition-image-pair(root) { animation: dt-clip .6s both; }
+::view-transition-old(root) { animation: dt-old .6s both; mix-blend-mode: normal; transform-origin: 50% 50%; }
+::view-transition-new(root) { animation: dt-new .6s both; mix-blend-mode: normal; transform-origin: 50% 50%; }
+
+/* thirds: zoom out, slide, zoom in */
+@keyframes dt-old {
+  0%   { transform: translateX(0) scale(1); animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
+  33%  { transform: translateX(0) scale(var(--dt-s)); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+  67% { transform: translateX(calc(var(--dt-dir) * -1 * (var(--dt-s) * 100% + 24px))) scale(var(--dt-s)); opacity: 1; }
+  67.1%, 100% { transform: translateX(calc(var(--dt-dir) * -1 * (var(--dt-s) * 100% + 24px))) scale(var(--dt-s)); opacity: 0; }
+}
+@keyframes dt-new {
+  /* parked off the screen and hidden while the clip is still wider than the monitor */
+  0%, 32.9% { transform: translateX(calc(var(--dt-dir) * (var(--dt-s) * 100% + 24px))) scale(var(--dt-s)); opacity: 0; }
+  33% { transform: translateX(calc(var(--dt-dir) * (var(--dt-s) * 100% + 24px))) scale(var(--dt-s)); opacity: 1; animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+  67%  { transform: translateX(0) scale(var(--dt-s)); animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
+  100% { transform: translateX(0) scale(1); }
+}
+/* the screen edge: pages only show inside the monitor while they slide */
+@keyframes dt-clip {
+  0%   { clip-path: inset(0 0); animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
+  33%, 67% { clip-path: inset(calc((1 - var(--dt-s)) * 50%) calc((1 - var(--dt-s)) * 50%)); animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
+  100% { clip-path: inset(0 0); }
+}
