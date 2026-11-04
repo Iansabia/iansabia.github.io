@@ -6,11 +6,10 @@
 <title>Ian Sabia</title>
 <script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <link rel="stylesheet" href="room/intro.css">
-<script>/* room intro: hide the page until room/intro.js decides whether to play */
-(function(){try{var d=document.documentElement,q=location.search;if(location.hash||/[?&]nointro\b/.test(q)||sessionStorage.getItem('ian-intro-played')||matchMedia('(prefers-reduced-motion: reduce)').matches)return;d.classList.add('intro-on')}catch(e){}})();
-</script>
+<!-- room intro gate: assets/desk-transition.js hides the page until room/intro.js decides -->
 <link rel="stylesheet" href="assets/desk-transition.css">
 <script src="assets/desk-transition.js"></script>
+<script type="module" src="assets/site-chrome.js"></script>
 <meta name="description" content="Ian Sabia. Data science at Boston University. I build AI products people actually use, then check that they tell the truth.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://iansabia.github.io/">

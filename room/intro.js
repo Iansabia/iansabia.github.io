@@ -35,13 +35,31 @@ function hasWebGL() {
 }
 export function shouldPlay() {
   try {
-    if (location.hash) return false;
-    if (new URLSearchParams(location.search).has('nointro')) return false;
+    if (window.top !== window) return false;                       // embedded pages and demos
+    const q = new URLSearchParams(location.search);
+    if (q.has('nointro') || q.has('embed')) return false;
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
     if (sessionStorage.getItem(KEY)) return false;
-    if (window.scrollY > 4) return false;
+    if (window.scrollY > 4 && !hashTarget()) return false;         // a link to a section lands there instead
     return hasWebGL();
   } catch (e) { return false; }      // no storage: never risk replaying on every load
+}
+
+// The section a #hash link points at (any page can be the first one opened), or null.
+function hashTarget() {
+  try {
+    const id = decodeURIComponent(location.hash.slice(1));
+    return id ? document.getElementById(id) : null;
+  } catch (e) { return null; }
+}
+// Put the page where the visitor asked for it: the #hash section, or the top.
+function land(top) {
+  const el = !top && hashTarget();
+  const html = document.documentElement, sb = html.style.scrollBehavior;
+  html.style.scrollBehavior = 'auto';
+  try { if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' }); else window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); }
+  catch (e) { if (el) el.scrollIntoView(); else window.scrollTo(0, 0); }
+  html.style.scrollBehavior = sb;
 }
 
 // ---------------------------------------------------------------- palette
@@ -132,7 +150,8 @@ function run(opts, done) {
   const themeDoc = () => (target.tagName === 'IFRAME' ? (target.contentDocument || document) : document);
   let dark = readDark(themeDoc());
   let P = dark ? PAL.dark : PAL.light;
-  try { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, 0); }
+  const toHash = !opts.force && !!hashTarget();   // a replay starts at the top; a first visit lands where it was opened
+  land(!toHash);
   html.classList.add('intro-on', 'intro-lock');
 
   // overlay: lives on <html>, outside <body>, so warping the body never moves it
@@ -165,6 +184,7 @@ function run(opts, done) {
     mq.removeEventListener && mq.removeEventListener('change', checkTheme);
     target.style.transform = ''; target.style.transformOrigin = ''; target.style.willChange = '';
     html.classList.remove('intro-on', 'intro-lock');
+    if (toHash) land(false);                        // images may have moved the section while the intro played
     ov.classList.add('is-out');
     if (skipped) ov.classList.add('is-fast');
     setTimeout(() => {
@@ -1074,7 +1094,8 @@ function run(opts, done) {
     };
 
     // ---------- warp the page onto the screen (homography -> CSS matrix3d)
-    target.style.transformOrigin = '0 0';
+    // origin at the viewport's top-left corner, so a page scrolled to a section warps from what is on screen
+    { const r = target.getBoundingClientRect(); target.style.transformOrigin = `${-r.left}px ${-r.top}px`; }
     target.style.willChange = 'transform';
     const _v = new T.Vector3();
     const warp = () => {

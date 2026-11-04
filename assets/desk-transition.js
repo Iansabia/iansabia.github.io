@@ -12,6 +12,31 @@
   var base = '';
   try { base = new URL('desk/', document.currentScript.src).href; } catch (e) { /* no preload */ }
 
+  // Room intro gate (room/intro.js), on every page: the first page of a browser session plays the
+  // brownstone intro, whatever page or #hash it is. Hide the page now (html.intro-on) so it never flashes;
+  // assets/site-chrome.js loads the intro, which lands on this page. That page's short page intro is
+  // marked as seen so the two never stack. Not in iframes, demo embeds, ?nointro, reduced motion or without WebGL.
+  try {
+    var q = location.search;
+    if (window.top === window && !/[?&](nointro|embed)\b/.test(q) && !sessionStorage.getItem('ian-intro-played') &&
+        !matchMedia('(prefers-reduced-motion: reduce)').matches && !/\/room\/?(index\.html)?$/.test(location.pathname)) {
+      var c = document.createElement('canvas'), gl = c.getContext('webgl2') || c.getContext('webgl');
+      if (gl) {
+        var lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
+        root.classList.add('intro-on');
+        var cover = document.createElement('style');
+        cover.textContent = 'html.intro-on::after{content:"";position:fixed;inset:0;z-index:2147483000;background:#EFEAE3;pointer-events:none;animation:ian-intro-cover 0s linear 4.5s forwards}' +
+          '@keyframes ian-intro-cover{to{visibility:hidden}}html.intro-on[data-theme="dark"]::after{background:#1A1434}';
+        document.head.appendChild(cover);
+        var css = new URL('../room/intro.css', document.currentScript.src).href;
+        if (![].some.call(document.querySelectorAll('link[rel="stylesheet"]'), function (l) { return l.href === css; })) {
+          var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = css; document.head.appendChild(l);
+        }
+        sessionStorage.setItem('pageIntro:' + location.pathname.replace(/index\.html?$/, ''), '1');
+      }
+    }
+  } catch (e) { /* no storage: never risk an intro on every page */ }
+
   // number each page in this tab (only used when the Navigation API is missing)
   try {
     var st = history.state || {};
