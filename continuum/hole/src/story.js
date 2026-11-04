@@ -5,16 +5,25 @@ import {
 } from "./world.js";
 import { fullSwing, puttStroke, FULL_IMPACT, PUTT_IMPACT, swingJoints, walkJoints, toWorld } from "./pose.js";
 
-export const TOTAL = 60;
-// 0 intro, 1 tee shot, 2 find the ball, 3 aim + approach, 4 putt and summary
-export const STAGES = [
+// Story time runs 0..TOTAL_I. The clock the viewer sees runs a little faster through the opening
+// flyover (3.5 s shorter), then 1:1: ext = clock seconds, int = story seconds.
+export const TOTAL_I = 58;
+const WARP_E = 3.0, WARP_D = 3.5;
+export const toStory = (e) => (e >= WARP_E ? e + WARP_D : e + WARP_D * (1 - Math.pow(1 - e / WARP_E, 2)));
+export const toClock = (i) => { if (i >= WARP_E + WARP_D) return i - WARP_D; let lo = 0, hi = WARP_E; for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; if (toStory(m) < i) lo = m; else hi = m; } return (lo + hi) / 2; };
+export const TOTAL = Math.round(toClock(TOTAL_I) * 100) / 100;
+// 0 intro, 1 tee shot, 2 find the ball, 3 aim + approach, 4 putt and summary (story seconds)
+export const STAGES_I = [
   { t0: 0, t1: 6, key: 5.6, still: 5.6 },
-  { t0: 6, t1: 18.2, key: 6.2, still: 17.2 },
-  { t0: 18.2, t1: 29.2, key: 18.4, still: 27.8 },
-  { t0: 29.2, t1: 45, key: 29.4, still: 43.5 },
-  { t0: 45, t1: TOTAL, key: 45.2, still: TOTAL },
+  { t0: 6, t1: 18.3, key: 6.2, still: 17.6 },
+  { t0: 18.3, t1: 28.7, key: 18.4, still: 27.8 },
+  { t0: 28.7, t1: 43.6, key: 28.9, still: 34.2 },
+  { t0: 43.6, t1: TOTAL_I, key: 43.8, still: TOTAL_I },
 ];
+// the same steps on the clock (step buttons, scroll, reduced motion stills)
+export const STAGES = STAGES_I.map((s) => ({ t0: toClock(s.t0), t1: toClock(s.t1), key: toClock(s.key), still: toClock(s.still) }));
 export const stageAt = (t) => { for (let i = STAGES.length - 1; i >= 0; i--) if (t >= STAGES[i].t0 - 1e-6) return i; return 0; };
+export const stageAtI = (t) => { for (let i = STAGES_I.length - 1; i >= 0; i--) if (t >= STAGES_I[i].t0 - 1e-6) return i; return 0; };
 
 // Per stage, for the no-WebGL plan (a list you read). The live play-through uses BEATS instead.
 export const CAPTIONS = [
@@ -32,16 +41,17 @@ export const BEATS = [
   { t: 8.6, icon: "body", title: "Tracks body and club" },
   { t: 12.0, icon: "arc", title: "Follows the ball" },
   { t: 16.6, icon: "pin", title: "Marks where it landed" },
-  { t: 18.2, icon: "eyeoff", title: "Ball out of sight" },
+  { t: 18.3, icon: "eyeoff", title: "Rolls out of sight" },
   { t: 19.7, icon: "map", title: "Phone puts it on the map" },
   { t: 21.0, icon: "cart", title: "Cart drives to the ball" },
   { t: 27.0, icon: "check", title: "Found it" },
-  { t: 29.4, icon: "dots", title: "Last 12 approach shots" },
+  { t: 28.7, icon: "dots", title: "Last 12 approach shots" },
   { t: 31.6, icon: "right", title: "Most finish right" },
   { t: 32.6, icon: "left", title: "So aim left" },
-  { t: 36.9, icon: "arc", title: "Drifts right, onto the green" },
-  { t: 45.0, icon: "putt", title: "Short putt" },
-  { t: 54.6, icon: "list", title: "Every shot joins the pattern" },
+  { t: 37.0, icon: "arc", title: "Starts left, drifts right" },
+  { t: 42.4, icon: "map", title: "On the map again" },
+  { t: 43.6, icon: "putt", title: "Short putt" },
+  { t: 53.0, icon: "list", title: "Every shot joins the pattern" },
 ];
 export const beatAt = (t) => { for (let i = BEATS.length - 1; i >= 0; i--) if (t >= BEATS[i].t - 1e-6) return i; return 0; };
 
@@ -49,20 +59,22 @@ function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return n 
 void ordinal;
 
 // ---------- timings ----------
-const SW1 = 10.0, IMP1 = SW1 + FULL_IMPACT, FL1 = 4.6, LAND1 = IMP1 + FL1, ROLL1 = 1.5;
-const WALK1 = [18.6, 20.4];
-const LOST = [18.2, 19.6, 20.6]; // search ring up, starts to close, closed on the ball
+const SW1 = 10.0, IMP1 = SW1 + FULL_IMPACT, FL1 = 4.6, LAND1 = IMP1 + FL1, ROLL1 = 1.35;
+const WALK1 = [18.9, 20.6];
+const GONE = [18.35, 18.85]; // the ball fades where it stopped, a grey "?" takes its place
+const LOST = [19.0, 19.8, 20.6]; // search ring up, starts to close, closed on the ball
 const DRIVE_A = [21.0, 27.0];
 const OUT_A = [27.2, 28.6];
 const PAST0 = 29.6, PAST_DT = 0.18;
 const AIM_SHIFT = [32.6, 34.0];
-const SW2 = 35.0, IMP2 = SW2 + FULL_IMPACT, FL2 = 3.7, LAND2 = IMP2 + FL2, ROLL2 = 1.4;
-const WALK2 = [42.6, 44.2];
-const DRIVE_B = [44.2, 48.0];
-const OUT_B = [48.0, 49.8];
-const SW3 = 50.4, IMP3 = SW3 + PUTT_IMPACT, PUTT_T = 1.9;
-const SUMMARY = 54.6;
-export const T = { SW1, IMP1, LAND1, ROLL1, LOST, DRIVE_A, PAST0, PAST_DT, AIM_SHIFT, SW2, IMP2, LAND2, SW3, IMP3, PUTT_T, SUMMARY };
+const SW2 = 35.0, IMP2 = SW2 + FULL_IMPACT, FL2 = 4.2, LAND2 = IMP2 + FL2, ROLL2 = 1.2;
+const FIND2 = [42.3, 43.7]; // a quick look at the ball map: the ball on the green
+const WALK2 = [43.4, 44.4];
+const DRIVE_B = [44.4, 46.6];
+const OUT_B = [46.6, 48.2];
+const SW3 = 48.5, IMP3 = SW3 + PUTT_IMPACT, PUTT_T = 1.9;
+const SUMMARY = 53.0;
+export const T = { SW1, IMP1, LAND1, ROLL1, GONE, LOST, DRIVE_A, PAST0, PAST_DT, AIM_SHIFT, SW2, IMP2, FL2, LAND2, ROLL2, FIND2, SW3, IMP3, PUTT_T, SUMMARY };
 
 const groundZ = (p) => height(p[0], p[1]);
 const TEE_LIFT = 0.07; // tee boxes are drawn almost flat, just above the ground
@@ -72,7 +84,8 @@ function flight(from, land, apex, u, curve) {
   // u: 0..1 through the air. The ball slows a little as it flies, peaks late.
   const s = 1 - Math.pow(1 - u, 1.25);
   let p = lerp2(from, land, s);
-  if (curve) p = add(lerp2(from, curve.aimLand, s), mul(sub(land, curve.aimLand), Math.pow(s, 2.6))); // starts on the aim line, bends right late
+  // the approach rides the aim line for the first 60% of the way, then bends right onto the green
+  if (curve) p = add(lerp2(from, curve.aimLand, s), mul(sub(land, curve.aimLand), Math.pow(smooth((s - 0.55) / 0.45), 1.25)));
   const z0 = groundZ(from) + (curve ? 0 : TEE_LIFT) + 0.05, z1 = groundZ(land) + 0.05;
   const arc = Math.sin(Math.PI * Math.pow(s, 0.85)) * apex;
   return [p[0], p[1], lerp(z0, z1, s) + arc];
@@ -162,17 +175,19 @@ function ballAt(t) {
 // ---------- trails ----------
 function trailsAt(t) {
   const out = [];
-  // the long flights step aside for the putt (so the green stays clear) and come back for the summary
-  const keep = clamp(1 - smooth(span(t, 46.4, 47.6)) + smooth(span(t, SUMMARY, SUMMARY + 0.8)), 0, 1);
+  // a finished flight steps back to a faint line once its beat is over, leaves for the putt (so the
+  // green stays clear) and comes back bright for the recap
+  const back = smooth(span(t, SUMMARY + 1.0, SUMMARY + 1.8));
+  const putt = 1 - smooth(span(t, 45.6, 46.6));
   if (t >= IMP1) {
     const u = span(t, IMP1, LAND1);
-    // while the cart drives to the ball the flight steps back, so the route reads as the one bright line
-    const dim = 1 - 0.65 * smooth(span(t, 19.6, 20.6)) * (1 - smooth(span(t, 27.2, 28.4)));
-    out.push({ id: "tee", path: arcPath(S.tee.from, S.tee.land, 28, u, null), done: u >= 1, a: keep * dim });
+    const a = (1 - 0.85 * smooth(span(t, 18.6, 19.6))) * putt;
+    out.push({ id: "tee", path: arcPath(S.tee.from, S.tee.land, 28, u, null), done: u >= 1, a: Math.max(a, back) });
   }
   if (t >= IMP2) {
     const u = span(t, IMP2, LAND2);
-    out.push({ id: "approach", path: arcPath(S.approach.from, S.approach.land, 19, u, curve2), done: u >= 1, a: keep });
+    const a = (1 - 0.85 * smooth(span(t, LAND2 + ROLL2 + 0.6, LAND2 + ROLL2 + 1.6))) * putt;
+    out.push({ id: "approach", path: arcPath(S.approach.from, S.approach.land, 19, u, curve2), done: u >= 1, a: Math.max(a, back) });
   }
   if (t >= IMP3) {
     const u = easeOut(span(t, IMP3, IMP3 + PUTT_T));
@@ -213,10 +228,11 @@ const KEYS = [
   { t: 12.2, c: add(S.tee.from, mul(S.dir1, 2)), z: 20.8, p: 62, b: viewSide + 14 },
   { t: 13.6, c: add(S.tee.from, mul(S.dir1, 40)), z: 19.1, p: 58, b: b1 + 4 },
   { t: 15.4, c: add(S.tee.from, mul(S.dir1, 140)), z: 18.3, p: 56, b: b1 + 2 },
-  { t: 17.4, c: S.tee.land, z: 18.75, p: 54, b: b1 + 10 },
-  // the ball is gone: back by the cart, looking down the hole, the search ring far off in the rough
-  { t: 19.8, c: lerp2(cartTee, S.tee.rest, 0.4), z: 17.95, p: 50, b: b1 + 8 },
-  // (the drive itself follows the cart, see FOLLOW below)
+  // hold on the landing spot: the ball lands on the fairway, kicks right into the rough and is gone
+  { t: 17.2, c: lerp2(S.tee.land, S.tee.rest, 0.45), z: 19.55, p: 54, b: b1 + 10 },
+  { t: 18.8, c: lerp2(S.tee.land, S.tee.rest, 0.5), z: 19.7, p: 54, b: b1 + 12 },
+  // then back by the cart, looking down the hole (the drive itself follows the cart, see FOLLOW below)
+  { t: 20.1, c: lerp2(cartTee, S.tee.rest, 0.35), z: 18.25, p: 50, b: b1 + 8 },
   { t: 24.0, c: lerp2(cartTee, S.tee.rest, 0.7), z: 18.6, p: 50, b: b1 + 8 },
   { t: 27.9, c: S.tee.rest, z: 20.25, p: 58, b: b1 + 16 },
   { t: 28.7, c: lerp2(S.tee.rest, S.pin, 0.35), z: 19.2, p: 50, b: b2 - 10 },
@@ -225,19 +241,22 @@ const KEYS = [
   { t: 33.2, c: greenView, z: 20.3, p: 46, b: b2 - 2 },
   { t: 34.1, c: greenView, z: 20.3, p: 46, b: b2 - 1 },
   { t: 35.4, c: add(S.approach.from, mul(S.dir2, 10)), z: 19.75, p: 62, b: b2 },
-  // the approach: a high camera straight behind the ball, so "aimed left, drifted right" reads plainly
-  { t: 37.4, c: lerp2(S.approach.from, S.pin, 0.5), z: 18.85, p: 44, b: b2 },
-  { t: 39.3, c: lerp2(S.approach.from, S.pin, 0.8), z: 19.5, p: 46, b: b2 },
-  { t: 41.0, c: lerp2(S.approach.from, S.pin, 0.95), z: 20.3, p: 48, b: b2 },
-  { t: 43.4, c: S.pin, z: 20.0, p: 50, b: b2 + 20 },
-  { t: 47.2, c: lerp2(S.pin, S.putt.from, 0.5), z: 20.6, p: 50, b: (b2 + 20 + bp - 90) / 2 },
+  // the approach: held behind the ball looking at the green, so the start along the aim line and the
+  // late bend to the right are both in frame the whole way
+  { t: 36.7, c: lerp2(S.approach.from, S.pin, 0.58), z: 19.0, p: 60, b: b2 },
+  { t: LAND2, c: lerp2(S.approach.from, S.pin, 0.8), z: 19.5, p: 60, b: b2 },
+  { t: 42.6, c: lerp2(S.pin, S.approach.rest, 0.5), z: 20.1, p: 52, b: b2 + 8 },
+  { t: 43.8, c: S.pin, z: 20.0, p: 50, b: b2 + 20 },
+  { t: 46.2, c: lerp2(S.pin, S.putt.from, 0.5), z: 20.6, p: 50, b: (b2 + 20 + bp - 90) / 2 },
   // the putt: from the side the golfer faces, so his body never hides the line. Ball on the left,
   // cup and flag on the right, the 6 ft line running across the screen between them
-  { t: 50.0, c: puttMid, z: 22.5, p: 50, b: bp - 90 },
-  { t: 53.2, c: puttMid, z: 22.7, p: 50, b: bp - 86 },
-  { t: 54.8, c: lerp2(puttMid, S.pin, 0.5), z: 22.2, p: 50, b: bp - 80 },
-  { t: 57.6, c: holeMid, z: 17.2, p: 50, b: b1 - 14 },
-  { t: TOTAL, c: holeMid, z: 17.15, p: 50, b: b1 - 18 },
+  { t: 48.4, c: puttMid, z: 22.5, p: 50, b: bp - 90 },
+  { t: 51.6, c: puttMid, z: 22.7, p: 50, b: bp - 86 },
+  { t: 53.0, c: lerp2(puttMid, S.pin, 0.5), z: 22.2, p: 50, b: bp - 80 },
+  // the recap: pull straight up off the green first, then out to the whole hole with all three shots on it
+  { t: 54.2, c: S.pin, z: 19.6, p: 48, b: bp - 70 },
+  { t: 55.8, c: holeMid, z: 17.25, p: 48, b: b1 - 14 },
+  { t: TOTAL_I, c: holeMid, z: 17.2, p: 48, b: b1 - 18 },
 ];
 // unwrap bearings so the camera turns the short way
 for (let i = 1; i < KEYS.length; i++) { while (KEYS[i].b - KEYS[i - 1].b > 180) KEYS[i].b -= 360; while (KEYS[i].b - KEYS[i - 1].b < -180) KEYS[i].b += 360; }
@@ -262,7 +281,8 @@ const FOLLOW = [20.2, 21.4, 26.8, 27.9];
 function follow(t) {
   const c = cartAt(t).p, ball = S.tee.rest;
   const d = Math.max(18, dist(c, ball));
-  return { c: lerp2(c, ball, 0.4), zoom: clamp(Math.log2(70.6e6 / (d * 1.65)), 17.7, 20.2), pitch: 50, bearing: b1 + 8 };
+  // never so far out that the cart shrinks to a speck: it stays the subject, the beacon shows ahead
+  return { c: lerp2(c, ball, 0.32), zoom: clamp(Math.log2(70.6e6 / (d * 1.4)), 18.25, 20.2), pitch: 50, bearing: b1 + 8 };
 }
 export function cameraAt(t) {
   const cam = {
@@ -280,7 +300,9 @@ export function cameraAt(t) {
 }
 
 // ---------- everything at time t ----------
-export function stateAt(t) {
+// `te` is the clock (what the controls and the scroll use); the story runs on its own seconds
+export function stateAt(te) {
+  const t = toStory(te);
   const golfer = golferAt(t);
   if (golfer) {
     const onTee = TEE && pointIn(golfer.pos, TEE.p);
@@ -290,13 +312,13 @@ export function stateAt(t) {
   const cart = cartAt(t);
   const ball = ballAt(t);
   // lost in the rough: the ball fades from view once it stops, and comes back when the phone finds it
-  ball.vis = 1 - smooth(span(t, 18.3, 18.8)) * (1 - smooth(span(t, LOST[2] - 0.3, LOST[2] + 0.1)));
-  const stage = stageAt(t);
+  ball.vis = 1 - smooth(span(t, ...GONE)) * (1 - smooth(span(t, LOST[2] - 0.3, LOST[2] + 0.1)));
+  const stage = stageAtI(t);
 
   // the phone tracking overlay
   const track1 = smooth(span(t, 7.4, 8.4)) * (1 - smooth(span(t, 14.2, 15.2)));
   const track2 = smooth(span(t, 34.2, 35.0)) * (1 - smooth(span(t, 38.4, 39.4)));
-  const track3 = smooth(span(t, 49.8, 50.4)) * (1 - smooth(span(t, 53.2, 54)));
+  const track3 = smooth(span(t, SW3 - 0.6, SW3)) * (1 - smooth(span(t, SW3 + 2.8, SW3 + 3.6)));
   const tracking = Math.max(track1, track2 * 0.85, track3 * 0.8);
   let trace = [];
   if (t >= SW1 && t < 15.2) trace = clubTrace(st1, SW1, fullSwing, t, 2.75);
@@ -305,36 +327,51 @@ export function stateAt(t) {
   const cone = smooth(span(t, 6.4, 7.6)) * (1 - smooth(span(t, 17.6, 18.6)));
   const pastN = clamp(Math.floor((t - PAST0) / PAST_DT) + 1, 0, PAST.length);
   const pastA = smooth(span(t, PAST0 - 0.3, PAST0 + 0.2)) * (1 - smooth(span(t, 38.6, 40.2)));
-  const disp = smooth(span(t, 31.6, 32.4)) * (1 - smooth(span(t, 37.4, 38.6)));
+  // the usual miss: one wedge from the ball out to the right of the flag, up once the dots are in
+  const disp = smooth(span(t, 31.8, 32.6)) * (1 - smooth(span(t, 37.4, 38.6)));
   const aimU = smooth(span(t, ...AIM_SHIFT));
-  const aimA = smooth(span(t, 32.3, 32.9)) * (1 - smooth(span(t, 42.2, 43.2))); // the aim line stays up through the approach flight
-  const arrowA = smooth(span(t, AIM_SHIFT[0] - 0.2, AIM_SHIFT[0] + 0.2)) * (1 - smooth(span(t, SW2 + 0.6, SW2 + 1.4)));
-  const ticks = TICKS.map((k) => ({ ...k, a: smooth(span(t, IMP1 + k.u * FL1 * 0.82, IMP1 + k.u * FL1 * 0.82 + 0.3)) * (1 - smooth(span(t, 18.2, 18.9))) }));
+  const aimA = smooth(span(t, 32.3, 32.9)) * (1 - smooth(span(t, LAND2 + 0.8, LAND2 + 1.6))); // the aim line stays up through the approach flight
+  const arrowA = smooth(span(t, AIM_SHIFT[0] - 0.2, AIM_SHIFT[0] + 0.2)) * (1 - smooth(span(t, LAND2 + 0.6, LAND2 + 1.4)));
+  // the bend: a short pink arrow beside the flight once the ball leaves the aim line
+  const bendA = smooth(span(t, IMP2 + FL2 * 0.62, IMP2 + FL2 * 0.8)) * (1 - smooth(span(t, LAND2 + 1.0, LAND2 + 1.8)));
+  const ticks = TICKS.map((k) => ({ ...k, a: smooth(span(t, IMP1 + k.u * FL1 * 0.82, IMP1 + k.u * FL1 * 0.82 + 0.3)) * (1 - smooth(span(t, 18.0, 18.7))) }));
 
-  // finding the ball: a wide search ring in the rough closes onto the ball, a beacon stands over it,
-  // the cart's route lights up ahead of it, and a burst when the cart pulls up beside the ball
+  // after the tee shot lands: the kick into the rough, drawn as a dotted line behind the rolling ball
+  const kickU = easeOut(span(t, LAND1, LAND1 + ROLL1));
+  const kickA = (t >= LAND1 ? 1 : 0) * (1 - smooth(span(t, LOST[2], LOST[2] + 0.6)));
+  const kick = kickA > 0.01 ? [S.tee.land, lerp2(S.tee.land, S.tee.rest, kickU)].map((q) => [q[0], q[1], groundZ(q) + 0.12]) : [];
+  // the grey question mark where the ball was last seen
+  const qA = smooth(span(t, GONE[0] + 0.2, GONE[1] + 0.1)) * (1 - smooth(span(t, LOST[1] + 0.2, LOST[2])));
+
+  // finding the ball: a search ring grows around the spot and closes onto the ball, a beacon stands
+  // over it, the cart's route lights up ahead of it, and a burst when the cart pulls up beside the ball
   const lostA = smooth(span(t, LOST[0], LOST[0] + 0.5)) * (1 - smooth(span(t, LOST[2] - 0.1, LOST[2] + 0.3)));
   const lostU = smooth(span(t, LOST[1], LOST[2]));
   const rest = S.tee.rest;
-  const lostC = lerp2(add(rest, add(mul(S.dir1, -9), mul(right(S.dir1), -6))), rest, lostU);
+  const lostC = lerp2(add(rest, add(mul(S.dir1, -7), mul(right(S.dir1), -5))), rest, lostU);
+  const lostR = lerp(4, 26, smooth(span(t, LOST[0], LOST[0] + 0.6))) * (1 - lostU) + 2.6 * lostU;
   const beacon = smooth(span(t, LOST[2] - 0.3, LOST[2] + 0.2)) * (1 - smooth(span(t, 28.2, 29.0)));
   const found = smooth(span(t, DRIVE_A[1] - 0.1, DRIVE_A[1] + 0.3)) * (1 - smooth(span(t, 28.6, 29.4)));
   const burst = span(t, DRIVE_A[1], DRIVE_A[1] + 1.1);
   const routeA = smooth(span(t, LOST[2] - 0.2, LOST[2] + 0.4)) * (1 - smooth(span(t, DRIVE_A[1] - 0.4, DRIVE_A[1] + 0.2)));
   const driven = t < DRIVE_A[0] ? 0 : ease(span(t, ...DRIVE_A)) * ROUTE_A.length;
   const route = routeA > 0.01 ? [...ROUTE_A.from(driven), rest].map((p) => [p[0], p[1], groundZ(p) + 0.15]) : [];
+  // after the approach: the ball on the green gets the same pin, for a moment
+  const find2 = smooth(span(t, FIND2[0], FIND2[0] + 0.3)) * (1 - smooth(span(t, FIND2[1] - 0.3, FIND2[1])));
 
+  const pipOn = (a, b, c, d) => smooth(span(t, a, b)) * (1 - smooth(span(t, c, d)));
   return {
-    t, stage, golfer, cart, ball, trails: trailsAt(t), trace, tracking, cone,
-    pastN, pastA, disp, aimU, aimA, arrowA, ticks,
-    cartMark: smooth(span(t, LOST[2] - 0.6, LOST[2])) * (1 - smooth(span(t, DRIVE_A[1] + 0.2, DRIVE_A[1] + 1.0))),
-    lostA, lostU, lostC, lostR: lerp(26, 2.6, lostU), beacon, found, burst, routeA, route,
-    landPin: smooth(span(t, LAND1, LAND1 + 0.4)) * (1 - smooth(span(t, 18.0, 18.5))),
-    greenPin: smooth(span(t, LAND2 + ROLL2, LAND2 + ROLL2 + 0.4)) * (1 - smooth(span(t, 47.4, 48.2))),
+    t, te, stage, golfer, cart, ball, trails: trailsAt(t), trace, tracking, cone,
+    pastN, pastA, disp, aimU, aimA, arrowA, bendA, ticks, kick, kickA, qA,
+    cartMark: smooth(span(t, LOST[0], LOST[0] + 0.5)) * (1 - smooth(span(t, DRIVE_A[1] + 0.2, DRIVE_A[1] + 1.0))),
+    lostA, lostU, lostC, lostR, beacon, found, burst, routeA, route, find2,
+    landPin: smooth(span(t, LAND1, LAND1 + 0.4)) * (1 - smooth(span(t, 18.9, 19.4))),
+    greenPin: smooth(span(t, LAND2 + ROLL2, LAND2 + ROLL2 + 0.4)) * (1 - smooth(span(t, 45.6, 46.4))),
     summary: smooth(span(t, SUMMARY, SUMMARY + 0.6)),
-    // the phone inset: first the camera view of the swing, then (after the ball is lost) the ball map
-    pip: Math.max(smooth(span(t, 7.0, 7.8)) * (1 - smooth(span(t, 15.0, 15.8))), smooth(span(t, 18.3, 19.0)) * (1 - smooth(span(t, 28.0, 28.7)))),
+    // the phone inset: the camera view of the swing, then the ball map after each shot
+    pip: Math.max(pipOn(7.0, 7.8, 15.0, 15.8), pipOn(GONE[1], GONE[1] + 0.6, 28.0, 28.7), pipOn(FIND2[0] - 0.2, FIND2[0] + 0.2, FIND2[1], FIND2[1] + 0.4)),
     pipMap: t >= 16.8,
+    pipGreen: t >= 40,
     caddy: smooth(span(t, 29.2, 29.8)) * (1 - smooth(span(t, 38.8, 39.6))),
     camera: cameraAt(t),
     shotsTaken: (t >= IMP1 ? 1 : 0) + (t >= IMP2 ? 1 : 0) + (t >= IMP3 ? 1 : 0),

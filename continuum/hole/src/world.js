@@ -121,10 +121,13 @@ const dir2 = norm(sub(PIN, R1));
 const rt2 = right(dir2);
 let AIM = add(PIN, mul(rt2, -7));
 for (const k of [10, 9, 8]) { const p = add(PIN, mul(rt2, -k)); if (inGreen(p)) { AIM = p; break; } }
-let L2 = add(add(PIN, mul(rt2, -2.6)), mul(dir2, -4.2));
-if (!inGreen(L2)) L2 = add(PIN, mul(dir2, -3));
-let R2 = add(add(PIN, mul(rt2, -1.5)), mul(dir2, -1.25));
-if (!inGreen(R2)) R2 = add(PIN, mul(dir2, -2));
+// It starts on the aim line, then drifts right: it lands just right of the flag and rolls toward it.
+let L2 = null;
+for (const [r, l] of [[3.6, -3.2], [3.2, -2.6], [2.8, -2.2], [2.2, -2.8]]) { const p = add(add(PIN, mul(rt2, r)), mul(dir2, l)); if (inGreen(p)) { L2 = p; break; } }
+if (!L2) L2 = add(PIN, mul(dir2, -3));
+let R2 = null;
+for (const [r, l] of [[1.7, -0.9], [1.5, -1.1], [1.2, -1.4]]) { const p = add(add(PIN, mul(rt2, r)), mul(dir2, l)); if (inGreen(p)) { R2 = p; break; } }
+if (!R2) R2 = add(PIN, mul(dir2, -2));
 
 export const SHOTS = {
   dir1, dir2, pin: PIN, aim: AIM,
@@ -179,14 +182,37 @@ export const CART_TEE = add(routeA[0], mul(dir1, -2.5));
 const cartNearBall = add(add(R1, mul(right(dir1), -3.4)), mul(dir1, -2.6));
 routeA.unshift(CART_TEE);
 routeA.push(add(cartNearBall, mul(dir1, -16)), cartNearBall);
-// green side: the nearest real cart path point to the green, short of it
-let greenPark = add(PIN, mul(dir2, -30));
-let bestG = Infinity;
-for (const p of paths) for (const q of p) {
-  const d = dist(q, PIN);
-  if (d > 18 && d < bestG && (q[0] - R1[0]) * dir2[0] + (q[1] - R1[1]) * dir2[1] > 40) { bestG = d; greenPark = q; }
+// green side: park just off the green, never on a green or a bunker, and get there without crossing
+// one (the cart never drives onto the putting surface). A real cart path point wins when one is close.
+const along = (q) => (q[0] - R1[0]) * dir2[0] + (q[1] - R1[1]) * dir2[1];
+const startB = add(cartNearBall, mul(dir2, 14));
+const nearPolys = ["green", "bunker"].flatMap((k) => H.polys[k]).filter((f) => f.p.some((q) => dist(q, PIN) < 260));
+const hits = (p) => nearPolys.some((f) => pointIn(p, f.p));
+const clearLine = (a, b) => { const n = Math.max(8, Math.ceil(dist(a, b) / 2)); for (let i = 1; i < n; i++) if (hits(lerp2(a, b, i / n))) return false; return true; };
+const offGreen = (q) => !hits(q) && [[2.5, 0], [-2.5, 0], [0, 2.5], [0, -2.5]].every(([a, b]) => !hits(add(add(q, mul(dir2, a)), mul(rt2, b))));
+const parks = [];
+for (const p of paths) for (const q of p) { const d = dist(q, PIN); if (d > 16 && d < 40 && along(q) > 40) parks.push({ q, d, path: true }); }
+for (const [l, r] of [[-22, -12], [-20, -15], [-25, -10], [-18, -18], [-28, -14], [-22, 12], [-20, 16], [-30, -6], [-12, -20], [-34, -10]]) {
+  const q = add(add(PIN, mul(dir2, l)), mul(rt2, r));
+  parks.push({ q, d: dist(q, PIN) + 4, path: false });
 }
-const routeB = [cartNearBall, add(cartNearBall, mul(dir2, 14)), add(greenPark, mul(norm(sub(greenPark, R1)), -12)), greenPark];
+parks.sort((a, b) => a.d - b.d);
+let routeB = null;
+const mids = [];
+for (let l = -80; l <= -26; l += 6) for (let r = -36; r <= 36; r += 6) mids.push(add(add(PIN, mul(dir2, l)), mul(rt2, r)));
+for (const k of parks) {
+  if (!offGreen(k.q)) continue;
+  if (clearLine(startB, k.q)) { routeB = [cartNearBall, startB, k.q]; break; }
+  let best = null, bl = Infinity;
+  for (const m of mids) {
+    if (hits(m) || !clearLine(startB, m) || !clearLine(m, k.q)) continue;
+    const L = dist(startB, m) + dist(m, k.q);
+    if (L < bl) { bl = L; best = m; }
+  }
+  if (best) { routeB = [cartNearBall, startB, best, k.q]; break; }
+}
+if (!routeB) routeB = [cartNearBall, startB, add(add(PIN, mul(dir2, -26)), mul(rt2, -16))];
+const greenPark = routeB[routeB.length - 1];
 
 function polyline(pts) {
   const d = [0];

@@ -462,9 +462,11 @@ export class Scene {
     ring("land", SHOTS.tee.land, S.landPin, 2.2, C.accent, false);
     this.findLayers(L, S, C, dark);
     ring("near", SHOTS.approach.rest, S.greenPin * (1 - S.summary), 0.9, C.accent, false);
+    // the ball map's look at the ball on the green: the same pin color, pulsing
+    ring("near-find", SHOTS.approach.rest, S.find2, 0.7, C.flag, true);
 
     // the caddy's read: past finishes, the usual spread, and the aim line
-    if (S.disp > 0.01 || S.pastA > 0.01 || S.aimA > 0.01) this.caddyLayers(L, S, C, dark);
+    if (S.disp > 0.01 || S.pastA > 0.01 || S.aimA > 0.01 || S.bendA > 0.01) this.caddyLayers(L, S, C, dark);
 
     // trails
     for (const tr of S.trails) this.trailLayers(L, tr, C, S);
@@ -549,43 +551,50 @@ export class Scene {
   caddyLayers(L, S, C, dark) {
     const from = SHOTS.approach.from;
     const d2 = SHOTS.dir2, rt = right(d2);
-    const center = add(add(PIN, mul(rt, 6.5)), mul(d2, 0.3));
-    // the usual spread: three soft rings, strongest in the middle (a simple heat area)
+    // the usual miss: one pink wedge from the ball that fans out to the right of the flag and ends at the
+    // green, its two edges hugging the right-side finishes. Faint near the ball, strongest at the green.
     if (S.disp > 0.01) {
-      const ell = (rx, ry) => {
-        const out = [];
-        for (let i = 0; i < 48; i++) {
-          const a = (i / 48) * Math.PI * 2;
-          const p = add(add(center, mul(rt, Math.cos(a) * rx)), mul(d2, Math.sin(a) * ry));
-          out.push([p[0], p[1], height(p[0], p[1]) + 0.14]);
-        }
-        return out;
-      };
-      const rings = [[11, 7, 30], [7.5, 5, 40], [4, 3, 58]];
+      const ang = (q) => { const v = sub(q, from); return Math.atan2(v[0] * rt[0] + v[1] * rt[1], v[0] * d2[0] + v[1] * d2[1]); };
+      const rights = PAST.filter((d) => d.right).map((d) => ang(d.p));
+      const a0 = Math.min(...rights) - 0.012, a1 = Math.max(...rights) + 0.012;
+      const R = Math.max(...PAST.filter((d) => d.right).map((d) => dist(d.p, from))) + 3;
+      const at = (a, r) => add(add(from, mul(d2, Math.cos(a) * r)), mul(rt, Math.sin(a) * r));
+      const grow = smooth(S.disp * 1.4);
+      const R1 = R * (0.35 + 0.65 * grow);
+      const z = (q) => [q[0], q[1], height(q[0], q[1]) + 0.13];
+      const cap = this.phone ? 0.3 : 0.38;
+      const bands = [];
+      const n = 10, fill0 = Math.max(0, R1 - 18); // the fill only spans the last stretch: the fan over the green
+      for (let i = 0; i < n; i++) {
+        const r0 = lerp(fill0, R1, i / n), r1 = lerp(fill0, R1, (i + 1) / n);
+        const k = 0.25 + 0.75 * Math.pow((i + 1) / n, 1.5); // stronger toward the far edge
+        const ring = [];
+        for (let j = 0; j <= 6; j++) ring.push(z(at(lerp(a0, a1, j / 6), r1)));
+        for (let j = 6; j >= 0; j--) ring.push(z(at(lerp(a0, a1, j / 6), Math.max(0.1, r0))));
+        bands.push({ poly: ring, a: k });
+      }
       L.push(new D.SolidPolygonLayer({
-        ...base, id: "spread", data: rings, getPolygon: (r) => ell(r[0] * (0.6 + 0.4 * S.disp), r[1] * (0.6 + 0.4 * S.disp)),
-        getFillColor: (r) => rgba(C.miss, r[2] * S.disp * (dark ? 1.3 : 1)), material: false, parameters: NODEPTH, updateTriggers: { getFillColor: S.t, getPolygon: S.t },
-      }));
-      // the cone: from the ball out to the spread
-      const far = 8;
-      const l = add(add(center, mul(rt, -far)), mul(d2, -2)), r = add(add(center, mul(rt, far)), mul(d2, -2));
-      const z = (p) => [p[0], p[1], height(p[0], p[1]) + 0.12];
-      L.push(new D.SolidPolygonLayer({
-        ...base, id: "cone", data: [0], getPolygon: () => drape([from, l, r], 0.12, 8), getFillColor: rgba(C.miss, 34 * S.disp),
-        material: false, parameters: NODEPTH, updateTriggers: { getFillColor: S.t },
+        ...base, id: "cone", data: bands, getPolygon: (d) => d.poly, getFillColor: (d) => rgba(C.miss, 255 * cap * d.a * S.disp * (dark ? 0.9 : 0.75)),
+        material: false, parameters: NODEPTH, updateTriggers: { getFillColor: S.t, getPolygon: S.t },
       }));
       L.push(new D.PathLayer({
-        ...base, id: "cone-edges", data: [[from, l], [from, r]], getPath: (s) => drape(s, 0.13, 8, false), getColor: rgba(C.miss, 150 * S.disp), getWidth: 1.2, widthUnits: "pixels",
-        getDashArray: [3, 3], extensions: DASH, parameters: NODEPTH, updateTriggers: { getColor: S.t },
+        ...base, id: "cone-edges", data: [[0, a0], [0, a1]], getPath: (e) => [z(at(e[1], 4)), z(at(e[1], R1))], getColor: rgba(C.miss, 170 * S.disp), getWidth: 1.3, widthUnits: "pixels",
+        getDashArray: [3, 3], extensions: DASH, parameters: NODEPTH, updateTriggers: { getColor: S.t, getPath: S.t },
+      }));
+      // the far edge of the wedge, an arc just past the green
+      const arc = []; for (let j = 0; j <= 12; j++) arc.push(z(at(lerp(a0, a1, j / 12), R1)));
+      L.push(new D.PathLayer({
+        ...base, id: "cone-arc", data: [arc], getPath: (d) => d, getColor: rgba(C.miss, 230 * S.disp), getWidth: 2, widthUnits: "pixels",
+        parameters: NODEPTH, updateTriggers: { getColor: S.t, getPath: S.t },
       }));
     }
     if (S.pastA > 0.01 && S.pastN > 0) {
       const pts = PAST.slice(0, S.pastN).map((d, i) => ({ p: [d.p[0], d.p[1], height(d.p[0], d.p[1]) + 0.15], right: d.right, i }));
       L.push(new D.ScatterplotLayer({
-        ...base, id: "past", data: pts, getPosition: (d) => d.p, getRadius: (d) => 7 * smooth((S.t - (T.PAST0 + d.i * T.PAST_DT)) / 0.22) * (1 + 0.6 * (1 - smooth((S.t - (T.PAST0 + d.i * T.PAST_DT) - 0.15) / 0.35))), radiusUnits: "pixels",
+        ...base, id: "past", data: pts, getPosition: (d) => d.p, getRadius: (d) => (d.right ? 7.5 : 5) * smooth((S.t - (T.PAST0 + d.i * T.PAST_DT)) / 0.22) * (1 + 0.6 * (1 - smooth((S.t - (T.PAST0 + d.i * T.PAST_DT) - 0.15) / 0.35))), radiusUnits: "pixels",
         stroked: true, lineWidthUnits: "pixels", getLineWidth: 2,
-        getFillColor: (d) => (d.right ? rgba(C.miss, 255 * S.pastA) : rgba(C.trackDot, 255 * S.pastA)),
-        getLineColor: (d) => (d.right ? rgba(dark ? C.trackDot : [255, 255, 255], 230 * S.pastA) : rgba(C.ink, 200 * S.pastA)),
+        getFillColor: (d) => (d.right ? rgba(C.miss, 255 * S.pastA) : rgba(C.trackDot, 150 * S.pastA)),
+        getLineColor: (d) => (d.right ? rgba(dark ? C.trackDot : [255, 255, 255], 230 * S.pastA) : rgba(C.muted || C.ink, 110 * S.pastA)),
         parameters: NODEPTH, updateTriggers: { getRadius: S.t, getFillColor: S.t, getLineColor: S.t },
       }));
     }
@@ -620,6 +629,31 @@ export class Scene {
       }));
       void n;
     }
+    // the bend: a short pink arrow on the ground beside the flight, curving from the aim line to the right
+    if (S.bendA > 0.01) {
+      const P0 = PATHS.approach, n = P0.length - 1;
+      const pts = [];
+      for (let i = Math.round(n * 0.58); i <= Math.round(n * 0.9); i++) {
+        const q = add(P0[i], mul(rt, 2.2 + 1.5 * ((i / n) - 0.58)));
+        pts.push([q[0], q[1], height(q[0], q[1]) + 0.2]);
+      }
+      const tip = pts[pts.length - 1], prev = pts[pts.length - 3];
+      const td = norm(sub(tip, prev)), tn = right(td);
+      const head = [add(tip, mul(td, 2.6)), add(tip, mul(tn, 1.5)), add(tip, mul(tn, -1.5))].map((q) => [q[0], q[1], height(q[0], q[1]) + 0.2]);
+      const a = S.bendA;
+      L.push(new D.PathLayer({
+        ...base, id: "bend-halo", data: [0], getPath: () => pts, getColor: rgba(C.halo, 200 * a), getWidth: 0.9, widthUnits: "meters", widthMinPixels: 6,
+        capRounded: true, jointRounded: true, parameters: NODEPTH, updateTriggers: { getColor: S.t },
+      }));
+      L.push(new D.PathLayer({
+        ...base, id: "bend", data: [0], getPath: () => pts, getColor: rgba(C.miss, 255 * a), getWidth: 0.5, widthUnits: "meters", widthMinPixels: 3.5,
+        capRounded: true, jointRounded: true, parameters: NODEPTH, updateTriggers: { getColor: S.t },
+      }));
+      L.push(new D.SolidPolygonLayer({
+        ...base, id: "bend-head", data: [0], getPolygon: () => head, getFillColor: rgba(C.miss, 255 * a), material: false, parameters: NODEPTH,
+        updateTriggers: { getFillColor: S.t },
+      }));
+    }
     if (S.aimA > 0.01) {
       const tgt = lerp2(PIN, SHOTS.aim, S.aimU);
       L.push(new D.PathLayer({
@@ -638,6 +672,12 @@ export class Scene {
   // cart), a beacon standing over the ball, and a burst when the cart arrives.
   findLayers(L, S, C, dark) {
     const rest = SHOTS.tee.rest, rz = height(rest[0], rest[1]);
+    if (S.kickA > 0.01 && S.kick.length > 1) {
+      L.push(new D.PathLayer({
+        ...base, id: "kick", data: [0], getPath: () => S.kick, getColor: rgba(C.flight1, 240 * S.kickA), getWidth: 2.4, widthUnits: "pixels",
+        getDashArray: [2, 3], extensions: DASH, capRounded: true, parameters: NODEPTH, updateTriggers: { getPath: S.t, getColor: S.t },
+      }));
+    }
     if (S.lostA > 0.01) {
       const c = S.lostC, z = height(c[0], c[1]) + 0.2, a = S.lostA;
       const k = (S.t * 0.9) % 1;
@@ -729,9 +769,15 @@ export class Scene {
     // while it drives to the ball, a marker under the cart keeps it easy to follow from far away
     if (S.cartMark > 0.01) {
       L.push(new D.ScatterplotLayer({
-        ...base, id: "cart-mark", data: [0], getPosition: () => [p[0], p[1], z0 + 0.1], getRadius: 3.2, radiusUnits: "meters", radiusMinPixels: 13,
+        ...base, id: "cart-mark", data: [0], getPosition: () => [p[0], p[1], z0 + 0.1], getRadius: 3.2, radiusUnits: "meters", radiusMinPixels: 20,
         getFillColor: rgba(C.accent, (dark ? 90 : 60) * S.cartMark), stroked: true, getLineColor: rgba(C.accent, 230 * S.cartMark), getLineWidth: 2, lineWidthUnits: "pixels",
         parameters: NODEPTH, updateTriggers: { getFillColor: S.t, getLineColor: S.t },
+      }));
+      const k = (S.t * 1.1) % 1;
+      L.push(new D.ScatterplotLayer({
+        ...base, id: "cart-mark-pulse", data: [0], getPosition: () => [p[0], p[1], z0 + 0.1], getRadius: 3.2 * (1 + 1.6 * k), radiusUnits: "meters", radiusMinPixels: 20 * (1 + 1.6 * k),
+        stroked: true, filled: false, getLineColor: rgba(C.accent, 220 * S.cartMark * (1 - k)), getLineWidth: 2, lineWidthUnits: "pixels",
+        parameters: NODEPTH, updateTriggers: { getLineColor: S.t },
       }));
     }
     L.push(new D.ScatterplotLayer({

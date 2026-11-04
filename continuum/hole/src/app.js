@@ -3,7 +3,7 @@
 // When playing, the page scroll follows the time so both stay in step. Step buttons glide there, no cuts.
 import { initTheme, onThemeChange, toggleTheme, forceTheme, sceneColors, reducedMotion } from "./theme.js";
 import { HOLE, NUM, SHOTS, PAST, PAST_RIGHT, height, dist, toLL, clamp, smooth, YD, add, mul, norm, sub, right } from "./world.js";
-import { TOTAL, STAGES, BEATS, stateAt, stageAt, beatAt, T } from "./story.js";
+import { TOTAL, STAGES, STAGES_I, BEATS, PATHS, stateAt, stageAt, stageAtI, beatAt, T } from "./story.js";
 import { Pip } from "./pip.js";
 import { renderFallback } from "./fallback.js";
 
@@ -182,7 +182,8 @@ function placeLabels(items) {
     const lift = it.lift == null ? 12 : it.lift;
     const x = Math.round(clamp(s[0] - L.w / 2 + (it.dx || 0), 12, Math.max(12, W - L.w - 12))); // keep wide labels inside a narrow frame
     let y = Math.round(s[1] - L.h - lift);
-    if (embed && y < 50) { L.el.style.opacity = "0"; continue; } // embedded, the legend sits at the top: keep labels clear of it
+    const topSafe = embed ? 50 : phone ? 112 : 70; // keep labels clear of the top bar and the legend
+    if (y < topSafe) { L.el.style.opacity = "0"; continue; }
     if (it.a > 0.3) {
       for (let k = 0; k < 4; k++) {
         const hit = placed.find((r) => x < r.x + r.w + 6 && x + L.w + 6 > r.x && y < r.y + r.h + 4 && y + L.h + 4 > r.y);
@@ -206,15 +207,12 @@ function viewFor(cam, S) {
   const v = { longitude: ll[0], latitude: ll[1], zoom: cam.zoom + zAdj, pitch: cam.pitch, bearing: cam.bearing, position: [0, 0, zc], maxPitch: 75, maxZoom: 24 };
   // put the action in the free part of the screen (away from the caption and the cards)
   const off = phone ? [0, -(parseFloat(getComputedStyle(root).getPropertyValue("--cap-h")) || 200) * 0.42 + 18] : [W > 1100 ? 70 : 40, -10];
+  // the caddy card sits on the right: slide the green left, away from it
+  if (!phone && S && S.caddy > 0.001) off[0] -= S.caddy * Math.min($("caddy").offsetWidth * 0.55, W * 0.2);
   // on a phone the camera inset sits top right: slide the golfer left so the inset never covers him
   if (phone && S && S.pip > 0.001) { off[0] -= S.pip * Math.min(W * 0.2, 80); off[1] -= S.pip * 30; }
   // embedded on a phone the frame is narrow: during the tee shot, slide the tee in from the right edge
   if (phone && embed && S) off[0] -= smooth((S.t - 3) / 3) * (1 - smooth((S.t - 18) / 3)) * W * 0.15;
-  // on a phone the caddy and summary cards sit at the top: slide the action down under them
-  if (phone && S) {
-    const a = Math.max(S.caddy || 0, S.summary || 0);
-    if (a > 0.001) { const ch = Math.max($("caddy").offsetHeight, $("summary").offsetHeight * (S.summary > S.caddy ? 1 : 0)); off[1] += a * Math.min(ch, H * 0.42) * 0.62; }
-  }
   try {
     const vp = new window.deck.WebMercatorViewport({ width: W, height: H, ...v });
     const q = vp.unproject([W / 2 - off[0], H / 2 - off[1]], { targetZ: zc });
@@ -249,7 +247,7 @@ const ICONS = {
 const STEP_NAMES = ["", "Tee shot", "Find the ball", "Aim", "Putt"];
 function setCaption(i, instant) {
   const c = BEATS[i];
-  const st = stageAt(c.t + 0.01);
+  const st = stageAtI(c.t + 0.01);
   const apply = () => {
     $("cap-kicker").textContent = c.kicker || `${st} of 4 · ${STEP_NAMES[st]}`;
     $("cap-title").innerHTML = `<svg class="cap-ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[c.icon] || ""}</svg><span>${c.title}</span>`;
@@ -284,7 +282,7 @@ function frameUI(S) {
   const bt = beatAt(S.t);
   if (bt !== lastBeat) { setCaption(bt, lastBeat === -1); lastBeat = bt; }
   stepBars.forEach((b, i) => {
-    const s = STAGES[i + 1];
+    const s = STAGES_I[i + 1];
     b.style.setProperty("--p", clamp((S.t - s.t0) / (s.t1 - s.t0), 0, 1).toFixed(3));
   });
   // cards
@@ -292,9 +290,10 @@ function frameUI(S) {
   $("pip").classList.toggle("on", pipOn);
   if (S.pip > 0.01) pip.draw(S, C);
   $("caddy").classList.toggle("on", S.caddy > 0.5);
-  $("summary").classList.toggle("on", S.summary > 0.5);
-  const chipOn = (S.t >= T.IMP1 && S.t < 18.4) || (S.t >= T.IMP2 && S.t < T.LAND2 + 0.3) || (S.greenPin > 0.5 && S.t < 46.5);
-  $("legend").style.opacity = S.summary > 0.5 || S.caddy > 0.5 || (phone && (S.pip > 0.2 || chipOn)) ? "0" : "1";
+  // the round's recap is drawn in the scene (three numbered shots and one chip); the text card is
+  // only for the no-WebGL plan
+  const chipOn = (S.t >= T.IMP1 && S.t < 18.4) || (S.t >= T.IMP2 && S.t < T.LAND2 + 0.3) || (S.greenPin > 0.5 && S.t < 45.5);
+  $("legend").style.opacity = S.caddy > 0.5 || (phone && (S.pip > 0.2 || chipOn)) ? "0" : "1";
   // pattern dots: a count you can watch
   const n = S.pastN;
   let r = 0;
@@ -313,7 +312,7 @@ function frameUI(S) {
   }
   // one chip at a time: the carry chip waits until "In the air" has gone (see the CSS delay)
   rCarry.classList.toggle("on", S.t >= T.LAND1 + 0.5 && S.t < 18.4);
-  rGreen.classList.toggle("on", S.greenPin > 0.5 && S.t < 46.5);
+  rGreen.classList.toggle("on", S.greenPin > 0.5 && S.t > T.FIND2[1] && S.t < 45.5);
 
   // labels
   const items = [];
@@ -324,20 +323,29 @@ function frameUI(S) {
   for (const k of S.ticks) items.push({ id: "tick" + k.yd, p: k.p, html: `${k.yd} yd`, a: k.a, cls: "small", lift: 8 });
   items.push({ id: "landed", p: SHOTS.tee.land, html: `Landed <span class="tag">${NUM.teeCarryYd} yd</span>`, a: S.landPin, cls: "accent", lift: 16 });
   // finding the ball: a question mark over the search ring, then the pin, then a check when the cart is there
-  items.push({ id: "lost", p: [S.lostC[0], S.lostC[1], height(S.lostC[0], S.lostC[1]) + 0.2], html: `<span class="q">?</span>`, a: S.lostA * (1 - smooth((S.lostU - 0.2) / 0.5)), cls: "icon", lift: 18 });
   const rest = SHOTS.tee.rest, restTop = [rest[0], rest[1], height(rest[0], rest[1]) + 7.5];
+  items.push({ id: "lost", p: [rest[0], rest[1], height(rest[0], rest[1]) + 0.2], html: `<span class="q">?</span>`, a: S.qA, cls: "icon grey", lift: 10 });
   items.push({ id: "found", p: restTop, html: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Found`, a: S.found, cls: "accent check", lift: 18 });
   // the flag label rides above the pennant; "Aim here" sits off to the left of it so the two never touch
   items.push({ id: "pin", p: [SHOTS.pin[0], SHOTS.pin[1], height(SHOTS.pin[0], SHOTS.pin[1]) + 3.2], html: `Flag <span class="tag">${NUM.toPinYd} yd</span>`, a: S.caddy, lift: 14 });
   items.push({ id: "aim", p: SHOTS.aim, html: "Aim here", a: S.aimA * smooth((S.aimU - 0.6) / 0.4) * (1 - smooth((S.t - T.LAND2) / 0.6)), cls: "accent", lift: 12, dx: -34 });
-  // the count builds with the dots, so the pattern is a number you can watch, not a sentence
+  // the count builds with the dots, one number per dot: a count you can watch, not a sentence
   {
     let rr = 0; for (let i = 0; i < S.pastN; i++) if (PAST[i].right) rr++;
-    items.push({ id: "usual", p: add(SHOTS.pin, mul(right(SHOTS.dir2), 14)), html: `<span class="big">${rr}</span> of ${S.pastN} right`, a: S.pastA * smooth((S.t - T.PAST0) / 0.3), cls: "warm count", lift: 6 });
+    const all = S.pastN >= PAST.length;
+    const html = all ? `<span class="big">${rr}</span> of ${PAST.length} <span class="arr">&rarr;</span>` : `<span class="big">${rr}</span>`;
+    items.push({ id: "usual", p: add(add(SHOTS.pin, mul(right(SHOTS.dir2), 12)), mul(SHOTS.dir2, 9)), html, a: S.pastA * smooth((S.t - T.PAST0) / 0.3) * (1 - smooth((S.t - 34.8) / 0.5)), cls: "warm count", lift: 6 });
   }
-  items.push({ id: "drift", p: SHOTS.approach.land, html: "Drifted right, as usual", a: smooth((S.t - T.LAND2) / 0.4) * (1 - smooth((S.t - 43.6) / 0.6)), cls: "small warm", lift: -38, dx: 110 });
+  items.push({ id: "drift", p: SHOTS.approach.land, html: "Drifted right", a: smooth((S.t - T.LAND2) / 0.4) * (1 - smooth((S.t - (T.LAND2 + 1.6)) / 0.5)), cls: "small warm", lift: 14, dx: phone ? -40 : 60 });
   items.push({ id: "near", p: SHOTS.approach.rest, html: `${NUM.leftFt} ft`, a: S.greenPin * (1 - smooth((S.t - T.IMP3) / 0.4)), cls: "small", lift: 10 });
   items.push({ id: "holed", p: [SHOTS.pin[0], SHOTS.pin[1], height(SHOTS.pin[0], SHOTS.pin[1]) + 3.2], html: "In the hole", a: smooth((S.t - (T.IMP3 + T.PUTT_T)) / 0.3) * (1 - S.summary), cls: "accent", lift: 16 });
+  // the recap: the three shots numbered on the hole, and the score as one chip
+  const rc = smooth((S.t - T.SUMMARY - 1.2) / 0.5);
+  const mid = (P) => P[Math.round(P.length * 0.45)];
+  items.push({ id: "n1", p: mid(PATHS.tee), html: "1", a: rc, cls: "num-badge", lift: 4 });
+  items.push({ id: "n2", p: mid(PATHS.approach), html: "2", a: smooth((S.t - T.SUMMARY - 1.5) / 0.5), cls: "num-badge", lift: 4 });
+  items.push({ id: "n3", p: SHOTS.approach.rest, html: "3", a: smooth((S.t - T.SUMMARY - 1.8) / 0.5), cls: "num-badge", lift: 4, dx: -20 });
+  items.push({ id: "score", p: [SHOTS.pin[0], SHOTS.pin[1], height(SHOTS.pin[0], SHOTS.pin[1]) + 3.2], html: names[String(strokes - par)] || `${strokes} shots`, a: smooth((S.t - T.SUMMARY - 2.2) / 0.5), cls: "accent", lift: 18, dx: 30 });
   placeLabels(items);
   void norm; void sub;
 }
@@ -345,8 +353,8 @@ const lerpP = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
 
 function draw() {
   const S = stateAt(t);
-  // on a phone the caddy card covers the top of the frame: it leaves as the approach swing starts
-  if (phone) S.caddy *= 1 - smooth((S.t - 35.0) / 0.6);
+  // on a phone the caddy card would cover the green: the count, the wedge and the arrow on the green say it
+  if (phone) S.caddy = 0;
   if (scene) scene.render(S, viewFor(S.camera, S));
   frameUI(S);
   lastFrameT = t;

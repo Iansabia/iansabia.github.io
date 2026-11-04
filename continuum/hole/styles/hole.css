@@ -445,6 +445,19 @@ html[data-layout="phone"] .caption h1 .cap-ic { width: 24px; height: 24px; paddi
 html[data-layout="phone"] .lbl.count { height: 28px; font-size: 11.5px; }
 html[data-layout="phone"] .lbl.count .big { font-size: 16px; }
 html[data-layout="phone"] .lbl.icon { width: 28px; height: 28px; }
+/* where the ball was last seen: a grey question mark, not yet found */
+.lbl.icon.grey { background: var(--glass-strong); color: var(--muted); border: 1.5px dashed var(--muted); }
+/* the miss count: one big pink number per dot, then "8 of 12" with an arrow to the right */
+.lbl.count { height: 44px; padding: 0 14px; font-size: 15px; font-weight: 600; gap: 6px; }
+.lbl.count .big { font-size: 30px; }
+.lbl.count .arr { color: var(--miss); font-size: 22px; font-weight: 700; line-height: 1; }
+html[data-layout="phone"] .lbl.count { height: 34px; padding: 0 10px; font-size: 12.5px; }
+html[data-layout="phone"] .lbl.count .big { font-size: 22px; }
+html[data-layout="phone"] .lbl.count .arr { font-size: 17px; }
+/* the recap: shot numbers on the hole */
+.lbl.num-badge { width: 30px; height: 30px; padding: 0; justify-content: center; border-radius: 50%; background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.lbl.num-badge::after { display: none; }
+html[data-layout="phone"] .lbl.num-badge { width: 26px; height: 26px; font-size: 13px; }
 
 /* the phone inset as a ball map */
 .pip.map .rec i { background: var(--warning-dot); animation: none; }
