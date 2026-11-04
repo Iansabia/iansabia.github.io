@@ -53,6 +53,17 @@ header.top nav a[aria-current="true"]::after{background:var(--acc)}
 .menu-btn{display:none;align-items:center;gap:8px;background:none;border:1.5px solid var(--rule);border-radius:999px;color:var(--ink);height:30px;padding:0 12px;cursor:pointer;font:500 12px/1 var(--sans);letter-spacing:.01em;text-transform:none}
 .menu-btn i{display:block;width:14px;height:8px;border-top:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transition:transform .3s var(--ease)}
 .menu-btn[aria-expanded="true"] i{transform:scaleY(.25)}
+/* Demos: a pill at the front of the bar, shown at every width (phones too, beside Menu) */
+header.top nav a.demos-pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px 0 10px;border:1.5px solid var(--acc);border-radius:999px;color:var(--acc);font-size:13px;font-weight:600;transition:background-color .2s,color .2s}
+header.top nav a.demos-pill::after{display:none}
+header.top nav a.demos-pill::before{content:"";position:absolute;inset:-8px 0}
+.demos-pill svg{width:9px;height:11px;fill:currentColor;flex:none}
+header.top nav a.demos-pill[aria-current="true"]{background:var(--acc);color:var(--bg)}
+@media (hover:hover){header.top nav a.demos-pill:hover{background:var(--acc);color:var(--bg)}}
+/* 44px hit area on the theme switch and Menu without changing how they look */
+.toggle,.menu-btn{position:relative}
+.toggle::after,.menu-btn::after{content:"";position:absolute;inset:-8px 0}
+@media (max-width:520px){header.top nav{gap:10px}}
 .menu{display:none}
 @media (max-width:860px){
   header.top nav .links{display:none}

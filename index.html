@@ -69,6 +69,17 @@
   .menu-btn{display:none;align-items:center;gap:8px;background:none;border:1.5px solid var(--rule);border-radius:999px;color:var(--ink);height:30px;padding:0 12px;cursor:pointer;font:500 12px/1 var(--sans);letter-spacing:.01em;text-transform:none}
   .menu-btn i{display:block;width:14px;height:8px;border-top:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transition:transform .3s var(--ease)}
   .menu-btn[aria-expanded="true"] i{transform:scaleY(.25)}
+  /* Demos: a pill at the front of the bar, shown at every width (phones too, beside Menu) */
+  .top nav a.demos-pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px 0 10px;border:1.5px solid var(--acc);border-radius:999px;color:var(--acc);font-size:13px;font-weight:600;transition:background-color .2s,color .2s}
+  .top nav a.demos-pill::after{display:none}
+  .top nav a.demos-pill::before{content:"";position:absolute;inset:-8px 0}
+  .demos-pill svg{width:9px;height:11px;fill:currentColor;flex:none}
+  .top nav a.demos-pill[aria-current="true"]{background:var(--acc);color:var(--bg)}
+  @media (hover:hover){.top nav a.demos-pill:hover{background:var(--acc);color:var(--bg)}}
+  /* 44px hit area on the theme switch and Menu without changing how they look */
+  .toggle,.menu-btn{position:relative}
+  .toggle::after,.menu-btn::after{content:"";position:absolute;inset:-8px 0}
+  @media (max-width:520px){.top nav{gap:10px}}
   .menu{display:none}
   @media (max-width:860px){
     .top nav .links{display:none}
@@ -516,8 +527,8 @@
       <span class="mono" style="font-size:13px">Ian Sabia</span>
     </a>
     <nav aria-label="Main">
+      <a class="demos-pill" href="demos/"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z"/></svg>Demos</a>
       <span class="links">
-        <a href="demos/">Demos</a>
         <a href="#currently">Currently</a>
         <a href="#work">Work</a>
         <a href="#projects">Projects</a>
@@ -530,13 +541,13 @@
       <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
     </nav>
     <div class="menu" id="menu">
-      <a href="demos/">Demos <span class="mono">01</span></a>
-      <a href="#currently">Currently <span class="mono">02</span></a>
-      <a href="#work">Work <span class="mono">03</span></a>
-      <a href="#projects">Projects <span class="mono">04</span></a>
-      <a href="#milan">Milan <span class="mono">05</span></a>
-      <a href="#off">Off the clock <span class="mono">06</span></a>
-      <a href="#contact">Contact <span class="mono">07</span></a>
+      <a href="demos/">Demos <span class="mono" aria-hidden="true">&nearr;</span></a>
+      <a href="#currently">Currently <span class="mono">01</span></a>
+      <a href="#work">Work <span class="mono">02</span></a>
+      <a href="#projects">Projects <span class="mono">03</span></a>
+      <a href="#milan">Milan <span class="mono">04</span></a>
+      <a href="#off">Off the clock <span class="mono">05</span></a>
+      <a href="#contact">Contact <span class="mono">06</span></a>
     </div>
   </header>
 

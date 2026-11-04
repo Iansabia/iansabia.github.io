@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Demos · Ian Sabia</title>
 <script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
-<meta name="description" content="Every demo on Ian Sabia's site in one place: live apps, 3D, a film and the small toys from the home page.">
+<meta name="description" content="Every demo on Ian Sabia's site in one place: live apps, 3D, a film and small toys from across the site.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://iansabia.github.io/demos/">
 <meta property="og:title" content="Demos · Ian Sabia">
-<meta property="og:description" content="Every demo on the site in one place: live apps, 3D, a film and the small toys from the home page.">
+<meta property="og:description" content="Every demo on the site in one place: live apps, 3D, a film and small toys from across the site.">
 <meta property="og:image" content="https://iansabia.github.io/demos/img/app-light.webp">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
@@ -22,7 +22,7 @@
   .shot img.d{display:none}
   :root[data-theme="dark"] .shot img.l{display:none}
   :root[data-theme="dark"] .shot img.d{display:block}
-  .shot .badge{position:absolute;left:14px;bottom:14px;display:inline-flex;align-items:center;gap:8px;padding:7px 12px 7px 10px;
+  .shot .badge{position:absolute;left:14px;bottom:14px;display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:7px 12px 7px 10px;
     background:color-mix(in srgb,var(--nbg) 82%,transparent);color:var(--nink);font:500 12px/1 var(--sans);letter-spacing:.01em;
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
   .shot .badge svg{width:9px;height:11px;flex:none}
@@ -56,7 +56,11 @@
   .demo.lead p{font-size:16px}
   .demo.lead .ctas{margin-top:10px}
 
-  .count{color:var(--acc);font-variant-numeric:tabular-nums}
+  /* short hero so the first demo shows on the first screen */
+  .page-hero{padding-bottom:32px}
+  .page-hero h1{margin-bottom:12px}
+  #play{padding-top:clamp(32px,4vw,48px)}
+  .page-hero .kicker a,.back .more{display:inline-flex;align-items:center;min-height:44px}
 
   @media (max-width:960px){
     .demos.three{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -69,6 +73,16 @@
     .demo.lead .body{padding:20px 18px 22px}
     .demo .body{padding:18px 18px 20px}
     .demo h3,.demos.three .demo h3{font-size:24px}
+  }
+  /* phones: the small toys go two to a row as compact cards, with one full-width button each */
+  @media (max-width:760px){
+    .demos.three{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .demos.three .demo p,.demos.three .where,.demos.three .cta2{display:none}
+    .demos.three .demo .body{padding:12px 12px 14px;gap:6px}
+    .demos.three .demo h3{font-size:18px}
+    .demos.three .ctas{padding-top:4px}
+    .demos.three .cta{width:100%;justify-content:center;padding:0 10px;font-size:14px;gap:6px}
+    .demos.three .demo:last-child:nth-child(odd){grid-column:1/-1}
   }
   @media (max-width:380px){
     .cta{padding:0 14px}
@@ -84,8 +98,8 @@
       <span class="mono" style="font-size:13px">Ian Sabia</span>
     </a>
     <nav aria-label="Main">
+      <a class="demos-pill" href="./" aria-current="true"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z"/></svg>Demos</a>
       <span class="links">
-        <a href="./" aria-current="true">Demos</a>
         <a href="../#currently">Currently</a>
         <a href="../#work">Work</a>
         <a href="../#projects">Projects</a>
@@ -97,13 +111,13 @@
       <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
     </nav>
     <div class="menu" id="menu">
-      <a href="./" aria-current="true">Demos <span class="mono">01</span></a>
-      <a href="../#currently">Currently <span class="mono">02</span></a>
-      <a href="../#work">Work <span class="mono">03</span></a>
-      <a href="../#projects">Projects <span class="mono">04</span></a>
-      <a href="../#milan">Milan <span class="mono">05</span></a>
-      <a href="../#off">Off the clock <span class="mono">06</span></a>
-      <a href="../#contact">Contact <span class="mono">07</span></a>
+      <a href="./" aria-current="true">Demos <span class="mono" aria-hidden="true">&nearr;</span></a>
+      <a href="../#currently">Currently <span class="mono">01</span></a>
+      <a href="../#work">Work <span class="mono">02</span></a>
+      <a href="../#projects">Projects <span class="mono">03</span></a>
+      <a href="../#milan">Milan <span class="mono">04</span></a>
+      <a href="../#off">Off the clock <span class="mono">05</span></a>
+      <a href="../#contact">Contact <span class="mono">06</span></a>
     </div>
   </header>
 
@@ -111,14 +125,12 @@
     <header class="page-hero">
       <div class="kicker mono"><a href="../">Home</a><span aria-hidden="true">/</span><span>Demos</span></div>
       <h1>Every <em>demo</em></h1>
-      <p class="lede">Everything on this site you can click, play or watch, in one place. The live apps and 3D come first, then the film, then the small toys from the home page.</p>
-      <div class="facts mono"><span>Demos<b>15</b></span><span>3D<b>3</b></span><span>Film<b>2 min</b></span><span>Toys<b>6</b></span></div>
+      <p class="lede">Everything you can click, play or watch on this site.</p>
     </header>
 
     <section class="block" id="play">
       <div class="head reveal"><h2>Play with it</h2><span class="num mono">01</span></div>
       <div class="rule"></div>
-      <p class="sub reveal">Live apps and 3D. Each one opens in your browser.</p>
       <div class="demos">
 
         <article class="demo lead reveal">
@@ -127,7 +139,7 @@
             <img class="d" src="img/app-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
           <div class="body">
-            <div class="tags"><span class="mono type">Interactive 3D &middot; live app</span><span class="mono where">Own page</span></div>
+            <div class="tags"><span class="mono type">Live app</span><span class="mono where">SwapChain</span></div>
             <h3>SwapChain</h3>
             <p>A 3D campus map, floor plans and a loop finder that matches chains of students (A takes B's room, B takes C's, C takes A's). Tap a dorm, swipe the sheet, run the Chain Demo.</p>
             <div class="ctas"><a class="cta" href="../swapchain/app/">Open the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../swapchain/">Project page</a></div>
@@ -166,7 +178,7 @@
             <img class="d" src="img/drive-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
           <div class="body">
-            <div class="tags"><span class="mono type">Video quiz</span><span class="mono where">Home &middot; NVIDIA</span></div>
+            <div class="tags"><span class="mono type">Video</span><span class="mono where">Home &middot; NVIDIA</span></div>
             <h3>Your call vs. my model</h3>
             <p>Make the call on four real dashcam clips, then see what my model said.</p>
             <div class="ctas"><a class="cta" href="../#nvidia">Make the call <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026">See the challenge <span aria-hidden="true">&nearr;</span></a></div>
@@ -179,7 +191,7 @@
             <img class="d" src="img/calc-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
           <div class="body">
-            <div class="tags"><span class="mono type">Live app</span><span class="mono where">Calculator</span></div>
+            <div class="tags"><span class="mono type">Walkthrough</span><span class="mono where">Calculator</span></div>
             <h3>An AI graphing calculator</h3>
             <p>Pick a problem, then press enter on the calculator. Each hop follows the real code.</p>
             <div class="ctas"><a class="cta" href="../calculator/#demo">Try the calculator <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../calculator/">Project page</a></div>
@@ -192,9 +204,9 @@
             <img class="d" src="img/fantasy-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
           <div class="body">
-            <div class="tags"><span class="mono type">Live app</span><span class="mono where">Fantasy AI</span></div>
+            <div class="tags"><span class="mono type">Walkthrough</span><span class="mono where">Fantasy AI</span></div>
             <h3>A week with the bot</h3>
-            <p>Steps 1 to 3 are real texts from my leagues. Steps 4 and 5 run made-up leagues through the real code and are marked Example.</p>
+            <p>Steps 1 to 3 are real texts from my leagues. Steps 4 and 5 run made-up leagues through the real code and are marked Example. In step 5, edit an AI draft and try to sneak in a number.</p>
             <div class="ctas"><a class="cta" href="../fantasy/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
           </div>
         </article>
@@ -205,7 +217,7 @@
             <img class="d" src="img/omi-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
           <div class="body">
-            <div class="tags"><span class="mono type">Step through</span><span class="mono where">Omi</span></div>
+            <div class="tags"><span class="mono type">Walkthrough</span><span class="mono where">Omi</span></div>
             <h3>Step through the bug</h3>
             <p>A transaction inside a transaction, and a check that trusted the wrong answer. Run it before and after the fix.</p>
             <div class="ctas"><a class="cta" href="../omi/#stack">Step through it <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../omi/">Project page</a></div>
@@ -223,7 +235,7 @@
 
         <article class="demo reveal">
           <a class="shot" href="../swapchain/#film" tabindex="-1" aria-hidden="true">
-            <img src="../swapchain/media/poster.jpg" alt="" loading="lazy">
+            <img src="img/film.webp" alt="" width="1120" height="700" loading="lazy">
             <span class="badge"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z" fill="currentColor"/></svg>2 min</span>
           </a>
           <div class="body">
@@ -240,7 +252,7 @@
             <img class="d" src="img/ccapp-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
           <div class="body">
-            <div class="tags"><span class="mono type">Scroll animation</span><span class="mono where">Continuum</span></div>
+            <div class="tags"><span class="mono type">Walkthrough</span><span class="mono where">Continuum</span></div>
             <h3>The app screen</h3>
             <p>The app screen during a real swing, in three steps. Scroll to play.</p>
             <div class="ctas"><a class="cta" href="../continuum/#ccApp">Scroll through it <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
@@ -275,23 +287,10 @@
             <img class="d" src="img/race-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
           <div class="body">
-            <div class="tags"><span class="mono type">Animation</span><span class="mono where">Home &middot; Medtronic</span></div>
+            <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home &middot; Medtronic</span></div>
             <h3>Lookup race</h3>
             <p>Five lookups by hand, 10 to 15 minutes each, against about a minute with the agent. Sped up 300&times;.</p>
             <div class="ctas"><a class="cta" href="../#medtronic">Run a lookup <span aria-hidden="true">&rarr;</span></a></div>
-          </div>
-        </article>
-
-        <article class="demo reveal">
-          <a class="shot" href="../fantasy/#demo" tabindex="-1" aria-hidden="true">
-            <img class="l" src="img/guard-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/guard-dark.webp" alt="" width="1120" height="700" loading="lazy">
-          </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Live app</span><span class="mono where">Fantasy AI &middot; step 5</span></div>
-            <h3>Number check</h3>
-            <p>An AI draft. Edit it and try to sneak in a number.</p>
-            <div class="ctas"><a class="cta" href="../fantasy/#demo">Sneak one in <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
           </div>
         </article>
 
@@ -301,7 +300,7 @@
             <img class="d" src="img/paper-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
           <div class="body">
-            <div class="tags"><span class="mono type">Chart</span><span class="mono where">Paper</span></div>
+            <div class="tags"><span class="mono type">Toy</span><span class="mono where">Paper</span></div>
             <h3>The headline result</h3>
             <p>The simplest model won. Hover a model to see its full row.</p>
             <div class="ctas"><a class="cta" href="../paper/#ladder">See the chart <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../paper/">The paper</a></div>
@@ -314,7 +313,7 @@
             <img class="d" src="img/rooting-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
           <div class="body">
-            <div class="tags"><span class="mono type">Live scores</span><span class="mono where">Home &middot; Currently</span></div>
+            <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home &middot; Currently</span></div>
             <h3>Rooting for</h3>
             <p>My Fantasy AI sets all three lineups. Hover a week to see the score.</p>
             <div class="ctas"><a class="cta" href="../#currently">See the weeks <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
@@ -322,7 +321,7 @@
         </article>
 
         <article class="demo reveal">
-          <a class="shot" href="../?nointro" tabindex="-1" aria-hidden="true">
+          <a class="shot" href="../#main" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/hero-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/hero-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -330,7 +329,7 @@
             <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home</span></div>
             <h3>Hit a shot</h3>
             <p>Click anywhere at the top of the home page to hit a shot.</p>
-            <div class="ctas"><a class="cta" href="../?nointro">Hit a shot <span aria-hidden="true">&rarr;</span></a></div>
+            <div class="ctas"><a class="cta" href="../#main">Hit a shot <span aria-hidden="true">&rarr;</span></a></div>
           </div>
         </article>
 
@@ -346,5 +345,16 @@
   </footer>
 </div>
 <script src="../assets/site.js"></script>
+<script>
+  /* the dark previews are lazy while hidden; load them on the first switch to dark, or once the page is idle */
+  (function(){
+    var done=false;
+    function eager(){ if(done) return; done=true; document.querySelectorAll('.shot img.d').forEach(function(i){ i.loading='eager'; }); }
+    document.addEventListener('themechange', eager);
+    if (document.documentElement.dataset.theme === 'dark') eager();
+    var idle = window.requestIdleCallback || function(f){ return setTimeout(f, 2500); };
+    addEventListener('load', function(){ idle(eager); });
+  })();
+</script>
 </body>
 </html>
