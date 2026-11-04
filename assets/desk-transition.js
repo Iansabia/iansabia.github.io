@@ -10,19 +10,27 @@
   var base = '';
   try { base = new URL('desk/', document.currentScript.src).href; } catch (e) { /* no preload */ }
 
+  // skipping rejects vt.ready; swallow it so it never shows up as an uncaught error
+  var skip = function (vt) {
+    var no = function () {};
+    try { vt.ready.catch(no); vt.updateCallbackDone && vt.updateCallbackDone.catch(no); } catch (e) { /* fine */ }
+    vt.skipTransition();
+  };
+
   addEventListener('pagereveal', function (e) {
     var vt = e.viewTransition;
     if (!vt) return;
+    if (window.top !== window) { skip(vt); return; } // embedded demos (iframes) never swap
     var back = false;
     try {
-      if (root.classList.contains('intro-on') || matchMedia('(prefers-reduced-motion: reduce)').matches) { vt.skipTransition(); return; }
+      if (root.classList.contains('intro-on') || matchMedia('(prefers-reduced-motion: reduce)').matches) { skip(vt); return; }
       var a = window.navigation && navigation.activation;
       if (a) {
-        if (a.navigationType === 'reload') { vt.skipTransition(); return; }
+        if (a.navigationType === 'reload') { skip(vt); return; }
         back = a.navigationType === 'traverse' && !!a.from && !!a.entry && a.entry.index > -1 && a.from.index > -1 && a.entry.index < a.from.index;
       } else {
         var n = performance.getEntriesByType('navigation')[0];
-        if (n && n.type === 'reload') { vt.skipTransition(); return; }
+        if (n && n.type === 'reload') { skip(vt); return; }
         back = !!n && n.type === 'back_forward';      // no Navigation API: treat any history move as back
       }
     } catch (err) { /* plain forward transition */ }
@@ -35,7 +43,8 @@
   addEventListener('pageswap', function (e) {
     var vt = e.viewTransition;
     if (!vt) return;
-    try { if (/\/room\/?(index\.html)?$/.test(new URL(e.activation.entry.url).pathname)) vt.skipTransition(); } catch (err) { /* keep it */ }
+    if (window.top !== window) { skip(vt); return; }
+    try { if (/\/room\/?(index\.html)?$/.test(new URL(e.activation.entry.url).pathname)) skip(vt); } catch (err) { /* keep it */ }
   });
 
   if (!base) return;
