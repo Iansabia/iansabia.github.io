@@ -58,6 +58,7 @@
   .top::before{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);right:calc(50% - 50vw);z-index:-1;background:color-mix(in srgb,var(--bg) 84%,transparent);-webkit-backdrop-filter:saturate(1.3) blur(14px);backdrop-filter:saturate(1.3) blur(14px);border-bottom:1px solid transparent;transition:border-color .3s,background-color .35s}
   .top.stuck::before{border-bottom-color:var(--rule)}
   .top nav{display:flex;gap:20px;align-items:center}
+  @media (min-width:861px) and (max-width:1000px){.top nav{gap:14px}} /* room for Demos next to Replay intro */
   .top nav .links{display:contents}
   .top a{text-decoration:none;font-weight:500;font-size:15px}
   .top nav a{position:relative;padding:4px 0;white-space:nowrap}
@@ -516,6 +517,7 @@
     </a>
     <nav aria-label="Main">
       <span class="links">
+        <a href="demos/">Demos</a>
         <a href="#currently">Currently</a>
         <a href="#work">Work</a>
         <a href="#projects">Projects</a>
@@ -528,12 +530,13 @@
       <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
     </nav>
     <div class="menu" id="menu">
-      <a href="#currently">Currently <span class="mono">01</span></a>
-      <a href="#work">Work <span class="mono">02</span></a>
-      <a href="#projects">Projects <span class="mono">03</span></a>
-      <a href="#milan">Milan <span class="mono">04</span></a>
-      <a href="#off">Off the clock <span class="mono">05</span></a>
-      <a href="#contact">Contact <span class="mono">06</span></a>
+      <a href="demos/">Demos <span class="mono">01</span></a>
+      <a href="#currently">Currently <span class="mono">02</span></a>
+      <a href="#work">Work <span class="mono">03</span></a>
+      <a href="#projects">Projects <span class="mono">04</span></a>
+      <a href="#milan">Milan <span class="mono">05</span></a>
+      <a href="#off">Off the clock <span class="mono">06</span></a>
+      <a href="#contact">Contact <span class="mono">07</span></a>
     </div>
   </header>
 
