@@ -15,7 +15,7 @@
 const APPS = [/\/swapchain\/app\/?(index\.html)?$/, /\/continuum\/hole\/?(index\.html)?$/, /\/room\/?(index\.html)?$/];
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-let dlg, box, frameWrap, titleEl, fullLink, backBtn, closeBtn, lastFocus, pendingNav, openUrl, savedScroll, savedTop;
+let dlg, box, frameWrap, titleEl, subEl, fullLink, backBtn, closeBtn, lastFocus, pendingNav, openUrl, savedScroll, savedTop, readyTimers = [];
 
 function css() {
   if (document.querySelector('link[data-demo-window]')) return;
@@ -35,7 +35,7 @@ function build() {
     '<div class="dw-box">' +
       '<div class="dw-bar">' +
         '<button type="button" class="dw-back"><span aria-hidden="true">&larr;</span> Back</button>' +
-        '<span class="dw-title" id="dw-title"></span>' +
+        '<span class="dw-head"><span class="dw-title" id="dw-title"></span><span class="dw-sub" id="dw-sub"></span></span>' +
         '<a class="dw-full" href="#">Open full screen <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 2.5h5v5M9.5 2.5 3 9"/></svg></a>' +
         '<button type="button" class="dw-x" aria-label="Close the demo"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12"/></svg></button>' +
       '</div>' +
@@ -45,6 +45,7 @@ function build() {
   box = dlg.querySelector('.dw-box');
   frameWrap = dlg.querySelector('.dw-frame');
   titleEl = dlg.querySelector('.dw-title');
+  subEl = dlg.querySelector('.dw-sub');
   fullLink = dlg.querySelector('.dw-full');
   backBtn = dlg.querySelector('.dw-back');
   closeBtn = dlg.querySelector('.dw-x');
@@ -104,14 +105,63 @@ function tuneFrame(ifr) {
   try {
     const d = ifr.contentDocument;
     if (!d || !d.documentElement) return;
-    const s = d.createElement('style');
-    s.textContent = 'header.top,.skip{display:none!important}:root{--bar:0px}';
-    d.head && d.head.appendChild(s);
-    d.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !e.defaultPrevented) requestClose(); });
+    if (!d.__dwTuned) tuneOnce(d);
     const id = decodeURIComponent((d.defaultView.location.hash || '').slice(1));
     const t = id && d.getElementById(id);
     if (t) t.scrollIntoView({ block: 'start' });
   } catch (e) { /* another origin: leave it */ }
+}
+
+function tuneOnce(d) {
+  d.__dwTuned = true;
+  // a link inside the window that leaves the framed page: close the window and go there at the top
+  // level, so the window never fills up with its own history
+  d.addEventListener('click', (e) => {
+    if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.hasAttribute('download') || (a.target && a.target !== '_self')) return;
+    const h = a.getAttribute('href') || '';
+    if (h.charAt(0) === '#' || /^(javascript|mailto|tel):/i.test(h)) return;
+    const here = d.defaultView.location;
+    if (a.origin === here.origin && a.pathname === here.pathname && a.search === here.search) return; // same page
+    e.preventDefault();
+    e.stopPropagation();
+    pendingNav = a.href;
+    requestClose();
+  }, true);
+  const s = d.createElement('style');
+  s.textContent = 'header.top,.skip{display:none!important}:root{--bar:0px}';
+  d.head && d.head.appendChild(s);
+  d.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !e.defaultPrevented) requestClose(); });
+}
+
+function isApp(url) { try { return APPS.some((re) => re.test(new URL(url, location.href).pathname)); } catch (e) { return false; } }
+
+// show the frame as soon as its page has parsed (not after every image); the full apps wait for their
+// first canvas, so the window never shows a half built app. Fallbacks: 1.2s for pages, 2.5s for apps.
+function watchReady(ifr, app) {
+  readyTimers.forEach(clearTimeout);
+  readyTimers = [];
+  const t0 = performance.now();
+  let canvasAt = 0;
+  const ready = () => { readyTimers.forEach(clearTimeout); readyTimers = []; if (ifr.isConnected) frameWrap.classList.add('ready'); };
+  const poll = () => {
+    if (!ifr.isConnected) return;
+    let d = null;
+    try { d = ifr.contentDocument; } catch (e) { ready(); return; }
+    const parsed = d && d.URL !== 'about:blank' && d.readyState !== 'loading';
+    if (parsed) tuneFrame(ifr);
+    if (parsed && !app) { ready(); return; }
+    if (parsed && app) {
+      const c = d.querySelector('canvas');
+      // a canvas the app has sized (a fresh one is 300x150 until the app sets it up)
+      if (c && c.width > 0 && (c.width !== 300 || c.height !== 150) && !canvasAt) canvasAt = performance.now();
+      if (canvasAt && performance.now() - canvasAt > 450) { ready(); return; }
+    }
+    if (performance.now() - t0 > (app ? 2500 : 1200)) { ready(); return; }
+    readyTimers.push(setTimeout(poll, 80));
+  };
+  readyTimers.push(setTimeout(poll, 60));
 }
 
 function open(a) {
@@ -120,6 +170,8 @@ function open(a) {
   openUrl = url.href;
   lastFocus = a;
   titleEl.textContent = titleFor(a);
+  subEl.textContent = a.dataset.demoCaption || '';
+  subEl.hidden = !a.dataset.demoCaption;
   fullLink.href = url.href;
 
   frameWrap.classList.remove('ready');
@@ -128,8 +180,10 @@ function open(a) {
   ifr.title = titleEl.textContent;
   ifr.allow = 'fullscreen; autoplay';
   ifr.src = frameSrc(url.href); // set before it is attached, so it adds no history entry
-  ifr.addEventListener('load', () => { frameWrap.classList.add('ready'); tuneFrame(ifr); });
+  const app = isApp(url.href);
+  ifr.addEventListener('load', () => { tuneFrame(ifr); if (!app) frameWrap.classList.add('ready'); });
   frameWrap.appendChild(ifr);
+  watchReady(ifr, app);
 
   try { history.pushState(Object.assign({}, history.state, { dw: url.href }), ''); } catch (e) { /* closes by button only */ }
   lockScroll(true);
@@ -144,7 +198,12 @@ function close() {
   frameWrap.querySelectorAll('iframe').forEach((f) => f.remove()); // stops sound, video and WebGL
   lockScroll(false);
   openUrl = null;
+  readyTimers.forEach(clearTimeout);
+  readyTimers = [];
   if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+  // with a #hash in the URL, Chrome can clear focus on the history step back: put it on the link again
+  const lf = lastFocus;
+  setTimeout(() => { if (lf && document.contains(lf) && document.activeElement !== lf) lf.focus({ preventScroll: true }); }, 0);
   if (pendingNav) { const go = pendingNav; pendingNav = null; location.href = go; }
 }
 

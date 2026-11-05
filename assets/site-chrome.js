@@ -24,6 +24,14 @@ if (html.classList.contains('intro-on')) {
 // ---------------------------------------------------------------- 4. demo chrome
 const DEMO_APP = /\/(swapchain\/app|continuum\/hole)\/?(index\.html)?$/;
 const embedded = framed || html.classList.contains('embed') || /[?&]embed\b/.test(location.search);
+// the site is light unless the visitor picked dark; the apps follow the system setting when nothing is
+// stored, so store the site default before their modules run (this module comes first in <head>)
+if (DEMO_APP.test(location.pathname) && !/[?&]theme=/.test(location.search)) {
+  try {
+    const t = localStorage.getItem('theme');
+    if (t !== 'light' && t !== 'dark') { localStorage.setItem('theme', 'light'); html.setAttribute('data-theme', 'light'); }
+  } catch (e) { /* no storage: the app decides */ }
+}
 if (DEMO_APP.test(location.pathname) && !embedded) {
   if (document.body) demoChrome(); else document.addEventListener('DOMContentLoaded', demoChrome, { once: true });
 }
@@ -33,18 +41,18 @@ function demoChrome() {
   const hole = /continuum\/hole/.test(location.pathname);
   const style = document.createElement('style');
   style.textContent = `
-html.sc-demo{--sc-bar:60px;--sc-back:46px;--sc-h:calc(var(--sc-bar) + var(--sc-back))}
-@media (max-width:640px){html.sc-demo{--sc-bar:56px;--sc-back:44px}}
+html.sc-demo{--sc-bar:60px;--sc-h:var(--sc-bar)}
+@media (max-width:640px){html.sc-demo{--sc-bar:56px}}
 .sc-chrome{--b:#F6F1E6;--i:#0B0817;--y:#4A4363;--r:#D3CAB5;--a:#6D4FE8;--w:#c0632f;
   position:fixed;top:0;left:0;right:0;z-index:2147482000;height:var(--sc-h);
   font:500 15px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;color:var(--i);
   -webkit-font-smoothing:antialiased;background:var(--b);border-bottom:1px solid var(--r);box-sizing:border-box}
 html[data-theme="dark"] .sc-chrome{--b:#1C1B21;--i:#F4F2F7;--y:#C3BECF;--r:#3D3A47;--a:#AE9CFF;--w:#EE9A63}
-@media (prefers-color-scheme:dark){html:not([data-theme="light"]) .sc-chrome{--b:#1C1B21;--i:#F4F2F7;--y:#C3BECF;--r:#3D3A47;--a:#AE9CFF;--w:#EE9A63}}
 .sc-chrome *{box-sizing:border-box;margin:0;padding:0}
 .sc-chrome a{color:inherit;text-decoration:none}
 .sc-chrome :focus-visible{outline:2px solid var(--a);outline-offset:3px}
 .sc-top{position:relative;height:var(--sc-bar);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 clamp(16px,4vw,48px);max-width:1216px;margin:0 auto}
+.sc-left{display:flex;align-items:center;gap:14px;min-width:0}
 .sc-brand{display:flex;align-items:center;gap:10px;white-space:nowrap}
 .sc-brand svg{width:26px;height:26px;flex:none}
 .sc-brand span{font-size:13px;letter-spacing:.01em}
@@ -69,14 +77,14 @@ html[data-theme="dark"] .sc-chrome{--b:#1C1B21;--i:#F4F2F7;--y:#C3BECF;--r:#3D3A
 .sc-menu a{display:flex;justify-content:space-between;align-items:baseline;padding:12px 2px;border-bottom:1px solid var(--r);font-weight:600;font-size:24px;letter-spacing:-.015em;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
 .sc-menu a:last-child{border-bottom:0}
 .sc-menu a span{font-size:13px;font-weight:500;color:var(--a)}
-.sc-backrow{height:var(--sc-back);display:flex;align-items:center;padding:0 clamp(16px,4vw,48px) 8px;max-width:1216px;margin:0 auto}
-.sc-back{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 16px 0 12px;border-radius:999px;background:var(--i);color:var(--b)!important;font-size:14px;font-weight:600;letter-spacing:-.005em;transition:transform .2s cubic-bezier(.32,.72,0,1),opacity .2s}
+.sc-back{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 16px 0 12px;white-space:nowrap;flex:none;border-radius:999px;background:var(--i);color:var(--b)!important;font-size:14px;font-weight:600;letter-spacing:-.005em;transition:transform .2s cubic-bezier(.32,.72,0,1),opacity .2s}
 .sc-back b{font-weight:600;font-size:16px;line-height:1}
 @media (hover:hover){.sc-back:hover{opacity:.86}}
 .sc-back:active{transform:scale(.96)}
 @media (max-width:860px){.sc-links{display:none}.sc-menu-btn{display:inline-flex}}
 @media (max-width:520px){.sc-nav{gap:10px}}
 @media (max-width:640px){.sc-brand span{display:none}}
+@media (max-width:400px){.sc-back{width:40px;padding:0;justify-content:center}.sc-back span{display:none}}
 ${hole
     ? `html.sc-demo .stage{top:var(--sc-h);height:calc(100vh - var(--sc-h))}
 @supports (height:100svh){html.sc-demo .stage{height:calc(100svh - var(--sc-h))}}`
@@ -104,10 +112,13 @@ ${hole
   bar.className = 'sc-chrome';
   bar.innerHTML = `
   <header class="sc-top">
+    <div class="sc-left">
+    <a class="sc-back" href="${from ? from.href : home}" aria-label="${from ? 'Back to the page you came from' : 'Back to Ian’s site'}"><b aria-hidden="true">&larr;</b><span>${from ? 'Back' : 'Ian’s site'}</span></a>
     <a class="sc-brand" href="${home}" aria-label="Ian Sabia, home">
       <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
       <span>Ian Sabia</span>
     </a>
+    </div>
     <nav class="sc-nav" aria-label="Site">
       <span class="sc-links">${items.slice(0, 2).map(link).join('')}</span>
       ${pill}
@@ -118,15 +129,11 @@ ${hole
     <div class="sc-menu" id="sc-menu">
       ${items.map(([href, t], i) => `<a href="${href}">${t} <span>0${i + 1}</span></a>`).join('')}
     </div>
-  </header>
-  <div class="sc-backrow">
-    <a class="sc-back" href="${from ? from.href : home}"><b aria-hidden="true">&larr;</b>${from ? 'Back' : 'Ian’s site'}</a>
-  </div>`;
+  </header>`;
   document.body.prepend(bar);
 
   const back = bar.querySelector('.sc-back');
   if (from) {
-    back.setAttribute('aria-label', 'Back to the page you came from');
     // the page we came from is the entry right behind this one: going back keeps its scroll and state
     back.addEventListener('click', (e) => {
       if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -142,14 +149,10 @@ ${hole
 
   // theme: the app's own switch when it has one (it recolors its 3D), else the site's way
   const toggle = bar.querySelector('.sc-toggle');
-  const isDark = () => {
-    const t = html.getAttribute('data-theme');
-    return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-  };
+  const isDark = () => html.getAttribute('data-theme') === 'dark';   // the site is light unless dark was picked
   const sync = () => toggle.setAttribute('aria-pressed', isDark());
   sync();
   new MutationObserver(sync).observe(html, { attributes: true, attributeFilter: ['data-theme'] });
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', sync);
   toggle.addEventListener('click', () => {
     const want = isDark() ? 'light' : 'dark';
     const own = document.getElementById('theme-btn');
@@ -226,11 +229,23 @@ function addReplay() {
   if (!toggle) return;
   const b = document.createElement('button');
   b.className = 'replay'; b.id = 'replayIntro'; b.type = 'button'; b.setAttribute('aria-label', 'Replay intro');
-  b.innerHTML = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.2v9.6L10.4 6z"/></svg><span>Replay intro</span>';
-  b.addEventListener('click', () => {
-    import(new URL('room/intro.js', ROOT).href).then((m) => m.playIntro({ force: true })).catch(() => { location.href = new URL('room/', ROOT).href; });
-  });
+  b.innerHTML = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.3 4.2A4.2 4.2 0 1 1 1.9 7.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M1.2 1.4v3.3h3.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Replay intro</span>';
+  const replay = () => import(new URL('room/intro.js', ROOT).href).then((m) => m.playIntro({ force: true })).catch(() => { location.href = new URL('room/', ROOT).href; });
+  b.addEventListener('click', replay);
   toggle.before(b);
+  // phones hide the bar button; the menu gets the same Replay intro link the home page has
+  const menu = document.getElementById('menu');
+  if (menu && !document.getElementById('replayIntroMenu')) {
+    const m = document.createElement('a');
+    m.className = 'menu-replay'; m.id = 'replayIntroMenu'; m.href = new URL('room/', ROOT).href; m.setAttribute('data-demo', 'off');
+    m.innerHTML = 'Replay intro <span class="mono" aria-hidden="true">&#8635;</span>';
+    m.addEventListener('click', (e) => {
+      if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      replay();
+    });
+    menu.appendChild(m);
+  }
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addReplay, { once: true }); else addReplay();
 

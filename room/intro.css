@@ -67,3 +67,18 @@ html.intro-lock { scroll-behavior: auto !important; }
   .ian-intro { display: none; }
   html.intro-on::after { display: none; }
 }
+
+/* after a deep-linked first visit: the page's name, for a moment, under the top bar */
+.ian-intro-where {
+  position: fixed; left: 50%; top: calc(var(--bar, 60px) + 12px); z-index: 60;
+  transform: translate(-50%, -6px); opacity: 0; pointer-events: none;
+  max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 8px 16px; border-radius: 999px;
+  background: rgba(255, 253, 250, .86); color: #1D1830; border: 1px solid rgba(29, 24, 48, .09);
+  -webkit-backdrop-filter: saturate(1.8) blur(20px); backdrop-filter: saturate(1.8) blur(20px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .08);
+  font: 600 14px/1.2 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; letter-spacing: -.01em;
+  transition: opacity .4s ease, transform .4s cubic-bezier(.22, 1, .36, 1);
+}
+.ian-intro-where.on { opacity: 1; transform: translate(-50%, 0); }
+html[data-theme="dark"] .ian-intro-where { background: rgba(25, 19, 51, .86); color: #F4F0FA; border-color: rgba(182, 166, 204, .22); }

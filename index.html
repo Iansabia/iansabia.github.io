@@ -103,7 +103,10 @@
   .replay{display:inline-flex;align-items:center;gap:6px;background:none;border:1.5px solid var(--rule);color:var(--ink);border-radius:999px;height:30px;padding:0 12px 0 10px;font:inherit;font-size:13px;cursor:pointer;transition:border-color .3s;white-space:nowrap}
   .replay svg{width:12px;height:12px;fill:currentColor}
   @media (hover:hover){.replay:hover{border-color:var(--ink)}}
-  @media (max-width:520px){.replay{padding:0;width:30px;justify-content:center}.replay span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}}
+  /* phones: Replay intro lives in the menu, so the bar has one play icon (Demos) */
+  .menu a.menu-replay{display:none}
+  @media (max-width:520px){.replay{display:none}.menu a.menu-replay{display:flex}.menu a:nth-last-child(2){border-bottom:1px solid var(--rule)}}
+  @media (min-width:521px){.menu a:nth-last-child(2){border-bottom:0}}
   .toggle{background:none;border:1.5px solid var(--rule);color:var(--ink);border-radius:999px;width:58px;height:30px;position:relative;cursor:pointer;transition:border-color .3s}
   @media (hover:hover){.toggle:hover{border-color:var(--ink)}}
   .toggle i{position:absolute;top:4px;left:5px;width:19px;height:19px;border-radius:50%;background:var(--warm);transition:transform .45s var(--ease),background .3s;box-shadow:0 0 0 0 transparent}
@@ -388,6 +391,7 @@
     .drive-side{border-left:1px solid var(--rule);border-top:0}
   }
   @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
     *,*::before,*::after{animation:none!important;transition:none!important}
     .reveal{opacity:1;transform:none}
     .rule{transform:none}
@@ -414,7 +418,7 @@
         <a href="#contact">Contact</a>
       </span>
       <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu <i aria-hidden="true"></i></button>
-      <button class="replay" id="replayIntro" type="button" aria-label="Replay intro"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.2v9.6L10.4 6z"/></svg><span>Replay intro</span></button>
+      <button class="replay" id="replayIntro" type="button" aria-label="Replay intro"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.3 4.2A4.2 4.2 0 1 1 1.9 7.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M1.2 1.4v3.3h3.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Replay intro</span></button>
       <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
     </nav>
     <div class="menu" id="menu">
@@ -424,6 +428,7 @@
       <a href="#milan">Milan <span class="mono">04</span></a>
       <a href="#off">Off the clock <span class="mono">05</span></a>
       <a href="#contact">Contact <span class="mono">06</span></a>
+      <a class="menu-replay" href="room/" data-demo="off" id="replayIntroMenu">Replay intro <span class="mono" aria-hidden="true">&#8635;</span></a>
     </div>
   </header>
 
@@ -838,8 +843,12 @@
 </script>
 <script type="module" src="room/intro.js"></script>
 <script type="module">
-document.getElementById('replayIntro').addEventListener('click', () => {
-  import('./room/intro.js').then(m => m.playIntro({ force: true })).catch(() => { location.href = 'room/'; });
+const replay = () => import('./room/intro.js').then(m => m.playIntro({ force: true })).catch(() => { location.href = 'room/'; });
+document.getElementById('replayIntro').addEventListener('click', replay);
+document.getElementById('replayIntroMenu').addEventListener('click', (e) => {
+  if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault();
+  replay();
 });
 </script>
 </body>

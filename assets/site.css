@@ -57,7 +57,10 @@ header.top nav a[aria-current="true"]::after{background:var(--acc)}
 .replay{display:inline-flex;align-items:center;gap:6px;background:none;border:1.5px solid var(--rule);color:var(--ink);border-radius:999px;height:30px;padding:0 12px 0 10px;font:inherit;font-size:13px;cursor:pointer;transition:border-color .3s;white-space:nowrap;flex:none}
 .replay svg{width:12px;height:12px;fill:currentColor}
 @media (hover:hover){.replay:hover{border-color:var(--ink)}}
-@media (max-width:520px){.replay{padding:0;width:30px;justify-content:center}.replay span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}}
+/* phones: Replay intro lives in the menu (site-chrome.js adds the link), as on the home page */
+header.top .menu a.menu-replay{display:none}
+@media (max-width:520px){.replay{display:none}header.top .menu a.menu-replay{display:flex}.menu a:nth-last-child(2){border-bottom:1px solid var(--rule)}}
+@media (min-width:521px){.menu a:nth-last-child(2){border-bottom:0}}
 @media (min-width:861px) and (max-width:1000px){header.top nav{gap:14px}}
 /* Projects: a pill in the middle of the bar, shown at every width (phones too, beside Menu) */
 header.top nav a.demos-pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px 0 10px;border:1.5px solid var(--acc);border-radius:999px;color:var(--acc);font-size:13px;font-weight:600;transition:background-color .2s,color .2s}
