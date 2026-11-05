@@ -44,6 +44,7 @@ dialog.dw::backdrop {
 .dw-sub { font-size: 14px; line-height: 1.2; color: var(--ink, #0B0817); }
 .dw-sub[hidden] { display: none; }
 .dw-full { font-size: 13px; color: var(--body, #4A4363); }
+.dw-full[hidden] { display: none; }
 .dw-full svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
 .dw-x { padding: 0; }
 .dw-x svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
@@ -67,6 +68,10 @@ dialog.dw::backdrop {
   animation: dw-spin .9s linear infinite;
 }
 @keyframes dw-spin { to { transform: rotate(360deg); } }
+
+/* a piece of the page in the window (the SwapChain film): the night frame, the film as large as fits.
+   The frame is a size container, so the film's width follows the room left for its card and rail. */
+dialog.dw.dw-node .dw-frame { display: flex; overflow: auto; overscroll-behavior: contain; container-type: size; background: var(--nbg, #0B0817); color: var(--nink, #EFEAF8); }
 
 /* open: the window rises a little and the dim fades in */
 dialog.dw.dw-anim[open] .dw-box { animation: dw-in .38s cubic-bezier(.22, 1, .36, 1) both; }

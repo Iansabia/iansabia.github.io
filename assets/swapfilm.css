@@ -65,3 +65,12 @@
   }
 @container (max-width:330px){.sf-steps{gap:4px}.sf-steps button{font-size:9px}.sf-rail{padding-inline:16px}}
 @media (prefers-reduced-motion:reduce){.sf-in,.sf-steps button,.sf-go{transition:none}}
+
+/* the player opens in the demo window (assets/demo-window.js): on the page it is a teaser, and while the
+   window is open a dark block of the same height holds its place. In the window the film is as large as
+   the room allows, with the card and the rail still under it (the frame is a size container). */
+.sf-stage{display:block;min-width:0}
+.sf-ph{background:var(--nbg)}
+.sf-stage.sf-popped{flex:none;width:min(100%,max(320px,calc((100cqh - 176px) * 16 / 9)));margin:auto}
+.sf-popped .sf-view{width:100%;margin:0}
+.sf-popped .sf-cap{margin:12px 12px 0}

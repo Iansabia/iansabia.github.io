@@ -10,12 +10,16 @@
    The window: a modal <dialog> (focus is trapped, the page behind is inert, Esc closes, focus goes
    back to the link) with a Back bar, a close button and an "Open full screen" link. Opening pushes a
    history entry, so the browser Back button closes the window. The page behind does not scroll.
-   Never runs inside a frame: a page shown in the window just navigates normally. */
+   Never runs inside a frame: a page shown in the window just navigates normally.
+
+   The same window can also hold a piece of this page instead of a frame: window.__dwOpenNode({...})
+   (set by init()) moves a node in with mount(host), and on close calls unmount() to put it back.
+   The SwapChain film (assets/swapfilm.js) plays this way, so there is only ever one video. */
 
 const APPS = [/\/swapchain\/app\/?(index\.html)?$/, /\/continuum\/hole\/?(index\.html)?$/, /\/room\/?(index\.html)?$/];
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-let dlg, box, frameWrap, titleEl, subEl, fullLink, backBtn, closeBtn, lastFocus, pendingNav, openUrl, savedScroll, savedTop, readyTimers = [];
+let dlg, box, frameWrap, titleEl, subEl, fullLink, backBtn, closeBtn, lastFocus, pendingNav, openUrl, savedScroll, savedTop, readyTimers = [], nodeOpts = null;
 
 function css() {
   if (document.querySelector('link[data-demo-window]')) return;
@@ -174,6 +178,8 @@ function open(a) {
   subEl.textContent = a.dataset.demoCaption || '';
   subEl.hidden = !a.dataset.demoCaption;
   fullLink.href = url.href;
+  fullLink.hidden = false;
+  dlg.classList.remove('dw-node');
 
   frameWrap.classList.remove('ready');
   frameWrap.querySelectorAll('iframe').forEach((f) => f.remove());
@@ -193,10 +199,42 @@ function open(a) {
   backBtn.focus();
 }
 
+// a piece of this page in the window (the SwapChain film): same frame, bar, Back, Esc and history step
+// opts: { key, opener, title, caption, mount(host), unmount() }
+function openNode(opts) {
+  if (!opts || typeof opts.mount !== 'function') return false;
+  build();
+  if (dlg.open) return false;
+  openUrl = 'node:' + (opts.key || 'page');
+  lastFocus = opts.opener || document.activeElement;
+  titleEl.textContent = opts.title || 'Demo';
+  subEl.textContent = opts.caption || '';
+  subEl.hidden = !opts.caption;
+  fullLink.hidden = true;
+  readyTimers.forEach(clearTimeout);
+  readyTimers = [];
+  frameWrap.querySelectorAll('iframe').forEach((f) => f.remove());
+  frameWrap.classList.add('ready');
+  dlg.classList.add('dw-node');
+  try { history.pushState(Object.assign({}, history.state, { dw: openUrl }), ''); } catch (e) { /* closes by button only */ }
+  lockScroll(true); // measured while the opener is still on the page
+  nodeOpts = opts;
+  opts.mount(frameWrap);
+  dlg.classList.toggle('dw-anim', !reduced());
+  dlg.showModal();
+  backBtn.focus();
+  return true;
+}
+
 function close() {
   if (!dlg || !dlg.open) return;
   dlg.close();
   frameWrap.querySelectorAll('iframe').forEach((f) => f.remove()); // stops sound, video and WebGL
+  if (nodeOpts) {
+    const o = nodeOpts; nodeOpts = null;
+    try { if (typeof o.unmount === 'function') o.unmount(); } catch (e) { /* the page part stays where it is */ }
+    dlg.classList.remove('dw-node');
+  }
   lockScroll(false);
   openUrl = null;
   readyTimers.forEach(clearTimeout);
@@ -238,6 +276,7 @@ export function init() {
   window.__demoWindow = true;
   if (window.top !== window) return; // pages shown inside the window navigate normally
   css();
+  window.__dwOpenNode = openNode;
   document.addEventListener('click', onClick);
   addEventListener('popstate', () => {
     if (dlg && dlg.open && !(history.state && history.state.dw === openUrl)) close();

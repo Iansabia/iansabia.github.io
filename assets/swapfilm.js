@@ -2,7 +2,10 @@
    Any [data-swapfilm] holding a .sf-view > video gets a caption card, a step rail and play/pause.
    The chapters follow what is on screen in swapchain-demo.mp4 (117.5 s); the words come from the film and the
    SwapChain page. It never autoplays: nothing downloads until the frame is near the screen (then only the
-   index, about 80 KB) and the film starts on "Play the film", a click on the picture or a chapter. */
+   index, about 80 KB) and the film starts on "Play the film", a click on the picture or a chapter.
+   On the page it is a teaser: any of those opens the site's demo window (assets/demo-window.js) and the same
+   player (the one video, its card and rail) moves into it and plays there, large. Closing the window pauses it
+   and puts it back. Without the window (inside a frame, or before it loads) it plays on the page as before. */
 (function () {
   var CH = [
     { t: 0, label: 'Pairs', icon: 'pair', title: 'BU only swaps pairs',
@@ -39,6 +42,10 @@
     var view = root.querySelector('.sf-view'), v = view && view.querySelector('video');
     if (!v) return;
     root.classList.add('sf');
+    // the player itself: the picture, its card and the rail. This is what moves into the window.
+    var stage = el('div', 'sf sf-stage');
+    view.before(stage);
+    stage.appendChild(view);
     var n = CH.length;
     var phone = v.dataset.phone && matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
     if (phone) v.src = v.dataset.phone;   // the same film at 960px and 30fps: 6MB instead of 28MB
@@ -75,7 +82,7 @@
       var b = el('button', null, '<span>' + c.label + '</span><i></i>');
       b.type = 'button';
       b.setAttribute('aria-label', (i + 1) + ' of ' + n + ', ' + c.label + ': ' + c.title + '. Starts at ' + fmt(c.t) + '.');
-      b.addEventListener('click', function () { jump(i); });
+      b.addEventListener('click', function () { pop(b); jump(i); });
       steps.appendChild(b);
       c.end = end;
       return b;
@@ -86,16 +93,16 @@
     if (fsOk) {
       var fs = el('button', 'sf-btn sf-fs', '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg>');
       fs.type = 'button'; fs.setAttribute('aria-label', 'Watch full screen');
-      fs.addEventListener('click', full);
+      fs.addEventListener('click', function () { pop(fs); full(); });
       rail.appendChild(fs);
     }
     view.after(rail);
     var say = el('p', 'sf-say'); say.setAttribute('aria-live', 'polite');
     rail.after(say);
 
-    var cur = -1, said = -1, started = false, autoPaused = false, raf = 0;
+    var cur = -1, said = -1, started = false, autoPaused = false, raf = 0, popped = false, ph = null;
 
-    function state(s) { root.dataset.state = s; label(); }
+    function state(s) { root.dataset.state = s; stage.dataset.state = s; label(); }
     function label() {
       var s = root.dataset.state;
       play.setAttribute('aria-label', s === 'playing' ? 'Pause the film' : s === 'ended' ? 'Play the film again' : 'Play the film');
@@ -151,9 +158,35 @@
     }
     document.addEventListener('fullscreenchange', function () { if (!document.fullscreenElement) v.controls = false; });
 
-    play.addEventListener('click', toggle);
-    hit.addEventListener('click', toggle);
-    go.addEventListener('click', function () { if (root.dataset.state === 'ended') jump(0); else begin(); });
+    // on the page, a press opens the window first; opener is where focus goes back when it closes
+    function pop(opener) {
+      if (popped || typeof window.__dwOpenNode !== 'function') return false;
+      return window.__dwOpenNode({
+        key: 'swapfilm', opener: opener, title: 'SwapChain film',
+        caption: n + ' steps · 2 min · No sound',
+        mount: function (host) {
+          ph = el('div', 'sf-ph'); ph.setAttribute('aria-hidden', 'true');
+          ph.style.height = stage.offsetHeight + 'px';
+          stage.before(ph);
+          host.appendChild(stage);
+          stage.classList.add('sf-popped');
+          popped = true;
+        },
+        unmount: function () {
+          autoPaused = false;
+          if (!v.paused) v.pause();
+          if (document.fullscreenElement === v && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+          stage.classList.remove('sf-popped');
+          if (ph) { ph.replaceWith(stage); ph = null; }
+          popped = false;
+        }
+      }) !== false;
+    }
+    function playOrAgain() { if (root.dataset.state === 'ended') jump(0); else begin(); }
+
+    play.addEventListener('click', function () { if (pop(play)) playOrAgain(); else toggle(); });
+    hit.addEventListener('click', function () { if (pop(play)) playOrAgain(); else toggle(); });
+    go.addEventListener('click', function () { pop(play); playOrAgain(); });
     // arrow keys move between the chapters in the rail
     steps.addEventListener('keydown', function (e) {
       var i = bars.indexOf(document.activeElement); if (i < 0) return;
