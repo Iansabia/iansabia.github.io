@@ -268,6 +268,12 @@
     .nv-stack .drive blockquote{font-size:13.5px;line-height:1.38}
     .nv-stack .drive-note{font-size:12.5px;line-height:1.38}
   }
+  /* phones and narrow tablets: the hole gets the same height it has on /continuum/, so its 'Phone on the cart' inset
+     clears its own control bar */
+  @media (max-width:900px){
+    .hole-view{flex:none;min-height:0;height:clamp(480px,calc(100vh - var(--bar) - 170px),640px)}
+    @supports (height:100svh){.hole-view{height:clamp(480px,calc(100svh - var(--bar) - 170px),640px)}}
+  }
   @media (max-width:640px){
     .lanes{padding:20px 16px;gap:22px}
     .verdict{padding-left:16px;padding-right:16px}

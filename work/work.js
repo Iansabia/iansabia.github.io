@@ -86,7 +86,25 @@
     frame.addEventListener('load', () => { if (!loaded) return; send({ type: 'cc-hole', theme: theme() }); setTimeout(show, 40000); });
     const load = () => { if (loaded) return; loaded = true; frame.src = '../continuum/hole/?embed=1&theme=' + theme(); };
     if (!('IntersectionObserver' in window)) { load(); return; }
-    new IntersectionObserver((es, o) => { if (es.some((e) => e.isIntersecting)) { load(); o.disconnect(); } }, { rootMargin: '100% 0px' }).observe(view);
+    /* load only once scrolling has settled near the hole: starting it mid-scroll (say on the smooth jump to a #nvidia
+       link) can stall the page's own scroll while the 3D scene starts up */
+    let near = false, settle = 0;
+    const later = () => { clearTimeout(settle); if (near && !loaded) settle = setTimeout(() => { if (near) load(); }, 300); };
+    addEventListener('scroll', later, { passive: true });
+    new IntersectionObserver((es, o) => {
+      near = es[es.length - 1].isIntersecting;
+      if (loaded) { o.disconnect(); removeEventListener('scroll', later); } else later();
+    }, { rootMargin: '100% 0px' }).observe(view);
+    /* Full screen opens a second copy of the hole in the demo window: pause this one meanwhile, and play it again
+       when the window closes if it was playing and is still on screen */
+    let held = false;
+    const full = document.querySelector('#ccHole .hole-full');
+    if (full) full.addEventListener('click', () => { held = loaded && isPlaying(); if (held) send({ type: 'cc-hole', pause: true }); });
+    document.addEventListener('close', (e) => {
+      if (!held || !(e.target instanceof HTMLDialogElement)) return;
+      held = false;
+      if (inView) setTimeout(play, 60); else resume = true;
+    }, true);
     new IntersectionObserver((es) => {
       const r = es[es.length - 1].intersectionRatio;
       if (r >= .5 && !inView) {
