@@ -372,7 +372,7 @@
       <h1 id="main-h1">A fix <em>inside Omi</em></h1>
       <p class="lede">Omi is an open-source AI wearable and desktop app. Its Mac app had a bug: chat, tasks and background synthesis all failed with the same database error. I traced it to one check, wrote a test that failed the same way, and fixed it. The fix was merged into main.</p>
       <div class="facts mono"><span>PR<b>#8443</b></span><span>Merged<b>Jun 27, 2026</b></span><span>Tests<b>233/233</b></span><span>Diff<b>+81 &minus;3</b></span></div>
-      <div class="actions"><a class="more" href="#stack">Step through the bug <span aria-hidden="true">&rarr;</span></a><a class="more quiet" href="https://github.com/BasedHardware/omi/pull/8443">See the pull request <span aria-hidden="true">&nearr;</span></a></div>
+      <div class="actions"><a class="more" href="#stack">Step through the bug <span aria-hidden="true">&rarr;</span></a><a target="_blank" class="more quiet" href="https://github.com/BasedHardware/omi/pull/8443" rel="noopener noreferrer">See the pull request <span aria-hidden="true">&nearr;</span></a></div>
     </header>
 
     <section class="block" id="broke">
@@ -490,7 +490,7 @@
      throw error;
    }
  }</code></pre>
-            <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+            <p class="src">From <a target="_blank" href="https://github.com/BasedHardware/omi" rel="noopener noreferrer">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
           </figure>
           <div class="note"><span class="mono">The old check</span><p>That first <code>if</code> is where it went wrong. When the flag said false inside an open transaction, the next line sent a second BEGIN. The helper is still in the file, and the schema migrations still use it.</p></div>
         </div>
@@ -513,7 +513,7 @@
 +      this.transactionDepth -= 1;
 +    }
 +  }</code></pre>
-          <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+          <p class="src">From <a target="_blank" href="https://github.com/BasedHardware/omi" rel="noopener noreferrer">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
         </figure>
         <div class="note"><span class="mono">Part 1 &middot; a nested call joins</span><p>If a transaction is already open, just run the work. No BEGIN, no COMMIT. The <code>finally</code> puts the count back even if the work throws.</p></div>
       </div>
@@ -534,7 +534,7 @@
 +    this.transactionDepth -= 1;
 +  }
  }</code></pre>
-          <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+          <p class="src">From <a target="_blank" href="https://github.com/BasedHardware/omi" rel="noopener noreferrer">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
         </figure>
         <div class="note"><span class="mono">Part 2 &middot; the outer call owns it</span><p>Otherwise this call owns the transaction: BEGIN, run the work, then COMMIT. If anything inside throws, ROLLBACK undoes all of it, nested work included.</p></div>
       </div>
@@ -560,7 +560,7 @@
           <pre class="cx" tabindex="0" role="region" aria-label="Diff: one removed line, then two added lines"><code>-this.db = new DatabaseSync(databasePath);
 +const Database = options.databaseFactory ?? DatabaseSync;
 +this.db = new Database(databasePath) as DatabaseSync;</code></pre>
-          <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+          <p class="src">From <a target="_blank" href="https://github.com/BasedHardware/omi" rel="noopener noreferrer">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
         </figure>
         <div class="note"><span class="mono">The hook</span><p>A new <code>databaseFactory</code> option lets a test pass in its own database. Without it, the store uses Node's real <code>DatabaseSync</code>, same as before.</p></div>
       </div>
@@ -590,7 +590,7 @@
      }
    }
 ~prepare() and close() stubs, lines 283-287</code></pre>
-          <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+          <p class="src">From <a target="_blank" href="https://github.com/BasedHardware/omi" rel="noopener noreferrer">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
         </figure>
         <div class="note"><span class="mono">The fake</span><p>The flag never flips, and a second BEGIN throws the same message SQLite does. Every BEGIN, COMMIT and ROLLBACK goes into <code>execLog</code>.</p></div>
       </div>
@@ -603,7 +603,7 @@
  expect(result).toBe("inner-result");
 ~one comment line
  expect(execLog).toEqual(["BEGIN", "COMMIT"]);</code></pre>
-          <p class="src">From <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
+          <p class="src">From <a target="_blank" href="https://github.com/BasedHardware/omi" rel="noopener noreferrer">BasedHardware/omi</a>, <a href="#license">MIT License</a></p>
         </figure>
         <div class="note"><span class="mono">The check</span><p>One transaction inside another. The inner result comes back, and the fake database saw exactly one BEGIN and one COMMIT.</p></div>
       </div>
@@ -622,7 +622,7 @@
       <div class="split">
         <div class="copy reveal">
           <p>It's a small diff. The point was to stop trusting a flag that could be wrong, and to prove the fix with a test that fails for the same reason the app did.</p>
-          <div class="result-actions"><a class="more" href="https://github.com/BasedHardware/omi/pull/8443">See the pull request <span aria-hidden="true">&nearr;</span></a></div>
+          <div class="result-actions"><a target="_blank" class="more" href="https://github.com/BasedHardware/omi/pull/8443" rel="noopener noreferrer">See the pull request <span aria-hidden="true">&nearr;</span></a></div>
         </div>
         <figure class="changelog reveal">
           <span class="mono">desktop/macos/CHANGELOG.json</span>
@@ -634,7 +634,7 @@
 
     <aside class="credits" id="license" aria-label="Credits">
       <span class="mono">Credits</span>
-      <p>Code excerpts on this page are from <a href="https://github.com/BasedHardware/omi">BasedHardware/omi</a>, used under the MIT License. Copyright (c) 2024 Based Hardware Contributors. Whitespace is trimmed for width.</p>
+      <p>Code excerpts on this page are from <a target="_blank" href="https://github.com/BasedHardware/omi" rel="noopener noreferrer">BasedHardware/omi</a>, used under the MIT License. Copyright (c) 2024 Based Hardware Contributors. Whitespace is trimmed for width.</p>
       <details>
         <summary>Read the MIT License</summary>
         <pre>MIT License
@@ -661,7 +661,7 @@ SOFTWARE.</pre>
       </details>
     </aside>
 
-    <div class="back"><a class="more" href="../projects/#omi"><span aria-hidden="true">&larr;</span> All projects</a><a class="more quiet" href="https://github.com/BasedHardware/omi/pull/8443">See the pull request <span aria-hidden="true">&nearr;</span></a></div>
+    <div class="back"><a class="more" href="../projects/#omi"><span aria-hidden="true">&larr;</span> All projects</a><a target="_blank" class="more quiet" href="https://github.com/BasedHardware/omi/pull/8443" rel="noopener noreferrer">See the pull request <span aria-hidden="true">&nearr;</span></a></div>
   </main>
 
   <footer>
