@@ -32,7 +32,9 @@
 
   /* ---- intro: one block. Name, tagline and links on the left, the range on the right, so the work
      starts about a screen down. The photo sits in the name line like a portrait stamp. ---- */
-  .hero{padding-top:clamp(28px,4.4vw,72px);cursor:crosshair}
+  .hero{padding-top:clamp(24px,3vw,48px);cursor:crosshair}
+  /* the first section sits closer under the hero, so on a laptop screen "01 / Currently" (Medtronic, Continuum, NVIDIA) starts in the first view */
+  .hero + section.block{padding-top:clamp(56px,6vw,84px)}
   .hero a,.hero button{cursor:pointer}
   .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,4vw,56px);align-items:stretch}
   .hero-text{min-width:0;display:flex;flex-direction:column;justify-content:center}
@@ -286,7 +288,7 @@
       <a href="#milan">Milan <span class="mono">04</span></a>
       <a href="#off">Off the clock <span class="mono">05</span></a>
       <a href="#contact">Contact <span class="mono">06</span></a>
-      <a class="menu-replay" href="room/" data-demo="off" id="replayIntroMenu">Replay intro <span class="mono" aria-hidden="true">&#8635;</span></a>
+      <a class="menu-replay" href="room/" data-demo="off" id="replayIntroMenu">Replay intro <svg class="ri" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.3 4.2A4.2 4.2 0 1 1 1.9 7.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M1.2 1.4v3.3h3.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
   </header>
 
@@ -494,9 +496,10 @@
   });
   /* pinned header: a hairline once you scroll, a menu on phones, and the section you're in underlined */
   const topBar = document.querySelector('.top'), menuBtn = document.getElementById('menuBtn'), menu = document.getElementById('menu');
-  const navLinks = [...document.querySelectorAll('.top nav .links a, .menu a')];
+  const navLinks = [...document.querySelectorAll('.top nav .links a, .top nav a.demos-pill, .menu a')];
   /* Work and Projects teasers link out to their own pages, so their nav links light up for those sections */
-  const mark = (id) => navLinks.forEach((a) => { const h = a.getAttribute('href'); (id && (h === '#' + id || h === id + '/') ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')); });
+  let marked = '';
+  const mark = (id) => (marked = id, navLinks).forEach((a) => { const h = a.getAttribute('href'); (id && (h === '#' + id || h === id + '/') ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')); });
   const stick = () => { topBar.classList.toggle('stuck', scrollY > 4); if (scrollY < 200) mark(''); };
   addEventListener('scroll', stick, { passive: true }); stick();
   const setMenu = (open) => { menu.classList.toggle('open', open); menuBtn.setAttribute('aria-expanded', open); };
@@ -504,7 +507,8 @@
   menu.addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
   document.addEventListener('click', (e) => { if (!menu.contains(e.target)) setMenu(false); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.classList.contains('open')) { setMenu(false); menuBtn.focus(); } });
-  const spy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) mark(e.target.id); }), { rootMargin: '-45% 0px -50% 0px' });
+  /* a section that leaves the band clears its mark (the intro warps the page, so a section can pass through the band without any scroll) */
+  const spy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) mark(e.target.id); else if (marked === e.target.id) mark(''); }), { rootMargin: '-45% 0px -50% 0px' });
   ['currently', 'work', 'projects', 'milan', 'off', 'contact'].forEach((id) => { const sec = document.getElementById(id); if (sec) spy.observe(sec); });
 
   /* phones get "tap", everyone else gets "click" and "hover" */

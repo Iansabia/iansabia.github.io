@@ -27,10 +27,10 @@
      and its toy in a rounded frame on the right (the caddy's hole figure). Shared pieces come from assets/site.css. */
   html{scroll-padding-top:calc(var(--bar) + 76px)}
   .page-hero{padding-bottom:clamp(28px,3.4vw,44px)}
-  .ph{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:clamp(20px,4.5vw,68px);align-items:end}
+  .ph{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(20px,4.5vw,68px);align-items:end}
   .page-hero h1{margin:8px 0 0}
   .page-hero h1 em{color:var(--ink)}
-  .ph .lede{justify-self:end;text-align:left;text-wrap:pretty;max-width:30ch;padding-bottom:.35em}
+  .ph .lede{justify-self:start;text-align:left;text-wrap:pretty;max-width:30ch;padding-bottom:.35em}
   @media (max-width:860px){.ph{grid-template-columns:minmax(0,1fr);gap:16px}.ph .lede{justify-self:start;text-align:left;padding-bottom:0}}
 
   /* jump bar: a segmented control that rides under the top bar; the case in view is the filled segment.
@@ -65,10 +65,15 @@
   .entry{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(28px,3vw,40px) clamp(28px,4.5vw,72px);align-items:stretch;padding:clamp(72px,9vw,128px) 0;border-top:1px solid var(--rule)}
   .entry:first-child{padding-top:0;border-top:0}
   .entry:last-child{padding-bottom:0}
+  /* a jump to a later case skips its top padding, so the case starts just under the jump bar, not a fifth of a screen down */
+  .entry + .entry{scroll-margin-top:calc(28px - clamp(72px,9vw,128px))}
+  /* a case that ends in a stats band: the next case's rule closes the band, so there is one line, not two */
+  .entry:has(> .stats.band:last-child):not(:last-child){padding-bottom:0}
+  .entry:has(> .stats.band:last-child):not(:last-child) > .stats.band{border-bottom:0}
   .case-copy{display:flex;flex-direction:column;min-width:0}
   .case-copy > .lbl{margin-bottom:16px}
-  .entry h3{font-size:clamp(32px,3.6vw,52px);line-height:1.02;letter-spacing:-.03em;margin:0 0 24px;text-wrap:balance}
-  .entry h3 em{color:var(--body)}
+  .entry h2{font-size:clamp(32px,3.6vw,52px);line-height:1.02;letter-spacing:-.03em;margin:0 0 24px;text-wrap:balance}
+  .entry h2 em{color:var(--body)}
   .case-copy p{font-weight:400;font-size:17px;line-height:1.55;color:var(--body);max-width:56ch;margin-bottom:14px}
   .case-copy p b{color:var(--ink);font-weight:500}
   .entry-links{margin-top:auto;padding-top:18px;display:flex;flex-wrap:wrap;gap:10px}
@@ -288,7 +293,7 @@
       <article class="entry" id="medtronic" aria-label="Medtronic">
         <div class="case-copy reveal">
           <span class="lbl acc">01 / Medtronic &middot; North Haven, CT</span>
-          <h3>Five systems, <em>one question</em></h3>
+          <h2>Five systems, <em>one question</em></h2>
           <p>A medical device plant kept its quality records in five separate systems. Every time someone had a question, the quality team dug through them by hand.</p>
           <p>I sat with the team first to learn what they actually used. Then I built <b>one Snowflake database across all five</b>, with an AI agent on top that lives in <b>Microsoft Teams</b>, where the plant already works. After I presented it to site leadership, it rolled out across the site.</p>
           <p>The model was the easy part. What made it accurate was the boring stuff underneath: clean joins, written rules, and sending unsure matches to a human instead of guessing.</p>
@@ -324,7 +329,7 @@
       <article class="entry" id="continuum" aria-label="Continuum">
         <div class="case-copy reveal">
           <span class="lbl acc">02 / Continuum &middot; Co-Founder</span>
-          <h3>The caddy <em>you already own</em></h3>
+          <h2>The caddy <em>you already own</em></h2>
           <p>An AI caddy that runs on your phone. It tracks your shots from ordinary video, gives swing feedback, and tells you where to aim based on where you've been missing.</p>
           <p>We started out building software for indoor simulators. About 70 conversations with golfers moved us onto the course instead. I lead product and ML.</p>
           <p>We test everything against hand labels before we trust it. When SAM 3.1 beat our own ball tracker on the same 91 hand-labeled frames, in a test that cost under $1, we switched.</p>
@@ -347,7 +352,7 @@
       <article class="entry" id="nvidia" aria-label="NVIDIA challenge">
         <div class="case-copy reveal">
           <span class="lbl acc">03 / NVIDIA Physical AI challenge &middot; solo</span>
-          <h3>Teaching a car <em>to explain itself</em></h3>
+          <h2>Teaching a car <em>to explain itself</em></h2>
           <p>NVIDIA's challenge asks a self-driving model to explain why the car makes its decision in unusual scenes. A judge model grades each explanation against human labels.</p>
           <p>I took NVIDIA's own driving model, <b>Alpamayo 1.5</b>, trained it further on the task, and got it running on a MacBook with a rewrite that makes it answer <b>4 to 7&times; faster</b>.</p>
           <p>Try it below: make the call on four real dashcam clips, then see what my model said. The contest closed on Oct 31.</p>

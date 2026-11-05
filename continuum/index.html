@@ -156,8 +156,9 @@
   [data-cc="scrub"] .cc-step.is-active{opacity:1;transform:none;pointer-events:auto;transition-delay:.08s}
 
   /* the phone: a CSS iPhone whose screen scrubs through the app, with a readout on each side */
-  .cc-next{margin-top:clamp(64px,8vw,104px);font-family:var(--sans);font-weight:500;font-size:clamp(28px,3vw,40px);line-height:1.15;letter-spacing:-.015em;color:var(--ink)}
-  .cc-next+.sub{margin-top:8px}
+  /* a second head inside section 01, in the same index / h / sub pattern as the section heads */
+  .cc-next{margin-top:clamp(64px,8vw,104px)}
+  .cc-next h3{font-family:var(--sans);font-weight:500;font-size:clamp(32px,3.6vw,52px);line-height:1;letter-spacing:-.03em;color:var(--ink);text-wrap:balance}
   .cc-appview{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:clamp(16px,3vw,48px);padding:12px 16px}
   .cc-iphone{--ph:clamp(280px,calc(var(--cc-avail) - 41px - var(--cc-cap,150px) - 34px),720px);position:relative;height:var(--ph);aspect-ratio:78/163.4;border-radius:17%/8.1%;
     background:linear-gradient(135deg,#f6a35c 0%,#e77a2c 42%,#c95c16 100%);
@@ -308,8 +309,7 @@
 
       <p class="loop-note reveal"><b>Why I show it this way.</b> Our first investor was not technical, so I showed what the product does instead of how the tracking works. My view: consumers and investors care that it works, the way runners trust Strava without knowing its algorithm.</p>
 
-      <h3 class="cc-next reveal">The app on a real swing</h3>
-      <p class="sub reveal">The app screen during a real swing, in three steps.</p>
+      <div class="shead cc-next reveal"><div><span class="lbl acc">01 / The app</span><h3>The app on a real swing</h3></div><p class="sub">The app screen during a real swing, in three steps.</p></div>
 
       <div class="cc-track" id="ccApp" style="--len:280vh">
         <div class="cc-pin">

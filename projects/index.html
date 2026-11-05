@@ -27,10 +27,10 @@
      project as a rounded screenshot on the page ground (a light and a dark copy, swapped with the theme), a short
      blurb, "Try the demo" (opens the demo window) and its project page. Shared pieces come from assets/site.css. */
   .page-hero{padding-bottom:clamp(28px,3.4vw,44px)}
-  .ph{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,4.5vw,68px);align-items:end}
+  .ph{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(20px,4.5vw,68px);align-items:end}
   .page-hero h1{margin:8px 0 0}
   .page-hero h1 em{color:var(--ink)}
-  .ph .lede{justify-self:end;text-align:left;text-wrap:pretty;max-width:40ch;padding-bottom:.35em}
+  .ph .lede{justify-self:start;text-align:left;text-wrap:pretty;max-width:40ch;padding-bottom:.35em}
   @media (max-width:860px){.ph{grid-template-columns:minmax(0,1fr);gap:16px}.ph .lede{justify-self:start;text-align:left;padding-bottom:0}}
   #all{padding-top:clamp(32px,4vw,52px)}
 
@@ -43,7 +43,7 @@
   .vid-play span{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 20px;border-radius:var(--r-pill);background:var(--nink);color:#0B0817;font:500 15px/1 var(--sans)}
   .vid-play svg{width:10px;height:12px;flex:none}
   .lead-body{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:18px clamp(24px,4.5vw,72px);align-items:start}
-  .lead-body h3{margin-top:14px;font-size:clamp(44px,5.4vw,76px);line-height:.95;letter-spacing:-.04em}
+  .lead-body h2{margin-top:14px;font-size:clamp(44px,5.4vw,76px);line-height:.95;letter-spacing:-.04em}
   .lead-body p{font-weight:400;font-size:17px;line-height:1.55;color:var(--body);max-width:60ch}
 
   /* the other projects: a rounded screenshot, then the words */
@@ -69,7 +69,7 @@
     .shot:hover .shot-in{transform:translateY(-4px)}
   }
   .tags{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;min-height:16px}
-  .demo h3{font-size:clamp(26px,2.5vw,36px);line-height:1.04;letter-spacing:-.03em;text-wrap:balance}
+  .demo h2{font-size:clamp(26px,2.5vw,36px);line-height:1.04;letter-spacing:-.03em;text-wrap:balance}
   .demo p{font-weight:400;font-size:16px;line-height:1.55;color:var(--body);max-width:54ch}
   .ctas{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:auto;padding-top:8px}
   .lead .ctas{margin-top:22px;padding-top:0}
@@ -93,7 +93,7 @@
   @media (max-width:760px){.demos{grid-template-columns:minmax(0,1fr)}}
   @media (max-width:600px){
     .demos{gap:52px;margin-top:64px;padding-top:36px}
-    .demo h3{font-size:28px}
+    .demo h2{font-size:28px}
     .lead-body p,.demo p{font-size:16px}
   }
 </style>
@@ -151,7 +151,7 @@
         <div class="lead-body">
           <div>
             <span class="lbl acc">Product &middot; DS229 team project</span>
-            <h3>SwapChain</h3>
+            <h2>SwapChain</h2>
           </div>
           <div>
             <p>A room-swap marketplace for BU, built in my product management class with a team of four. BU's swap tools only match pairs. SwapChain finds loops of students who can all move at once (A takes B's room, B takes C's, C takes A's). I built the demo: a 3D campus map, floor plans and the loop finder. The film follows a swap list of 350 students, all made up. No sound.</p>
@@ -168,7 +168,7 @@
             <img class="d" src="img/fantasy-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
           <div class="tags"><span class="lbl acc">02 / Python &middot; agents</span><span class="stars" data-repo="Iansabia/fantasy-ai"></span></div>
-          <h3>Fantasy AI Manager</h3>
+          <h2>Fantasy AI Manager</h2>
           <p>I was in too many fantasy leagues, so I built an agent that runs three of them for me: lineups, injuries, waivers and trade ideas. Plain code makes every call. The AI only reads the news and explains.</p>
           <div class="ctas"><a class="pill sm" data-demo data-demo-title="A week with the bot" href="../fantasy/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../fantasy/">Project page</a></div>
         </article>
@@ -179,7 +179,7 @@
             <img class="d" src="img/paper-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
           <div class="tags"><span class="lbl acc">03 / Research &middot; DS340</span><span class="stars" data-repo="Iansabia/DS340-Project"></span></div>
-          <h3>Complexity is not an edge</h3>
+          <h2>Complexity is not an edge</h2>
           <p>Polymarket and Kalshi often price the same event differently. Does a fancier model profit more from those gaps? No. The simplest model won, with about 30&times; more edge per trade.</p>
           <div class="ctas"><a class="pill sm" data-demo data-demo-title="The headline result" href="../paper/#ladder">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../paper/">Read the paper</a></div>
         </article>
@@ -190,7 +190,7 @@
             <img class="d" src="img/calc-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
           <div class="tags"><span class="lbl acc">04 / C++ &middot; ESP32-S3</span><span class="stars" data-repo="OtterCadGH/nternet-Link"></span></div>
-          <h3>An AI graphing calculator</h3>
+          <h2>An AI graphing calculator</h2>
           <p>A camera and an ESP32 chip wired into a TI-Nspire. It photographs a handwritten problem and shows a worked solution on the calculator. I wrote the firmware, the calculator client and the local proxy.</p>
           <div class="ctas"><a class="pill sm" data-demo href="../calculator/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../calculator/">Project page</a></div>
         </article>
@@ -201,7 +201,7 @@
             <img class="d" src="img/omi-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
           <div class="tags"><span class="lbl acc">05 / TypeScript &middot; open source</span><span class="stars" data-repo="BasedHardware/omi"></span></div>
-          <h3>A fix inside Omi</h3>
+          <h2>A fix inside Omi</h2>
           <p>Omi is an open-source AI wearable. Its macOS app broke chat and tasks whenever two database transactions nested. I wrote a failing test first, fixed it, and it was merged into main.</p>
           <div class="ctas"><a class="pill sm" data-demo data-demo-title="Step through the bug" href="../omi/#stack">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../omi/">Project page</a></div>
         </article>

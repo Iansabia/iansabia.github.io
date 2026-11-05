@@ -43,6 +43,8 @@
     background:radial-gradient(120% 60% at 50% 32%,color-mix(in srgb,var(--acc) 10%,var(--tile)),var(--tile) 72%)}
   .strip{grid-area:strip;padding:18px 22px 20px;border-bottom:1px solid var(--rule);background:var(--frame)}
   .wire-area{grid-area:wire;padding:18px 22px 22px}
+  /* wide screens: the calculator rides along while the log scrolls, so its column never sits empty */
+  @media (min-width:901px){.demo{overflow:clip}.calc-stick{position:sticky;top:calc(var(--bar) + 20px)}}
   .hint{margin-top:14px;color:var(--body);font-size:14px}
   .hint b{color:var(--ink);font-weight:500}
 
@@ -437,6 +439,7 @@
 
           <div class="run">
             <div class="calc-area">
+              <div class="calc-stick">
               <span class="lbl mono">Press enter</span>
               <div class="calc-wrap">
                 <div class="calc" id="calc">
@@ -482,6 +485,7 @@
                 </div>
               </div>
               <p class="calc-note">Example output, written in the format the device uses. Drawing, not to scale.</p>
+              </div>
             </div>
 
             <div class="strip">

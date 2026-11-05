@@ -42,7 +42,7 @@
 
   /* the rule band */
   .band{margin-top:clamp(36px,5vw,56px);padding:clamp(24px,4vw,40px);display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px clamp(24px,4vw,56px);align-items:center;border-radius:var(--r-frame);box-shadow:inset 0 0 0 1px var(--nrule);transition:background-color .35s}
-  .band .mono{display:block;margin-bottom:12px}
+  .band .mono,.band > div > .lbl{display:block;margin-bottom:12px}
   .band .big{font-family:var(--sans);font-weight:500;font-size:clamp(24px,2.8vw,36px);line-height:1.12;letter-spacing:-.025em;color:var(--nink)}
   .band .big b{font-weight:500}
   .band .big em{font-style:normal;color:var(--nline)}
@@ -335,7 +335,7 @@
 
     <section class="band night reveal" aria-label="The rule the bot follows">
       <div>
-        <span class="mono">The one rule</span>
+        <span class="lbl">The one rule</span>
         <p class="big"><b>Plain code makes every decision.</b> The AI only labels news and writes explanations, and it's <em>never allowed to invent a number.</em></p>
       </div>
       <ul class="legend">

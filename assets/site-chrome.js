@@ -58,6 +58,8 @@ html[data-theme="dark"] .sc-chrome{--b:#0B0817;--t:#15102A;--i:#EFEAF8;--y:#A79F
 .sc-left{display:flex;align-items:center;gap:12px;min-width:0}
 .sc-brand{display:flex;align-items:center;gap:9px;white-space:nowrap;font-size:17px;letter-spacing:-.01em}
 .sc-brand svg{width:24px;height:24px;flex:none;border-radius:8px}
+html[data-theme="dark"] .sc-brand svg rect{fill:#1B1533}
+html[data-theme="dark"] .sc-brand svg{box-shadow:0 0 0 1px var(--r)}
 .sc-nav{display:flex;align-items:center;gap:4px}
 .sc-links{display:flex;gap:4px}
 .sc-links a{position:relative;display:inline-flex;align-items:center;min-height:36px;padding:7px 12px;border-radius:999px;color:var(--y);white-space:nowrap;transition:background-color .2s,color .2s}
@@ -248,7 +250,7 @@ function addReplay() {
   if (menu && !document.getElementById('replayIntroMenu')) {
     const m = document.createElement('a');
     m.className = 'menu-replay'; m.id = 'replayIntroMenu'; m.href = new URL('room/', ROOT).href; m.setAttribute('data-demo', 'off');
-    m.innerHTML = 'Replay intro <span class="mono" aria-hidden="true">&#8635;</span>';
+    m.innerHTML = 'Replay intro <svg class="ri" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.3 4.2A4.2 4.2 0 1 1 1.9 7.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M1.2 1.4v3.3h3.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     m.addEventListener('click', (e) => {
       if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
