@@ -11,7 +11,7 @@
     golf: { name: 'Golf', items: ['golf-1', 'golf-2'] },
     soccer: { name: 'Soccer', items: ['soccer-1'] },
     running: { name: 'Running', items: ['running-1', 'running-2', 'running-3', 'running-4'] },
-    pasta: { name: 'Homemade pasta', items: ['pasta-1', 'pasta-2', 'pasta-3', 'pasta-4', 'pasta-5', 'pasta-6'] },
+    pasta: { name: 'Homemade pasta', items: ['pasta-4', 'pasta-1', 'pasta-2', 'pasta-3', 'pasta-5', 'pasta-6'] },
     oysters: { name: 'Oysters', items: ['oysters-1'] },
     nfl: { name: 'The NFL', items: [{ video: 'nfl-loop.mp4', poster: 'nfl-poster.webp' }] }
   };
