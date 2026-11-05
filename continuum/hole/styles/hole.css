@@ -113,6 +113,19 @@ html.embed .controls { transition: opacity 0.3s var(--ease), transform 0.3s var(
 html.embed:not(.started) .controls { opacity: 0; pointer-events: none; transform: translate(-50%, 8px); }
 /* driven by the page's scroll: no play button, no control bar, and the page shows its own progress rail */
 html.driven .controls, html.driven .start, html.driven .hint, html.driven .cap-steps { display: none !important; }
+/* driven: a small "Scroll to play" under the caption until the reader starts scrolling, so the still opening frame
+   never reads as a picture */
+.scroll-cue { display: none; }
+html.driven .scroll-cue { display: flex; width: max-content; align-items: center; gap: 6px; margin-top: 12px; padding: 6px 12px 6px 13px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 600; letter-spacing: 0.01em; max-height: 40px; overflow: hidden; transition: opacity 0.3s var(--ease), transform 0.3s var(--ease), max-height 0.35s var(--ease), margin 0.35s var(--ease), padding 0.35s var(--ease); }
+html.driven .scroll-cue svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; animation: cue-nudge 1.6s var(--ease) infinite; }
+@keyframes cue-nudge { 0%, 100% { transform: translateY(-1px); } 50% { transform: translateY(2px); } }
+html.driven[data-layout="phone"] .scroll-cue { margin-top: 8px; font-size: 12px; padding: 5px 11px; }
+/* once the hole moves it fades and folds away, so the caption card shrinks back to its text */
+html.driven.moved .scroll-cue { opacity: 0; transform: translateY(4px); max-height: 0; margin-top: 0; padding-block: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { html.driven .scroll-cue svg { animation: none; } }
+/* driven: the page's scrim takes the taps, so every caption shows in full (no "tap to read more") */
+html.driven .caption .cap-more { display: none !important; }
+html.driven .caption.started:not(.notext) #cap-text { display: block !important; -webkit-line-clamp: unset !important; overflow: visible !important; }
 #map { position: absolute; inset: 0; }
 #map canvas { outline: none; }
 /* a soft fade under the top bar, like the SwapChain map */

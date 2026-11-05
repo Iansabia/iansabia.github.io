@@ -3,7 +3,7 @@
 // When playing, the page scroll follows the time so both stay in step. Step buttons glide there, no cuts.
 import { initTheme, onThemeChange, toggleTheme, forceTheme, sceneColors, reducedMotion } from "./theme.js";
 import { HOLE, NUM, SHOTS, PAST, PAST_RIGHT, height, dist, toLL, clamp, smooth, YD, add, mul, norm, sub, right } from "./world.js";
-import { TOTAL, STAGES, STAGES_I, BEATS, PATHS, stateAt, stageAt, stageAtI, beatAt, T } from "./story.js";
+import { TOTAL, STAGES, STAGES_I, BEATS, PATHS, stateAt, stageAt, stageAtI, beatAt, T, toClock } from "./story.js";
 import { Pip } from "./pip.js";
 import { renderFallback } from "./fallback.js";
 
@@ -15,10 +15,30 @@ const embed = root.classList.contains("embed");
 // embedded with scroll=1: the page around the frame sends scroll progress (0..1) and the play-through follows it
 const driven = embed && root.classList.contains("driven");
 // who may drive the frame: this site, the live site (the Continuum page and the caddy page share it) and local previews
-const okOrigin = (o) => o === location.origin || o === "https://iansabia.github.io" || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(o);
+const okOrigin = (o) => o === location.origin || o === "https://iansabia.github.io" || /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(o);
 let parentOrigin = location.origin;
 try { const r = document.referrer && new URL(document.referrer).origin; if (r && okOrigin(r)) parentOrigin = r; } catch (e) { /* no referrer */ }
 const RM = () => reducedMotion();
+// driven: the page's scroll moves through the captions, so screen readers hear the page's step changes, not every caption
+if (driven) ["readout", "caddy", "summary", "cap-body"].forEach((id) => { const el = $(id); if (el) el.setAttribute("aria-live", "off"); });
+
+// ---------- scroll share per caption (driven) ----------
+// Each caption gets its own equal share of the page's scroll (the opening one a little less), with the camera
+// moving between them. Short beats are never skipped and the long putt does not eat the scroll.
+// KT: clock time where each caption starts (and the end); KP: the progress where it starts.
+const KT = BEATS.map((b) => toClock(b.t)).concat(TOTAL);
+const KP = [0];
+BEATS.forEach((b, i) => KP.push(KP[i] + (i === 0 ? 0.6 : 1)));
+const KSUM = KP[KP.length - 1];
+for (let i = 0; i < KP.length; i++) KP[i] /= KSUM;
+function seg(x, from, to) {
+  for (let i = 0; i < from.length - 1; i++) {
+    if (x <= from[i + 1] || i === from.length - 2) { const w = from[i + 1] - from[i]; return to[i] + (w > 0 ? clamp((x - from[i]) / w, 0, 1) : 0) * (to[i + 1] - to[i]); }
+  }
+  return to[to.length - 1];
+}
+const pToT = (p) => seg(clamp(p, 0, 1), KP, KT);
+const tToP = (tt) => seg(clamp(tt, 0, TOTAL), KT, KP);
 
 // ---------- static text ----------
 const par = HOLE.par;
@@ -141,15 +161,20 @@ document.addEventListener("keydown", (e) => {
 });
 // Seekable timeline: progress 0..1 from the page around the frame. Native scroll there, an eased follow here, so a
 // fast flick plays through quickly instead of cutting. Reduced motion: the still frame of the step it lands in.
-let extP = null;
-function setProgress(p) {
+let extP = null, rush = false;
+function setProgress(p, fast) {
   p = clamp(Number(p) || 0, 0, 1);
   extP = p;
-  const tt = p * TOTAL;
+  // "Scroll to play" shows until the reader starts scrolling
+  const mv = p > 0.012;
+  if (mv !== root.classList.contains("moved")) { root.classList.toggle("moved", mv); setTimeout(() => { measureCaption(); needDraw = true; kick(); }, 400); }
+  const tt = pToT(p);
   playing = false; seek = null; clearInterval(rmTimer);
   if (tt > 0.2) markStarted();
   if (RM() || !scene) { t = RM() ? STAGES[stageAt(tt)].still : tt; scrollT = null; needDraw = true; kick(); return; }
   scrollT = tt;
+  // fast: the frame is leaving the screen, so go straight to where the scroll is (the recap at the end)
+  rush = !!fast;
   kick();
 }
 // Embedded: the page sends the theme it shows, a pause when the frame scrolls out of view and, when driven, the
@@ -159,7 +184,7 @@ if (embed) {
   window.addEventListener("message", (e) => {
     if (!okOrigin(e.origin) || e.source !== window.parent || !e.data) return;
     parentOrigin = e.origin;
-    if (e.data.type === "hole-progress") { setProgress(e.data.t); return; }
+    if (e.data.type === "hole-progress") { setProgress(e.data.t, e.data.fast); return; }
     if (e.data.type !== "cc-hole") return;
     if (e.data.theme) forceTheme(e.data.theme);
     if (e.data.pause && (playing || seek)) { pause(); clearInterval(rmTimer); updateButtons(); }
@@ -390,10 +415,39 @@ const probe = { sum: 0, n: 0, level: 0 };
 function probeFrame(ms) {
   if (!scene || ms > 250) return; // a tab switch or a stall, not a slow frame
   probe.sum += ms; probe.n++;
-  if (probe.n < 45) return;
+  if (probe.n < (driven ? 20 : 45)) return;   // driven by a page: step down sooner, a lagging hole reads as broken
   const avg = probe.sum / probe.n;
   probe.sum = 0; probe.n = 0;
   if (avg > 24 && probe.level < 2) { probe.level++; scene.setQuality(probe.level); needDraw = true; }
+}
+
+// Driven: follow the page's scroll on real elapsed time (not frames), so a slow phone catches up as fast as a quick one.
+// A small gap eases. A big one (a fast flick) does not fast-forward: it cuts to the still of each step on the way,
+// holds it for a moment, then eases into the target. A skimmer sees tee shot, found it, aim left, the recap.
+const CUT = 6, HOLD_MS = 650;
+let holdUntil = 0;
+function driveStep(now, dtR) {
+  if (now < holdUntil) return;
+  let d = scrollT - t;
+  if (Math.abs(d) > CUT) {
+    const a = stageAt(t), b = stageAt(scrollT), dir = Math.sign(d), next = a + dir;
+    if (!rush && a !== b && next !== b) { t = STAGES[next].still; holdUntil = now + HOLD_MS; return; }
+    t = rush ? scrollT : scrollT - dir * 1.5;
+    d = scrollT - t;
+  }
+  if (Math.abs(d) < 0.004) { t = scrollT; scrollT = null; rush = false; return; }
+  const step = d * (1 - Math.exp(-dtR * 7));
+  t += Math.sign(step) * Math.min(Math.abs(step), 30 * dtR);
+}
+// Driven: tell the page where the hole really is, so its rail follows the picture and not the scroll
+let sentP = -1, sentBeat = -1, sentAt = 0;
+function postTime(now, force) {
+  if (!driven || parent === window) return;
+  const p = +tToP(t).toFixed(4);
+  if (p === sentP && lastBeat === sentBeat) return;
+  if (!force && lastBeat === sentBeat && now - sentAt < 90) return;
+  sentP = p; sentBeat = lastBeat; sentAt = now;
+  try { parent.postMessage({ type: "hole-time", p, stage: stageAt(t), beat: lastBeat, title: BEATS[lastBeat] ? BEATS[lastBeat].title : "" }, parentOrigin); } catch (e) { /* the page fills its rail from its scroll */ }
 }
 
 let lastNow = 0;
@@ -401,6 +455,7 @@ function tick(now) {
   raf = 0;
   if (lastNow) probeFrame(now - lastNow);
   const dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 1 / 60;
+  const dtR = lastNow ? Math.min(0.25, (now - lastNow) / 1000) : 1 / 60;
   lastNow = now;
   let moving = false;
   if (seek) {
@@ -415,18 +470,17 @@ function tick(now) {
     moving = true;
     scrollToTime(t);
   } else if (scrollT != null) {
-    const d = scrollT - t;
-    if (Math.abs(d) < 0.004) { t = scrollT; scrollT = null; }
+    if (driven) driveStep(now, dtR);
     else {
-      let step = d * Math.min(1, dt * 7);
-      // driven by a page: a big jump plays through at up to 40 story seconds a second, never a cut
-      if (driven) step = Math.sign(step) * Math.min(Math.abs(step), 40 * dt);
-      t += step;
+      const d = scrollT - t;
+      if (Math.abs(d) < 0.004) { t = scrollT; scrollT = null; }
+      else t += d * Math.min(1, dt * 7);
     }
     moving = true;
   }
   updateButtons();
   if (moving || needDraw || t !== lastFrameT) { draw(); needDraw = false; }
+  postTime(now, scrollT == null);
   if (visible && !document.hidden && (moving || playing || seek || scrollT != null)) kick();
   else lastNow = 0;
 }
@@ -445,7 +499,10 @@ function webgl2() {
 function ready() {
   if (!embed || parent === window) return;
   // the step starts as fractions of the play-through, so a page can draw its progress rail and jump to a step
-  const steps = STAGES.slice(1).map((s, i) => ({ name: STEP_NAMES[i + 1], from: +(s.t0 / TOTAL).toFixed(4), key: +(s.key / TOTAL).toFixed(4) }));
+  // (in scroll progress, which gives each caption an equal share), plus the recap as a fifth step
+  const r4 = (x) => +x.toFixed(4);
+  const steps = STAGES.slice(1).map((s, i) => ({ name: STEP_NAMES[i + 1], from: r4(tToP(s.t0)), key: r4(tToP(s.key)) }));
+  steps.push({ name: "Recap", from: r4(KP[BEATS.length - 1]), key: 1 });
   try { parent.postMessage({ type: "cc-hole-ready", driven, steps }, parentOrigin); } catch (e) { /* the page lifts its poster on a timer */ }
 }
 function fallback() {
@@ -479,7 +536,7 @@ async function boot() {
   }
   const q = new URLSearchParams(location.search);
   if (q.has("t")) t = clamp(parseFloat(q.get("t")) || 0, 0, TOTAL);
-  else if (driven && extP != null) t = RM() ? STAGES[stageAt(extP * TOTAL)].still : extP * TOTAL;
+  else if (driven && extP != null) t = RM() ? STAGES[stageAt(pToT(extP))].still : pToT(extP);
   else if (!embed) t = RM() ? STAGES[stageAt(timeFromScroll())].still : timeFromScroll();
   if (t > 0.2 || driven) markStarted();
   if (q.has("t") && !embed) scrollToTime(t);
@@ -488,6 +545,6 @@ async function boot() {
   kick();
   if (embed && !driven && q.get("autoplay") === "1" && !RM()) play();
   // for screenshots and tests
-  window.__hole = { probe, get scene() { return scene; }, seekNow: (x) => { t = clamp(x, 0, TOTAL); if (t > 0.2) markStarted(); playing = false; seek = null; scrollT = null; needDraw = true; draw(); }, get t() { return t; }, TOTAL, STAGES, setProgress };
+  window.__hole = { probe, get scene() { return scene; }, seekNow: (x) => { t = clamp(x, 0, TOTAL); if (t > 0.2) markStarted(); playing = false; seek = null; scrollT = null; needDraw = true; draw(); }, get t() { return t; }, TOTAL, STAGES, setProgress, pToT, tToP };
 }
 boot();
