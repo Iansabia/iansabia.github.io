@@ -35,6 +35,8 @@ const FLIGHT = 1.1, FLIGHT_MIN = .7, BUDGET = 1.5, READY_BY = .8;
 // clock for story 0 to ENTER); from the door in, the house plays at the original pace (the old
 // shots took IN_WALL seconds from the doorway to the monitor).
 const ENTER = 2.45, OUT_FLIGHT = .75, OUT_MIN = .45, IN_WALL = 2.65;
+// the change from the fast street to the house pace is eased over the door (story seconds), not a step
+const EASE = [1.55, 2.95];
 const LATE = 1.3;   // the head gate's cover starts fading at 1.4 s; a first visit that starts later does not play
 const FADE = .2, FADE_SKIP = .16, LIVE_FADE = .1;   // LIVE_FADE: canvas over the poster, camera held still
 
@@ -1226,7 +1228,8 @@ function run(opts, done) {
       const real = Math.max(0, (now - last) / 1000); last = now;
       if (!(TEST && TEST.hold)) {
         const step = Math.min(real, flight / 7);
-        t += step * (t < ENTER ? speed : speedIn); wall += step;
+        const k = smooth(clamp((t - EASE[0]) / (EASE[1] - EASE[0]), 0, 1));
+        t += step * (speed + (speedIn - speed) * k); wall += step;
         // a very slow device still lands: never more than about 1.5 s past the planned flight
         if ((performance.now() - t0wall) / 1000 > flight + LIVE_FADE + 1.5) t = END;
       }
