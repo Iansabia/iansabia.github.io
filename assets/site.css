@@ -353,3 +353,23 @@ footer .stamp b{color:var(--ink);font-weight:500;margin-left:8px;letter-spacing:
   .reveal{opacity:1;transform:none}
   .rule{transform:none}
 }
+
+/* ---- subpage kit (continuum, swapchain, fantasy, omi, calculator, paper) ---- */
+/* a long section intro that would be too long for the right column of .shead sits under it at lede size */
+.lead-in{color:var(--body);font-size:clamp(18px,1.5vw,22px);line-height:1.32;letter-spacing:-.01em;max-width:52ch;margin:0 0 clamp(22px,3vw,36px)}
+/* who did it: a tiny mono pill, "Me" filled in the accent */
+.who-did{display:inline-flex;align-items:center;font:500 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;margin-left:8px;vertical-align:3px;border-radius:var(--r-pill);border:0;box-shadow:inset 0 0 0 1px var(--rule);color:var(--body)}
+.who-did.me{background:var(--acc);box-shadow:none;color:var(--bg)}
+:root[data-theme="dark"] .who-did.me{background:var(--ball);color:#0B0817}
+/* the ladder: ruled steps with a mono index */
+ol.ladder{list-style:none;display:grid;border-top:1px solid var(--rule);padding:0}
+ol.ladder li{display:grid;grid-template-columns:64px minmax(0,1fr);gap:16px;padding:22px 0;border-bottom:1px solid var(--rule)}
+ol.ladder .n{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--acc);padding-top:7px}
+ol.ladder b{font-weight:500;color:var(--ink);font-size:clamp(19px,1.6vw,24px);line-height:1.2;letter-spacing:-.02em}
+ol.ladder p{color:var(--body);font-size:16px;margin-top:6px;max-width:68ch}
+@media (max-width:600px){ol.ladder li{grid-template-columns:40px minmax(0,1fr);gap:10px;padding:18px 0}ol.ladder p{font-size:15px}}
+/* pull quote: big sans, the mono source under it, a rust dot instead of a bar */
+.quote{position:relative;padding:0}
+.quote p{font-size:clamp(24px,2.6vw,34px);line-height:1.15;letter-spacing:-.025em;color:var(--ink)}
+.quote span{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
+.quote span::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ball)}

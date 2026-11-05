@@ -48,36 +48,31 @@
   .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:28px clamp(28px,4vw,56px);align-items:start}
   .copy p{color:var(--body);margin-bottom:14px;max-width:60ch}
   .copy p:last-child{margin-bottom:0}
-  .copy b{color:var(--ink);font-weight:600}
+  .copy b{color:var(--ink);font-weight:500}
 
+  /* stats: no box, cells split by hairlines, mono numbers in the accent */
   .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
-  .stats div{padding:18px 18px 20px 0}
-  .stats div+div{border-left:1px solid var(--rule);padding-left:18px}
-  .stats b{display:block;font-family:var(--serif);font-size:clamp(28px,3.4vw,40px);line-height:1;color:var(--ink)}
-  .stats b small{font-size:.55em;font-weight:500}
-  .stats span{display:block;margin-top:8px;color:var(--body);font-size:14px}
-  .stats.sim{margin-top:22px}
+  .stats div{padding:22px 18px 24px;min-width:0}
+  .stats div:first-child{padding-left:0}
+  .stats div+div{border-left:1px solid var(--rule)}
+  .stats b{display:block;font-family:var(--mono);font-weight:500;font-size:clamp(28px,3vw,40px);line-height:1;letter-spacing:-.03em;color:var(--acc);font-feature-settings:"zero" 1,"tnum" 1;white-space:nowrap}
+  .stats b small{font-size:.5em;letter-spacing:0;font-weight:500}
+  .stats span{display:block;margin-top:10px;color:var(--body);font-size:13px;line-height:1.35}
+  .stats.sim{margin-top:28px}
 
-  .loop{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--rule)}
-  .loop div{padding:18px;position:relative}
-  .loop div+div{border-left:1px solid var(--rule)}
-  .loop .who{color:var(--acc)}
-  .loop b{display:block;font-family:var(--serif);font-size:22px;margin:6px 0 4px;color:var(--ink)}
+  /* the pivot: three tiles, before, the turn, after */
+  .loop{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .loop div{position:relative;padding:clamp(18px,1.8vw,24px);border-radius:var(--r-card);background:var(--tile);display:flex;flex-direction:column;min-height:180px}
+  .loop div:not(:last-child)::after{content:"\2192";position:absolute;right:-13px;top:50%;transform:translateY(-50%);z-index:1;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--bg);color:var(--acc);font:500 13px/1 var(--mono)}
+  .loop .who{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
+  .loop b{display:block;font-weight:500;font-size:clamp(22px,1.9vw,28px);line-height:1.08;letter-spacing:-.025em;margin:0 0 8px;padding-top:32px;color:var(--ink)}
   .loop p{color:var(--body);font-size:14px}
-  .loop-note{color:var(--body);font-size:15px;margin-top:14px;max-width:72ch}
-  .loop-note b{color:var(--ink);font-weight:600}
-
-  .ladder{list-style:none;display:grid;border-top:1px solid var(--rule)}
-  .ladder li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:16px 0;border-bottom:1px solid var(--rule)}
-  .ladder .n{color:var(--acc);padding-top:3px}
-  .ladder b{font-weight:600;color:var(--ink)}
-  .ladder p{color:var(--body);font-size:15px;margin-top:4px;max-width:70ch}
-  .who-did{display:inline-block;font:500 10.5px/1 var(--sans);letter-spacing:.01em;text-transform:none;padding:4px 6px 3px;margin-left:8px;vertical-align:2px;border:1px solid var(--rule);color:var(--body)}
-  .who-did.me{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+  .loop-note{color:var(--body);font-size:15px;margin-top:16px;max-width:72ch}
+  .loop-note b{color:var(--ink);font-weight:500}
   .nw{white-space:nowrap}
 
   /* ===== The 3D hole: the demo in hole/, framed like the figures on this page. Its ground colour follows the theme. ===== */
-  .hole-fig{--hg:#EFEAE3;--poster:url(hole/poster-light.webp);margin:clamp(20px,3vw,28px) 0 0;border:1px solid var(--rule);background:var(--hg);color:var(--ink);overflow:hidden}
+  .hole-fig{--hg:#EFEAE3;--poster:url(hole/poster-light.webp);margin:clamp(20px,3vw,28px) 0 0;border:1px solid var(--rule);border-radius:var(--r-frame);background:var(--hg);color:var(--ink);overflow:hidden}
   :root[data-theme="dark"] .hole-fig{--hg:#120E24;--poster:url(hole/poster-dark.webp)}
   /* the anchor target must not move after a jump lands on it: no reveal slide, and it stops a little under the bar */
   #ccHole{scroll-margin-top:8px}
@@ -93,20 +88,20 @@
   [data-hole="scroll"] .hole-scrim{display:block;position:absolute;inset:0;z-index:2}   /* the wheel and the finger scroll this page, never the frame */
   .hole-say{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
   .hole-rail{display:none}
-  [data-hole="scroll"] .hole-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,.72fr);gap:10px;padding:9px 14px 10px;border-top:1px solid var(--rule);background:var(--bg)}
+  [data-hole="scroll"] .hole-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,.72fr);gap:12px;padding:11px 18px 12px;border-top:1px solid var(--rule);background:var(--hg)}
   :root[data-theme="dark"] .hole-rail{background:var(--hg);border-color:rgba(143,127,247,.18)}
   .hole-rail button{display:grid;gap:6px;min-width:0;padding:0;background:none;border:0;cursor:pointer;text-align:left;font:500 11px/1.2 var(--mono);letter-spacing:.06em;color:var(--body);transition:color .25s}
   .hole-rail button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .hole-rail button i{position:relative;display:block;height:3px;border-radius:2px;background:var(--rule);overflow:hidden}
+  .hole-rail button i{position:relative;display:block;height:4px;border-radius:4px;background:var(--ghost);overflow:hidden}
   .hole-rail button i::after{content:"";position:absolute;inset:0;transform-origin:left;transform:scaleX(var(--p,0));background:var(--acc);border-radius:inherit}
   .hole-rail button[aria-current="step"]{color:var(--acc)}
   @media (hover:hover){.hole-rail button:hover{color:var(--ink)}}
   @media (pointer:coarse){.hole-rail button{position:relative}.hole-rail button::after{content:"";position:absolute;inset:-9px -4px}}
   /* dark: the header and footer take the map's purple, so the frame reads as one object */
   :root[data-theme="dark"] .hole-h,:root[data-theme="dark"] .hole-f{background:var(--hg);border-color:rgba(143,127,247,.18)}
-  .hole-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 14px;min-height:41px;border-bottom:1px solid var(--rule);background:var(--bg);color:var(--body)}
-  .hole-h>.mono{font-size:11px;letter-spacing:.06em}
-  .hole-full{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.06em;color:var(--acc);text-decoration:none;white-space:nowrap;padding:4px 0}
+  .hole-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 18px;min-height:44px;border-bottom:1px solid var(--rule);background:var(--hg);color:var(--body)}
+  .hole-h>.mono{font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  .hole-full{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);text-decoration:none;white-space:nowrap;padding:4px 0}
   .hole-full-s{display:none}
   .hole-full svg{flex:none;width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s var(--ease)}
   .hole-full:hover{text-decoration:underline;text-underline-offset:3px}
@@ -118,9 +113,9 @@
   .hole-wait{position:absolute;left:12px;bottom:12px;display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 9px;border-radius:999px;background:color-mix(in srgb,var(--hg) 82%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 0 0 .5px var(--rule);color:var(--body);font-size:12.5px;transition:opacity .4s var(--ease)}
   .hole-wait svg{width:18px;height:18px;color:var(--acc)}
   .hole-view.is-on .hole-wait{opacity:0}
-  .hole-f{padding:10px 14px;border-top:1px solid var(--rule);background:var(--bg);color:var(--body);font-size:13px;line-height:1.5}
+  .hole-f{padding:12px 18px;border-top:1px solid var(--rule);background:var(--hg);color:var(--body);font-size:13px;line-height:1.5}
   .hole-f a{color:inherit;text-underline-offset:2px}
-  .hole-tag{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--warm);margin-right:2px}
+  .hole-tag{display:inline-flex;align-items:center;gap:6px;font-weight:500;color:var(--acc);margin-right:2px}
   .hole-tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
   .hole-f-s{display:none}
 
@@ -131,11 +126,11 @@
   .cc-track{position:relative;margin-top:clamp(20px,3vw,28px)}
   [data-cc="scrub"] .cc-track{height:var(--len,420vh)}
   [data-cc="scrub"] .cc-pin{position:sticky;top:calc(var(--bar) + 12px)}   /* nothing above this may set overflow, or sticky stops working */
-  .cc-fig{margin:0;border:1px solid var(--rule);background:var(--cc-bg);color:var(--cc-ink);isolation:isolate}
-  .cc-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 14px;min-height:41px;border-bottom:1px solid var(--cc-rule);color:var(--cc-body)}
-  .cc-h>.mono{font-size:11px;letter-spacing:.06em}
+  .cc-fig{margin:0;border:1px solid var(--cc-rule);border-radius:var(--r-frame);overflow:hidden;background:var(--cc-bg);color:var(--cc-ink);isolation:isolate}
+  .cc-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 18px;min-height:41px;border-bottom:1px solid var(--cc-rule);color:var(--cc-body)}
+  .cc-h>.mono{font-size:11px;letter-spacing:.1em;text-transform:uppercase}
   .cc-tabs{display:none;gap:4px}
-  .cc-tab{font:inherit;letter-spacing:.06em;color:inherit;background:none;border:1px solid var(--cc-rule);padding:4px 8px;cursor:pointer;transition:background-color .25s,color .25s,border-color .25s}
+  .cc-tab{font:inherit;letter-spacing:.06em;color:inherit;background:none;border:1px solid var(--cc-rule);border-radius:var(--r-pill);padding:4px 10px;cursor:pointer;transition:background-color .25s,color .25s,border-color .25s}
   .cc-tab:hover{border-color:var(--cc-acc)}
   .cc-tab[aria-current="step"]{background:var(--cc-acc);border-color:var(--cc-acc);color:var(--cc-bg)}
   .cc-scrub-only{display:none}
@@ -148,19 +143,19 @@
 
   /* the caption slot: every step sits in the same grid cell, so the slot is as tall as the longest step and never jumps */
   .cc-cap{list-style:none;display:grid}
-  .cc-step{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:6px 28px;align-items:start;padding:16px;border-top:1px solid var(--cc-rule)}
+  .cc-step{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:6px 28px;align-items:start;padding:16px 18px;border-top:1px solid var(--cc-rule)}
   .cc-step:first-child{border-top:0}
   .cc-step .n{display:flex;align-items:center;gap:10px;color:var(--cc-acc);margin-bottom:4px}
-  .cc-step b{display:block;font-family:var(--serif);font-weight:600;font-size:clamp(20px,2.2vw,26px);line-height:1.15;letter-spacing:-.015em;color:var(--cc-ink)}
+  .cc-step b{display:block;font-family:var(--sans);font-weight:500;font-size:clamp(20px,2.2vw,26px);line-height:1.15;letter-spacing:-.015em;color:var(--cc-ink)}
   .cc-step p{color:var(--cc-body);font-size:15px;max-width:60ch}
-  .cc-f{padding:10px 16px;border-top:1px solid var(--cc-rule);color:var(--cc-body);font-size:13px}
+  .cc-f{padding:10px 18px;border-top:1px solid var(--cc-rule);color:var(--cc-body);font-size:13px}
   .cc-f-s{display:none}   /* phones get the one line version, so the stage keeps its height */
   [data-cc="scrub"] .cc-cap{border-top:1px solid var(--cc-rule)}
   [data-cc="scrub"] .cc-step{grid-area:1/1;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s;pointer-events:none}
   [data-cc="scrub"] .cc-step.is-active{opacity:1;transform:none;pointer-events:auto;transition-delay:.08s}
 
   /* the phone: a CSS iPhone whose screen scrubs through the app, with a readout on each side */
-  .cc-next{margin-top:clamp(64px,8vw,104px);font-family:var(--serif);font-weight:600;font-size:clamp(22px,2.4vw,30px);line-height:1.15;letter-spacing:-.015em;color:var(--ink)}
+  .cc-next{margin-top:clamp(64px,8vw,104px);font-family:var(--sans);font-weight:500;font-size:clamp(28px,3vw,40px);line-height:1.15;letter-spacing:-.015em;color:var(--ink)}
   .cc-next+.sub{margin-top:8px}
   .cc-appview{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:clamp(16px,3vw,48px);padding:12px 16px}
   .cc-iphone{--ph:clamp(280px,calc(var(--cc-avail) - 41px - var(--cc-cap,150px) - 34px),720px);position:relative;height:var(--ph);aspect-ratio:78/163.4;border-radius:17%/8.1%;
@@ -193,9 +188,15 @@
 
   @media (max-width:760px){
     .split{grid-template-columns:1fr}
-    .stats,.loop{grid-template-columns:1fr}
-    .stats div+div,.loop div+div{border-left:0;border-top:1px solid var(--rule);padding-left:0}
-    .loop div+div{padding-left:18px}
+    .loop{grid-template-columns:1fr;gap:10px}
+    .loop div{min-height:0}
+    .loop div:not(:last-child)::after{content:"\2193";right:auto;left:24px;top:auto;bottom:-18px;transform:none}
+    .loop b{padding-top:14px}
+    .stats{grid-template-columns:1fr 1fr}
+    .stats div{padding:18px 14px 20px}
+    .stats div:nth-child(odd){padding-left:0;border-left:0}
+    .stats div:nth-child(n+3){border-top:1px solid var(--rule)}
+    .stats div:last-child:nth-child(odd){grid-column:1/-1}
 
     .cc-step{grid-template-columns:1fr;gap:4px;padding:12px 14px}
     .cc-step b{font-size:21px}
@@ -207,7 +208,7 @@
     .cc-f-s{display:inline}
     .hole-view{height:clamp(480px,calc(100vh - var(--bar) - 170px),640px)}
     [data-hole="scroll"] .hole-track{--hole-len:360vh}
-    [data-hole="scroll"] .hole-rail{gap:8px;padding:8px 12px 9px}
+    [data-hole="scroll"] .hole-rail{gap:8px;padding:9px 14px 10px}
     .hole-rail button{font-size:10.5px;letter-spacing:.03em}
     .hole-f{font-size:12px;padding:8px 12px}
     .hole-f-l{display:none}
@@ -270,14 +271,12 @@
       <h1 id="main-h1">The caddy<br><em>you already own</em></h1>
       <p class="lede">Continuum is an AI golf caddy that tracks your shots from ordinary phone video and tells you where to aim, based on where you've been missing. After the shot, it helps you find your ball. I&nbsp;<span class="nw">co-founded</span> it and lead <span class="nw">product and ML.</span></p>
       <div class="facts mono"><span>Role<b>Co-founder</b></span><span>Since<b>Jul 2025</b></span><span>My part<b>Product and ML</b></span><span>Golfer conversations<b>~70</b></span></div>
-      <p class="hole-link" style="margin-top:22px"><a class="more" data-demo href="#ccHole">See the 3D example hole <span aria-hidden="true">&darr;</span></a></p>
-      <p class="hole-link" style="margin-top:14px"><a class="more quiet" href="https://iansabia.github.io/continuum-caddy/" target="_blank" rel="noopener noreferrer">See the Continuum product site <span aria-hidden="true">&nearr;</span></a></p>
+      <div class="actions"><a class="more" data-demo href="#ccHole">See the 3D example hole <span aria-hidden="true">&darr;</span></a><a class="more quiet" href="https://iansabia.github.io/continuum-caddy/" target="_blank" rel="noopener noreferrer">See the Continuum product site <span aria-hidden="true">&nearr;</span></a></div>
     </header>
 
     <section class="block" id="how">
-      <div class="head reveal"><h2>How it works</h2><span class="num mono">01</span></div>
-      <div class="rule"></div>
-      <p class="sub reveal">One example play of a real hole, hole 10 at Miacomet Golf Club on Nantucket, a par 4. Keep scrolling and it plays through.</p>
+      <div class="shead reveal"><div><span class="lbl acc">01 / How it works</span><h2>How it works</h2></div></div>
+      <p class="lead-in reveal">One example play of a real hole, hole 10 at Miacomet Golf Club on Nantucket, a par 4. Keep scrolling and it plays through.</p>
 
       <div class="hole-track" id="ccHole">
       <div class="hole-pin">
@@ -343,9 +342,7 @@
     </section>
 
     <section class="block" id="pivot">
-      <div class="head reveal"><h2>The pivot</h2><span class="num mono">02</span></div>
-      <div class="rule"></div>
-      <p class="sub reveal">We changed what we built after about 70 conversations with golfers.</p>
+      <div class="shead reveal"><div><span class="lbl acc">02 / The pivot</span><h2>The pivot</h2></div><p class="sub">We changed what we built after about 70 conversations with golfers.</p></div>
       <div class="loop reveal" role="group" aria-label="Before and after the pivot">
         <div><span class="mono who">Before</span><b>Indoor simulators</b><p>We started out building software for indoor simulators. I had done the product research and thought we had a great solution.</p></div>
         <div><span class="mono who">What changed</span><b>About 70 conversations</b><p>Playing on the course and talking with about 70 golfers led my <span class="nw">co-founder</span> and me to pivot.</p></div>
@@ -355,9 +352,7 @@
     </section>
 
     <section class="block" id="testing">
-      <div class="head reveal"><h2>How we test it</h2><span class="num mono">03</span></div>
-      <div class="rule"></div>
-      <p class="sub reveal">We test everything against hand labels before we trust it.</p>
+      <div class="shead reveal"><div><span class="lbl acc">03 / How we test it</span><h2>How we test it</h2></div><p class="sub">We test everything against hand labels before we trust it.</p></div>
       <div class="split">
         <div class="copy reveal">
           <p><b>What I built.</b> I lead product and ML. From June to September 2026 I built our perception stack from scratch, the software that sees the ball and the swing.</p>
@@ -379,9 +374,7 @@
     </section>
 
     <section class="block" id="process">
-      <div class="head reveal"><h2>How we got there</h2><span class="num mono">04</span></div>
-      <div class="rule"></div>
-      <p class="sub reveal">From indoor simulators to a caddy on your phone, and who did what.</p>
+      <div class="shead reveal"><div><span class="lbl acc">04 / How we got there</span><h2>How we got there</h2></div><p class="sub">From indoor simulators to a caddy on your phone, and who did what.</p></div>
       <ol class="ladder reveal">
         <li><span class="mono n">01</span><div><b>Talked to golfers</b><span class="who-did">Team</span><p>About 70 conversations moved us from indoor simulator software to an AI caddy for the course.</p></div></li>
         <li><span class="mono n">02</span><div><b>Built our own perception stack</b><span class="who-did me">Me</span><p>June to September 2026. A ball tracker built from scratch, a strike timer that listens to the audio, and a swing finder that follows the body with MediaPipe pose.</p></div></li>
