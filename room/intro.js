@@ -20,6 +20,17 @@
 
 const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const KEY = 'ian-intro-played';
+// Seen in this tab, or in any tab of this browser in the last day (links opened from an email each get
+// a fresh tab, so sessionStorage alone would replay the intro on every one)
+const SEEN = 'ian-intro-at', SEEN_FOR = 24 * 3600e3;
+function seen() {
+  if (sessionStorage.getItem(KEY)) return true;
+  try { const at = +localStorage.getItem(SEEN); return at > 0 && Date.now() - at < SEEN_FOR; } catch (e) { return false; }
+}
+function markSeen() {
+  sessionStorage.setItem(KEY, '1');
+  try { localStorage.setItem(SEEN, String(Date.now())); } catch (e) { /* this tab still remembers */ }
+}
 const TEST = window.__INTRO_TEST || null;   // local screenshot scripts only; nothing reads the URL
 let T = null;                                // the three.js namespace once loaded
 
@@ -56,7 +67,7 @@ export function shouldPlay() {
     const q = new URLSearchParams(location.search);
     if (q.has('nointro') || q.has('embed')) return false;
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
-    if (sessionStorage.getItem(KEY)) return false;
+    if (seen()) return false;
     if (window.scrollY > 4 && !hashTarget()) return false;         // a link to a section lands there instead
     return hasWebGL();
   } catch (e) { return false; }      // no storage: never risk replaying on every load
@@ -180,7 +191,7 @@ export function playIntro(opts = {}) {
   if (!opts.force && (window.__introSkipped || !shouldPlay())) { html.classList.remove('intro-on'); return Promise.resolve(false); }
   // a first visit whose cover has already timed out (slow network) shows the page as it is: no late flight
   if (!opts.force && !TEST && typeof window.__introT0 === 'number' && (performance.now() - window.__introT0) / 1000 > LATE) {
-    try { sessionStorage.setItem(KEY, '1'); } catch (e) { /* fine */ }
+    try { markSeen(); } catch (e) { /* fine */ }
     // let the cover finish its own fade (1.4 s + .2 s from when it was first styled), then drop the class
     const drop = () => { html.removeEventListener('animationend', onEnd); html.classList.remove('intro-on'); };
     const onEnd = (e) => { if (e.target === html && e.pseudoElement === '::after') drop(); };
@@ -188,7 +199,7 @@ export function playIntro(opts = {}) {
     setTimeout(drop, 2000);
     return Promise.resolve(false);
   }
-  if (!opts.force) { try { sessionStorage.setItem(KEY, '1'); } catch (e) { /* gate already checked */ } }
+  if (!opts.force) { try { markSeen(); } catch (e) { /* gate already checked */ } }
   let resolve; const promise = new Promise(r => { resolve = r; });
   active = { promise };
   run(opts, () => { active = null; resolve(true); });

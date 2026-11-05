@@ -18,7 +18,7 @@
   // marked as seen so the two never stack. Not in iframes, demo embeds, ?nointro, reduced motion or without WebGL.
   try {
     var q = location.search;
-    if (window.top === window && !/[?&](nointro|embed)\b/.test(q) && !sessionStorage.getItem('ian-intro-played') &&
+    if (window.top === window && !/[?&](nointro|embed)\b/.test(q) && !sessionStorage.getItem('ian-intro-played') && !(function () { try { var at = +localStorage.getItem('ian-intro-at'); return at > 0 && Date.now() - at < 864e5; } catch (e) { return false; } })() &&
         !matchMedia('(prefers-reduced-motion: reduce)').matches && !/\/room\/?(index\.html)?$/.test(location.pathname)) {
       var c = document.createElement('canvas'), gl = c.getContext('webgl2') || c.getContext('webgl');
       if (gl) {
@@ -65,7 +65,7 @@
           if (e && e.type === 'keydown' && (e.metaKey || e.ctrlKey) && e.key !== 'Escape') return;
           if (e && e.type === 'keydown' && /^( |Spacebar|PageDown|PageUp|ArrowDown|ArrowUp|Home|End)$/.test(e.key)) e.preventDefault();
           window.__introSkipped = true;
-          try { sessionStorage.setItem('ian-intro-played', '1'); } catch (err) { /* fine */ }
+          try { sessionStorage.setItem('ian-intro-played', '1'); localStorage.setItem('ian-intro-at', String(Date.now())); } catch (err) { /* fine */ }
           root.classList.remove('intro-on');
           off();
         };
