@@ -184,6 +184,15 @@ const OVER = .0015;
 // ---------------------------------------------------------------- the intro
 let active = null;
 
+function withStyles() {
+  const href = new URL('intro.css', import.meta.url).href;
+  const have = [...document.querySelectorAll('link[rel="stylesheet"]')].find(l => l.href === href);
+  if (have && have.sheet) return Promise.resolve();
+  const l = have || Object.assign(document.createElement('link'), { rel: 'stylesheet', href });
+  if (!have) document.head.appendChild(l);
+  return new Promise(res => { l.addEventListener('load', res, { once: true }); l.addEventListener('error', res, { once: true }); setTimeout(res, 1500); });
+}
+
 export function playIntro(opts = {}) {
   if (active) return active.promise;
   const html = document.documentElement;
@@ -202,7 +211,9 @@ export function playIntro(opts = {}) {
   if (!opts.force) { try { markSeen(); } catch (e) { /* gate already checked */ } }
   let resolve; const promise = new Promise(r => { resolve = r; });
   active = { promise };
-  run(opts, () => { active = null; resolve(true); });
+  // the stylesheet is only in the page when the home page links it or the head gate expected a first
+  // visit; a Replay on any other page has to bring it, or the overlay renders unstyled below the page
+  withStyles().then(() => run(opts, () => { active = null; resolve(true); }));
   return promise;
 }
 
