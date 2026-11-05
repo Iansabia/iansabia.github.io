@@ -3,7 +3,7 @@
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const root = document.documentElement;
-  const css = (n) => getComputedStyle(root).getPropertyValue(n).trim();
+  const css = (n) => getComputedStyle(document.getElementById('range') || root).getPropertyValue(n).trim(); // the range frame sets its own night colors
   const coarse = matchMedia('(pointer: coarse)').matches;
 
   /* blocks that animate once they come on screen */
@@ -94,7 +94,7 @@
     el('rect', { x: TEE.x - 14, y: TEE.y - 4, width: 28, height: 8, fill: body, rx: 2 });
     (balls || []).forEach((b, i) => {
       const last = i === balls.length - 1;
-      if (last) el('path', { d: `M${TEE.x} ${TEE.y} Q ${(TEE.x + b.x) / 2} ${b.y - 60} ${b.x} ${b.y}`, fill: 'none', stroke: acc, 'stroke-width': 2, opacity: .7, class: 'arc' });
+      if (last) el('path', { d: `M${TEE.x} ${TEE.y} Q ${(TEE.x + b.x) / 2} ${b.y - 60} ${b.x} ${b.y}`, fill: 'none', stroke: css('--line'), 'stroke-width': 2, opacity: .9, class: 'arc' });
       el('line', { x1: b.ax - 4, y1: b.ay - 4, x2: b.ax + 4, y2: b.ay + 4, stroke: body, 'stroke-width': 1.2, opacity: last ? .9 : .35 });
       el('line', { x1: b.ax - 4, y1: b.ay + 4, x2: b.ax + 4, y2: b.ay - 4, stroke: body, 'stroke-width': 1.2, opacity: last ? .9 : .35 });
       el('circle', { cx: b.x, cy: b.y, r: last ? 6 : 4.5, fill: b.good ? acc : warm, stroke: css('--bg'), 'stroke-width': 1.5, opacity: last ? 1 : .75 });
