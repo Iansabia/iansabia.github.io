@@ -6,7 +6,7 @@
 <title>Ian Sabia</title>
 <script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <script>/* the work cases moved to their own page: old links like /#nvidia land there */
-  (function () { var h = location.hash; if (/^#(medtronic|continuum|nvidia|drive)$/.test(h)) location.replace('work/' + location.search + h); })();</script>
+  (function () { var h = location.hash; if (/^#(medtronic|continuum|nvidia|drive|range)$/.test(h)) location.replace('work/' + location.search + h); })();</script>
 <link rel="stylesheet" href="room/intro.css">
 <!-- room intro gate: assets/desk-transition.js hides the page until room/intro.js decides -->
 <link rel="stylesheet" href="assets/desk-transition.css">
@@ -61,7 +61,7 @@
   .top::before{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);right:calc(50% - 50vw);z-index:-1;background:color-mix(in srgb,var(--bg) 84%,transparent);-webkit-backdrop-filter:saturate(1.3) blur(14px);backdrop-filter:saturate(1.3) blur(14px);border-bottom:1px solid transparent;transition:border-color .3s,background-color .35s}
   .top.stuck::before{border-bottom-color:var(--rule)}
   .top nav{display:flex;gap:20px;align-items:center}
-  @media (min-width:861px) and (max-width:1000px){.top nav{gap:14px}} /* room for Demos next to Replay intro */
+  @media (min-width:861px) and (max-width:1000px){.top nav{gap:14px}} /* room for the Projects pill next to Replay intro */
   .top nav .links{display:contents}
   .top a{text-decoration:none;font-weight:500;font-size:15px}
   .top nav a{position:relative;padding:4px 0;white-space:nowrap}
@@ -72,7 +72,7 @@
   .menu-btn{display:none;align-items:center;gap:8px;background:none;border:1.5px solid var(--rule);border-radius:999px;color:var(--ink);height:30px;padding:0 12px;cursor:pointer;font:500 12px/1 var(--sans);letter-spacing:.01em;text-transform:none}
   .menu-btn i{display:block;width:14px;height:8px;border-top:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transition:transform .3s var(--ease)}
   .menu-btn[aria-expanded="true"] i{transform:scaleY(.25)}
-  /* Demos: a pill at the front of the bar, shown at every width (phones too, beside Menu) */
+  /* Projects: a pill in the middle of the bar, shown at every width (phones too, beside Menu) */
   .top nav a.demos-pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px 0 10px;border:1.5px solid var(--acc);border-radius:999px;color:var(--acc);font-size:13px;font-weight:600;transition:background-color .2s,color .2s}
   .top nav a.demos-pill::after{display:none}
   .top nav a.demos-pill::before{content:"";position:absolute;inset:-8px 0}
@@ -285,19 +285,16 @@
   @media (max-width:900px){
     .hero{grid-template-columns:1fr}
     .meta{border-left:0;border-top:1px solid var(--nrule);display:grid;grid-template-columns:1fr 1fr}
-    .meta div{border-right:1px solid var(--nrule)}
-    .meta div:nth-child(2n){border-right:0}
+    .meta div:first-child{grid-column:1/-1}
+    .meta div:nth-child(2){border-right:1px solid var(--nrule)}
+    .meta div:nth-child(2),.meta div:nth-child(3){border-bottom:0}
     .entry{grid-template-columns:1fr}
     .off{grid-template-columns:1fr}
   }
   @media (max-width:640px){
     body{font-size:16px}
-    /* hero facts: "Now" gets a full row, Next and Last shot share one, Revised lives in the footer */
-    .meta div{padding:14px 16px;border-right:0}
-    .meta div:first-child{grid-column:1/-1}
-    .meta div:nth-child(2){border-right:1px solid var(--nrule)}
-    .meta div:last-child{display:none}
-    .meta div:nth-child(2),.meta div:nth-child(3){border-bottom:0}
+    /* hero facts: "Now" gets a full row, Next and Last shot share one (the revised date is in the footer) */
+    .meta div{padding:14px 16px}
     .meta dd{font-size:15px}
     /* currently: name and date on one line, role under it */
     .now a,.now div.row{grid-template-columns:1fr auto;gap:2px 12px;padding:13px 4px}
@@ -326,6 +323,13 @@
     .card{scroll-snap-align:start;border-left:1px solid var(--rule);min-height:0;padding:20px 18px}
     .card.wide{grid-column:auto}
     .grid.three,.grid.four{grid-template-columns:none}
+    /* the Work and Projects blurbs are short, so on phones they stack as rows instead of scrolling sideways */
+    .grid.compact,.grid.compact.three,.grid.compact.four{grid-auto-flow:row;grid-template-columns:minmax(0,1fr);overflow:visible;margin-right:0;padding-right:0;border-left:1px solid var(--rule)}
+    .grid.compact .card{border-left:0;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;row-gap:3px;align-items:center}
+    .grid.compact .card .top-row{grid-column:1}
+    .grid.compact .card h4,.grid.compact .card.wide h4{grid-column:1;font-size:20px}
+    .grid.compact .card p{display:none}
+    .grid.compact .card .go{grid-column:2;grid-row:1/span 2;margin-top:0;white-space:nowrap}
     /* contact: one full-width row each, with the address showing */
     .contact{grid-template-columns:1fr}
     .contact a{flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 12px;padding:16px 14px}
@@ -441,7 +445,6 @@
       <div><dt class="mono">Now</dt><dd>Looking for a Summer 2027 product management internship</dd></div>
       <div><dt class="mono">Next</dt><dd>Spring 2027 on exchange at Bocconi, Milan</dd></div>
       <div><dt class="mono">Last shot</dt><dd class="shotread" id="shotread">About <span>269 yd</span><br><small>mine, for real</small></dd></div>
-      <div><dt class="mono">Revised</dt><dd>Oct 23, 2026</dd></div>
     </dl>
   </section>
 
@@ -450,9 +453,9 @@
     <div class="rule"></div>
     <p class="sub reveal">What I'm building and studying this fall.</p>
     <div class="now reveal">
-      <a href="work/#medtronic"><b>Medtronic</b><span>Engineering Intern, Quality Systems</span><span class="when mono">May 2026 &ndash; now</span></a>
-      <a href="work/#continuum"><b>Continuum</b><span>Co-Founder, AI golf caddy</span><span class="when mono">Jul 2025 &ndash; now</span></a>
-      <a href="work/#nvidia"><b>NVIDIA challenge</b><span>Self-driving reasoning model <span class="pill" data-rank>#3</span></span><span class="when mono">Oct 2026</span></a>
+      <div class="row"><b>Medtronic</b><span>Engineering Intern, Quality Systems</span><span class="when mono">May 2026 &ndash; now</span></div>
+      <div class="row"><b>Continuum</b><span>Co-Founder, AI golf caddy</span><span class="when mono">Jul 2025 &ndash; now</span></div>
+      <div class="row"><b>NVIDIA challenge</b><span>Self-driving reasoning model <span class="pill" data-rank>#16</span></span><span class="when mono">Oct 2026</span></div>
       <div class="row"><b>Boston University</b><span>B.S. Data Science, Philosophy minor</span><span class="when mono">Class of 2028</span></div>
     </div>
     <div class="rooting reveal">
@@ -470,17 +473,17 @@
       <a class="card" href="work/#medtronic">
         <div class="top-row"><span class="tagline mono">Medtronic</span></div>
         <h4>An AI agent for a plant's quality team</h4>
-        <span class="go">Run a lookup <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">See it <span aria-hidden="true">&rarr;</span></span>
       </a>
       <a class="card" href="work/#continuum">
         <div class="top-row"><span class="tagline mono">Continuum</span></div>
         <h4>An AI golf caddy on your phone</h4>
-        <span class="go">Hit a few <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">See it <span aria-hidden="true">&rarr;</span></span>
       </a>
       <a class="card" href="work/#nvidia">
         <div class="top-row"><span class="tagline mono">NVIDIA challenge</span></div>
         <h4>A self-driving model that explains itself</h4>
-        <span class="go">Make the call <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">See it <span aria-hidden="true">&rarr;</span></span>
       </a>
     </div>
     <a class="more see-all reveal" href="work/" aria-label="See all work">See all <span aria-hidden="true">&rarr;</span></a>
@@ -495,27 +498,27 @@
         <div class="top-row"><span class="tagline mono">Product &middot; DS229 team project</span></div>
         <h4>SwapChain</h4>
         <p>A room-swap marketplace for BU that finds loops of students who can all move at once, not just pairs.</p>
-        <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">See it <span aria-hidden="true">&rarr;</span></span>
       </a>
       <a class="card" href="projects/#fantasy">
         <div class="top-row"><span class="tagline mono">Python &middot; agents</span></div>
         <h4>Fantasy AI Manager</h4>
-        <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">See it <span aria-hidden="true">&rarr;</span></span>
       </a>
       <a class="card" href="projects/#paper">
         <div class="top-row"><span class="tagline mono">Research &middot; DS340</span></div>
         <h4>Complexity is not an edge</h4>
-        <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">See it <span aria-hidden="true">&rarr;</span></span>
       </a>
       <a class="card" href="projects/#calculator">
         <div class="top-row"><span class="tagline mono">C++ &middot; ESP32-S3</span></div>
         <h4>An AI graphing calculator</h4>
-        <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">See it <span aria-hidden="true">&rarr;</span></span>
       </a>
       <a class="card" href="projects/#omi">
         <div class="top-row"><span class="tagline mono">TypeScript &middot; open source</span></div>
         <h4>A fix inside Omi</h4>
-        <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">See it <span aria-hidden="true">&rarr;</span></span>
       </a>
     </div>
     <a class="more see-all reveal" href="projects/" aria-label="See all projects">See all <span aria-hidden="true">&rarr;</span></a>
@@ -584,7 +587,7 @@
 
   <footer>
     <p>Made in Boston. No trackers. <a class="replay-intro" href="room/">Replay intro</a></p>
-    <div class="stamp mono"><span>Revised<b>2026-10-23</b></span><span>Shots hit<b id="shotCount">0</b></span></div>
+    <div class="stamp mono"><span>Revised<b>2026-11-04</b></span><span>Shots hit<b id="shotCount">0</b></span></div>
   </footer>
 </div>
 
@@ -782,7 +785,7 @@
     fwrap.appendChild(card);
   });
 
-  /* live rank from NVIDIA's public leaderboard (a Gradio Space that allows this origin; work/work.js does the same). If it can't be reached, the dated #3 stays. */
+  /* live rank from NVIDIA's public leaderboard (a Gradio Space that allows this origin; work/work.js does the same). If it can't be reached, the dated #16 stays. */
   (async () => {
     const base = 'https://nvidia-physicalai-ood-leaderboard.hf.space/gradio_api/call/lambda';
     let me = null;

@@ -8,7 +8,8 @@
       (assets/desk-transition.css). Plain scrolling never animates; reduced motion just jumps.
    4. Full-screen demos (swapchain/app/, continuum/hole/) opened on their own: the site's top bar
       (name, Currently, Work, the Projects pill, Milan, Off the clock, Contact, menu, theme switch) and a Back pill under it. The demo fills the rest of the screen.
-      Nothing inside the apps changes: the layout is moved down with injected CSS only. */
+      Nothing inside the apps changes: the layout is moved down with injected CSS only.
+   5. Replay intro: the same button as the home page's, added to the top bar of every other page. */
 
 const html = document.documentElement;
 const ROOT = new URL('../', import.meta.url);          // the site root
@@ -216,6 +217,22 @@ function onClick(e) {
   const done = () => { html.removeAttribute('data-dt-back'); shown.forEach((n) => { n.style.transition = ''; }); };
   vt.finished.then(done, done);
 }
+
+// ---------------------------------------------------------------- 5. Replay intro in every top bar
+// The home page has its own button; every other page with the site bar gets the same one before the theme switch.
+function addReplay() {
+  if (framed || document.getElementById('replayIntro')) return;
+  const toggle = document.querySelector('header.top nav #theme');
+  if (!toggle) return;
+  const b = document.createElement('button');
+  b.className = 'replay'; b.id = 'replayIntro'; b.type = 'button'; b.setAttribute('aria-label', 'Replay intro');
+  b.innerHTML = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.2v9.6L10.4 6z"/></svg><span>Replay intro</span>';
+  b.addEventListener('click', () => {
+    import(new URL('room/intro.js', ROOT).href).then((m) => m.playIntro({ force: true })).catch(() => { location.href = new URL('room/', ROOT).href; });
+  });
+  toggle.before(b);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addReplay, { once: true }); else addReplay();
 
 // after demo-window.js, so its own same-page demo links (#demo and friends) are handled there first
 demoWindow.finally(() => document.addEventListener('click', onClick));

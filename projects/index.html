@@ -15,7 +15,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://iansabia.github.io/projects/">
 <meta property="og:title" content="Projects · Ian Sabia">
-<meta property="og:description" content="Projects with demos you can try: live apps, 3D, a film and small toys from across the site.">
+<meta property="og:description" content="Projects with demos you can try: a live app, a film, a research result, a calculator build and an open-source fix.">
 <meta property="og:image" content="https://iansabia.github.io/projects/img/app-light.webp">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
@@ -23,7 +23,7 @@
 <style>
   /* Projects page (it took over the old Demos page): every project, each with a preview from its demo
      (a light and a dark copy, swapped with the theme), a short blurb, "Try the demo" (opens the demo window)
-     and its project page. Then the demos from work and the small toys from the rest of the site. */
+     and its project page. The demos from work live on the Work page, one line points there. */
   .shot{position:relative;display:block;aspect-ratio:16/10;overflow:hidden;background:var(--tile);border-bottom:1px solid var(--rule)}
   .shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
   .shot img.d{display:none}
@@ -52,9 +52,6 @@
   @media (hover:hover){.cta2:hover{text-decoration-color:var(--acc);color:var(--acc)}}
 
   .demos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
-  .demos.three{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .demos.three .demo h3{font-size:22px}
-  .demos.three .ctas{column-gap:14px}
   /* the lead demo spans the row: big preview on the left, words on the right */
   .demo.lead{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
   .demo.lead .shot{border-bottom:0;border-right:1px solid var(--rule)}
@@ -66,30 +63,22 @@
   /* short hero so the first demo shows on the first screen */
   .page-hero{padding-bottom:32px}
   .page-hero h1{margin-bottom:12px}
-  #play{padding-top:clamp(32px,4vw,48px)}
+  #all{padding-top:clamp(32px,4vw,48px)}
+  .from-work{padding-top:clamp(28px,4vw,40px)}
+  .from-work .sub{margin:0}
+  .from-work .more{margin-left:2px}
   .page-hero .kicker a,.back .more{display:inline-flex;align-items:center;min-height:44px}
 
   @media (max-width:960px){
-    .demos.three{grid-template-columns:repeat(2,minmax(0,1fr))}
     .demo p{font-size:15px}
   }
   @media (max-width:760px){
-    .demos,.demos.three{grid-template-columns:minmax(0,1fr);gap:16px}
+    .demos{grid-template-columns:minmax(0,1fr);gap:16px}
     .demo.lead{display:flex}
     .demo.lead .shot{border-right:0;border-bottom:1px solid var(--rule)}
     .demo.lead .body{padding:20px 18px 22px}
     .demo .body{padding:18px 18px 20px}
-    .demo h3,.demos.three .demo h3{font-size:24px}
-  }
-  /* phones: the small toys go two to a row as compact cards, with one full-width button each */
-  @media (max-width:760px){
-    .demos.three{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .demos.three .demo p,.demos.three .where,.demos.three .cta2{display:none}
-    .demos.three .demo .body{padding:12px 12px 14px;gap:6px}
-    .demos.three .demo h3{font-size:18px}
-    .demos.three .ctas{padding-top:4px}
-    .demos.three .cta{width:100%;justify-content:center;padding:0 10px;font-size:14px;gap:6px}
-    .demos.three .demo:last-child:nth-child(odd){grid-column:1/-1}
+    .demo h3{font-size:24px}
   }
   @media (max-width:380px){
     .cta{padding:0 14px}
@@ -107,8 +96,6 @@
   /* live GitHub stars, as on the old home page cards */
   .stars{font-family:var(--mono);font-size:12px;color:var(--body);white-space:nowrap;opacity:0;transition:opacity .4s}
   .stars.ok{opacity:1}
-  .demos + .demos{margin-top:20px}
-  @media (max-width:760px){.demos + .demos{margin-top:12px}}
   .cta2.ext{font-size:13px;color:var(--body);text-decoration-thickness:1px}
   @media (max-width:760px){.demo.lead .shot.vid{border-bottom:1px solid var(--rule)}}
 </style>
@@ -148,13 +135,11 @@
   <main id="main">
     <header class="page-hero">
       <div class="kicker mono"><a href="../">Home</a><span aria-hidden="true">/</span><span>Projects</span></div>
-      <h1 id="main-h1">Projects <em>and demos</em></h1>
+      <h1 id="main-h1"><em>Projects</em></h1>
       <p class="lede">Smaller things I built because I wanted them to exist. Each one has a demo you can try right here, and its own page with the full write-up.</p>
     </header>
 
     <section class="block" id="all">
-      <div class="head reveal"><h2>Projects</h2><span class="num mono">01</span></div>
-      <div class="rule"></div>
       <div class="demos">
 
         <article class="demo lead reveal" id="swapchain">
@@ -225,129 +210,8 @@
       </div>
     </section>
 
-    <section class="block" id="from-work">
-      <div class="head reveal"><h2>From my work</h2><span class="num mono">02</span></div>
-      <div class="rule"></div>
-      <p class="sub reveal">Demos from Medtronic, Continuum and the NVIDIA challenge. The full stories are on the <a href="../work/">Work page</a>.</p>
-      <div class="demos">
-
-        <article class="demo reveal" id="hole">
-          <a class="shot" data-demo href="../continuum/hole/" tabindex="-1" aria-hidden="true">
-            <img class="l" src="img/hole-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/hole-dark.webp" alt="" width="1120" height="700" loading="lazy">
-          </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Interactive 3D</span><span class="mono where">Continuum</span></div>
-            <h3>Miacomet hole 10 &middot; Par 4</h3>
-            <p>One example play of a real hole, hole 10 at Miacomet Golf Club on Nantucket, a par 4. Press play, or step through it.</p>
-            <div class="ctas"><a class="cta" data-demo href="../continuum/hole/">Play the hole <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
-          </div>
-        </article>
-
-        <article class="demo reveal" id="drive">
-          <a class="shot" data-demo href="../work/#nvidia" tabindex="-1" aria-hidden="true">
-            <img class="l" src="img/drive-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/drive-dark.webp" alt="" width="1120" height="700" loading="lazy">
-          </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Video</span><span class="mono where">Work &middot; NVIDIA</span></div>
-            <h3>Your call vs. my model</h3>
-            <p>Make the call on four real dashcam clips, then see what my model said.</p>
-            <div class="ctas"><a class="cta" data-demo href="../work/#nvidia">Make the call <span aria-hidden="true">&rarr;</span></a><a class="cta2 ext" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026">See the challenge <span aria-hidden="true">&nearr;</span></a></div>
-          </div>
-        </article>
-
-      </div>
-      <div class="demos three">
-
-        <article class="demo reveal" id="ccapp">
-          <a class="shot" data-demo href="../continuum/#ccApp" tabindex="-1" aria-hidden="true">
-            <img class="l" src="img/ccapp-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/ccapp-dark.webp" alt="" width="1120" height="700" loading="lazy">
-          </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Walkthrough</span><span class="mono where">Continuum</span></div>
-            <h3>The app screen</h3>
-            <p>The app screen during a real swing, in three steps. Scroll to play.</p>
-            <div class="ctas"><a class="cta" data-demo href="../continuum/#ccApp">Scroll through it <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
-          </div>
-        </article>
-
-        <article class="demo reveal" id="range">
-          <a class="shot" data-demo href="../work/#continuum" tabindex="-1" aria-hidden="true">
-            <img class="l" src="img/range-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/range-dark.webp" alt="" width="1120" height="700" loading="lazy">
-          </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Toy</span><span class="mono where">Work &middot; Continuum</span></div>
-            <h3>The range</h3>
-            <p>Click where you want to aim. Hit three and I'll tell you what you're doing. A toy, not the real model.</p>
-            <div class="ctas"><a class="cta" data-demo href="../work/#continuum">Hit a few <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
-          </div>
-        </article>
-
-        <article class="demo reveal" id="race">
-          <a class="shot" data-demo href="../work/#medtronic" tabindex="-1" aria-hidden="true">
-            <img class="l" src="img/race-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/race-dark.webp" alt="" width="1120" height="700" loading="lazy">
-          </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Toy</span><span class="mono where">Work &middot; Medtronic</span></div>
-            <h3>Lookup race</h3>
-            <p>Five lookups by hand, 10 to 15 minutes each, against about a minute with the agent. Sped up 300&times;.</p>
-            <div class="ctas"><a class="cta" data-demo href="../work/#medtronic">Run a lookup <span aria-hidden="true">&rarr;</span></a></div>
-          </div>
-        </article>
-
-      </div>
-    </section>
-
-    <section class="block" id="toys">
-      <div class="head reveal"><h2>Small toys</h2><span class="num mono">03</span></div>
-      <div class="rule"></div>
-      <p class="sub reveal">Smaller pieces built into the home page.</p>
-      <div class="demos three">
-
-        <article class="demo reveal" id="intro">
-          <a class="shot" data-demo href="../room/" tabindex="-1" aria-hidden="true">
-            <img class="l" src="img/room-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/room-dark.webp" alt="" width="1120" height="700" loading="lazy">
-          </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Interactive 3D</span><span class="mono where">The intro</span></div>
-            <h3>The intro flight</h3>
-            <p>Down a brownstone street, in the front door, and onto the monitor in my room.</p>
-            <div class="ctas"><a class="cta" data-demo href="../room/">Replay intro <span aria-hidden="true">&rarr;</span></a></div>
-          </div>
-        </article>
-
-        <article class="demo reveal" id="rooting">
-          <a class="shot" data-demo href="../#currently" tabindex="-1" aria-hidden="true">
-            <img class="l" src="img/rooting-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/rooting-dark.webp" alt="" width="1120" height="700" loading="lazy">
-          </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home &middot; Currently</span></div>
-            <h3>Rooting for</h3>
-            <p>My Fantasy AI sets all three lineups. Hover a week to see the score.</p>
-            <div class="ctas"><a class="cta" data-demo href="../#currently">See the weeks <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
-          </div>
-        </article>
-
-        <article class="demo reveal" id="shot">
-          <a class="shot" data-demo href="../#main" tabindex="-1" aria-hidden="true">
-            <img class="l" src="img/hero-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/hero-dark.webp" alt="" width="1120" height="700" loading="lazy">
-          </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home</span></div>
-            <h3>Hit a shot</h3>
-            <p>Click anywhere at the top of the home page to hit a shot.</p>
-            <div class="ctas"><a class="cta" data-demo href="../#main">Hit a shot <span aria-hidden="true">&rarr;</span></a></div>
-          </div>
-        </article>
-
-      </div>
+    <section class="block from-work" id="from-work">
+      <p class="sub reveal">Demos from my work are on the <a class="more" href="../work/">Work page <span aria-hidden="true">&rarr;</span></a></p>
     </section>
 
     <div class="back"><a class="more" href="../"><span aria-hidden="true">&larr;</span> Home</a><a class="more quiet" href="../work/">Work <span aria-hidden="true">&rarr;</span></a></div>

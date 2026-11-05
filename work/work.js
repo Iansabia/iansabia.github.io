@@ -1,5 +1,5 @@
 /* Work page toys (moved from the home page as they were): the counters and bars, the lookup race,
-   the range, the case tabs, the car game and the live leaderboard rank. Theme, menu and reveals come from assets/site.js. */
+   the range, the jump bar, the car game and the live leaderboard rank. Theme, menu and reveals come from assets/site.js. */
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const root = document.documentElement;
@@ -152,37 +152,13 @@
   document.getElementById('rangeReset').addEventListener('click', newGolfer);
   newGolfer();
 
-  /* work tabs; links into a case (the Currently rows, #drive) open its tab first */
-  const tabs = [...document.querySelectorAll('.case-tab')];
-  const panelOf = (t) => document.getElementById(t.getAttribute('aria-controls'));
-  function openCase(id, focus) {
-    tabs.forEach((t) => {
-      const on = t.getAttribute('aria-controls') === id;
-      t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
-      panelOf(t).hidden = !on;
-      if (on && focus) t.focus();
-    });
-  }
-  tabs.forEach((t, i) => {
-    t.addEventListener('click', () => openCase(t.getAttribute('aria-controls')));
-    t.addEventListener('keydown', (e) => {
-      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-      if (d) { e.preventDefault(); openCase(tabs[(i + d + tabs.length) % tabs.length].getAttribute('aria-controls'), true); }
-    });
-  });
-  const caseOf = (hash) => { const el = hash && hash.length > 1 && document.getElementById(hash.slice(1)); const c = el && el.closest('[role=tabpanel]'); return c ? c.id : null; };
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('a[href^="#"]'), id = a && caseOf(a.getAttribute('href'));
-    if (!id) return;
-    e.preventDefault(); openCase(id);
-    document.querySelector('.cases').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    history.replaceState(null, '', a.getAttribute('href'));
-  });
-  if (caseOf(location.hash)) {
-    openCase(caseOf(location.hash)); requestAnimationFrame(() => document.querySelector('.cases').scrollIntoView());
-    let moved = false; ['wheel', 'touchstart', 'keydown'].forEach((t) => addEventListener(t, () => { moved = true; }, { once: true, passive: true }));
-    addEventListener('load', () => setTimeout(() => { if (!moved) document.querySelector('.cases').scrollIntoView(); }, 60), { once: true });
-  }
+  /* jump bar: underline the case in view. #hash links (from home, the old /demos/ links or the bar
+     itself) are plain anchors now that all three cases are on the page; the browser lands them. */
+  const jumps = [...document.querySelectorAll('.case-tab')];
+  const markCase = (id) => jumps.forEach((j) => (j.getAttribute('href') === '#' + id ? j.setAttribute('aria-current', 'true') : j.removeAttribute('aria-current')));
+  markCase('medtronic');
+  const caseSpy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) markCase(e.target.id); }), { rootMargin: '-40% 0px -55% 0px' });
+  document.querySelectorAll('.entry').forEach((el) => caseSpy.observe(el));
 
   /* car game: real answers from my fine-tuned Alpamayo 1.5 on four public dashcam clips (rt/public_clip.py) */
   const OPTS = ['Keep going', 'Slow down', 'Stop', 'Steer around'];
@@ -410,7 +386,7 @@
   $('dNext').addEventListener('click', () => { show((scene + 1) % SCENES.length); clipIntoView(); });
   show(0);
 
-  /* live rank from NVIDIA's public leaderboard (a Gradio Space that allows this origin). If it can't be reached, the dated #3 stays. */
+  /* live rank from NVIDIA's public leaderboard (a Gradio Space that allows this origin). If it can't be reached, the dated #16 stays. */
   (async () => {
     const base = 'https://nvidia-physicalai-ood-leaderboard.hf.space/gradio_api/call/lambda';
     let me = null;

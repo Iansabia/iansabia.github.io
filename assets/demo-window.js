@@ -15,7 +15,7 @@
 const APPS = [/\/swapchain\/app\/?(index\.html)?$/, /\/continuum\/hole\/?(index\.html)?$/, /\/room\/?(index\.html)?$/];
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-let dlg, box, frameWrap, titleEl, fullLink, backBtn, closeBtn, lastFocus, pendingNav, openUrl, savedScroll;
+let dlg, box, frameWrap, titleEl, fullLink, backBtn, closeBtn, lastFocus, pendingNav, openUrl, savedScroll, savedTop;
 
 function css() {
   if (document.querySelector('link[data-demo-window]')) return;
@@ -82,13 +82,20 @@ function lockScroll(on) {
   const r = document.documentElement;
   if (on) {
     savedScroll = scrollY;
+    savedTop = lastFocus && lastFocus.getBoundingClientRect().height ? lastFocus.getBoundingClientRect().top : null;
     const gap = innerWidth - r.clientWidth;
     r.classList.add('dw-lock');
     if (gap > 0) r.style.setProperty('--dw-gap', gap + 'px');
   } else {
     r.classList.remove('dw-lock');
     r.style.removeProperty('--dw-gap');
-    if (Math.abs(scrollY - savedScroll) > 2) scrollTo(0, savedScroll);
+    // put the link back where it was on screen, even if something above it changed height meanwhile
+    // (late images, a video poster); without the link, fall back to the old scroll position
+    const anchor = lastFocus && document.contains(lastFocus) && lastFocus.getBoundingClientRect().height ? lastFocus : null;
+    if (anchor && savedTop != null) {
+      const d = anchor.getBoundingClientRect().top - savedTop;
+      if (Math.abs(d) > 2) scrollTo({ top: scrollY + d, left: 0, behavior: 'instant' });
+    } else if (Math.abs(scrollY - savedScroll) > 2) scrollTo({ top: savedScroll, left: 0, behavior: 'instant' });
   }
 }
 
