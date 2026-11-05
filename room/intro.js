@@ -20,9 +20,9 @@
 
 const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const KEY = 'ian-intro-played';
-// Seen in this tab, or in any tab of this browser in the last day (links opened from an email each get
+// Seen in this tab, or in any tab of this browser in the last hour (links opened from an email each get
 // a fresh tab, so sessionStorage alone would replay the intro on every one)
-const SEEN = 'ian-intro-at', SEEN_FOR = 24 * 3600e3;
+const SEEN = 'ian-intro-at', SEEN_FOR = 3600e3;
 function seen() {
   if (sessionStorage.getItem(KEY)) return true;
   try { const at = +localStorage.getItem(SEEN); return at > 0 && Date.now() - at < SEEN_FOR; } catch (e) { return false; }
