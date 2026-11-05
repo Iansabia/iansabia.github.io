@@ -23,6 +23,16 @@ const KEY = 'ian-intro-played';
 const TEST = window.__INTRO_TEST || null;   // local screenshot scripts only; nothing reads the URL
 let T = null;                                // the three.js namespace once loaded
 
+// Timing. The whole first visit, from the page's first paint to a usable page, fits in about 1.5 s.
+// The flight keeps its shots (street, door, hall, room, monitor) and runs them faster: STORY is the
+// length of the camera path in its own seconds, FLIGHT the wall-clock time it gets to play.
+// On a first visit the flight ends at about BUDGET after the head gate (window.__introT0), shrinking
+// toward FLIGHT_MIN when three.js arrives late; if three.js is not drawing by READY_BY, the page
+// shows without the 3D (the poster frame just fades).
+const STORY = 5.6;
+const FLIGHT = 1.1, FLIGHT_MIN = .7, BUDGET = 1.5, READY_BY = .8;
+const FADE = .2, FADE_SKIP = .16;
+
 // ---------------------------------------------------------------- gate
 function hasWebGL() {
   try {
@@ -220,11 +230,15 @@ function run(opts, done) {
       ov.remove();
       if (renderer) { renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) { /* fine */ } }
       done();
-    }, skipped ? 260 : 380);
+    }, (skipped ? FADE_SKIP : FADE) * 1000 + 20);
   }
 
   // ---------------------------------------------------------------- load three, lazily
-  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('three.js took too long')), TEST ? 30000 : (window.__introSlow ? 2500 : 4000)));
+  // a first visit counts from the head gate; a replay (force) has nothing to wait for but the module
+  const t0 = !opts.force && typeof window.__introT0 === 'number' ? window.__introT0 : performance.now();
+  const since = () => (performance.now() - t0) / 1000;
+  const wait = TEST ? 30000 : Math.max(250, (opts.force ? 4 : READY_BY - since()) * 1000);
+  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('three.js took too long')), wait));
   Promise.race([T ? Promise.resolve(T) : import(THREE_URL), timeout]).then(mod => {
     T = mod;
     if (ended) return;
@@ -1068,20 +1082,22 @@ function run(opts, done) {
     }
 
     // ================================================================ camera path
+    // key times are in story seconds (STORY in all); the street part is kept short so the house,
+    // the hall and the room get most of the flight
     const KEYS = [
       { t: 0.0, p: [11.0, 3.6, -31], l: [8.6, 2.4, -4], f: 44 },
-      { t: 1.55, p: [10.4, 3.0, -14.5], l: [5.6, 2.2, 3.0], f: 46 },
-      { t: 2.55, p: [7.6, 2.3, -.6], l: [2.2, 1.5, 3.6], f: 50 },
-      { t: 3.2, p: [4.9, 1.95, 3.58], l: [1.0, 1.35, 3.5], f: 56 },
-      { t: 3.7, p: [2.55, 1.55, 3.52], l: [-.6, 1.35, 3.4], f: 60 },
-      { t: 4.2, p: [1.17, 1.46, 3.22], l: [-1.3, 1.1, 1.4], f: 60 },
-      { t: 4.8, p: [.75, 1.3, 2.05], l: [-1.62, 1.07, 1.2], f: 52 },
-      { t: 5.35, p: [-.3, 1.11, 1.2], l: [-1.62, 1.07, 1.2], f: 34 },
-      { t: 5.85, p: [-1.07, 1.06, 1.2], l: [-1.62, 1.06, 1.2], f: 0, fill: true },
+      { t: 1.0, p: [10.4, 3.0, -14.5], l: [5.6, 2.2, 3.0], f: 46 },
+      { t: 1.75, p: [7.6, 2.3, -.6], l: [2.2, 1.5, 3.6], f: 50 },
+      { t: 2.45, p: [4.9, 1.95, 3.58], l: [1.0, 1.35, 3.5], f: 56 },
+      { t: 3.0, p: [2.55, 1.55, 3.52], l: [-.6, 1.35, 3.4], f: 60 },
+      { t: 3.6, p: [1.17, 1.46, 3.22], l: [-1.3, 1.1, 1.4], f: 60 },
+      { t: 4.3, p: [.75, 1.3, 2.05], l: [-1.62, 1.07, 1.2], f: 52 },
+      { t: 5.0, p: [-.3, 1.11, 1.2], l: [-1.62, 1.07, 1.2], f: 34 },
+      { t: 5.6, p: [-1.07, 1.06, 1.2], l: [-1.62, 1.06, 1.2], f: 0, fill: true },
     ];
     const PORTRAIT_P = { 0: [11.6, 2.6, -30], 1: [11.6, 2.6, -13.5], 2: [8.4, 2.3, .2], 5: [1.15, 1.46, 3.2], 6: [.95, 1.32, 2.3], 7: [-.2, 1.11, 1.2] };
     const PORTRAIT_L = { 0: [9.6, 3.9, -6], 1: [5.2, 3.5, 3.4], 2: [2.2, 2.1, 3.6], 5: [-1.4, 1.1, 1.3] };
-    const DOOR_OPEN = [2.35, 3.25], BEND = [4.3, 5.4], END = 5.85;
+    const DOOR_OPEN = [1.6, 2.55], BEND = [3.72, 5.06], END = STORY;
     let posC, lookC, keyU;
     const setupPath = () => {
       const portrait = innerWidth / innerHeight < 1;
@@ -1117,7 +1133,7 @@ function run(opts, done) {
       camera.position.copy(_p); camera.lookAt(_l);
       const seg = u * (KEYS.length - 1), i = Math.min(Math.floor(seg), KEYS.length - 2), s = seg - i;
       camera.fov = u >= 1 ? fovFor(KEYS[KEYS.length - 1], KEYS.length - 1) : lerp(fovFor(KEYS[i], i), fovFor(KEYS[i + 1], i + 1), smooth(s));
-      camera.near = t > 3.4 ? .03 : .1;
+      camera.near = t > 2.89 ? .03 : .1;
       if (TEST && TEST.cam) { const v = TEST.cam; camera.position.set(v[0], v[1], v[2]); camera.lookAt(v[3], v[4], v[5]); camera.fov = v[6] || 60; }
       camera.updateProjectionMatrix();
     };
@@ -1139,7 +1155,7 @@ function run(opts, done) {
       target.style.transform = m ? `matrix3d(${m.join(',')})` : 'scale(0.0001)';
     };
 
-    let t = 0, last = 0, wall = 0, t0wall = 0, firstFrame = true;
+    let t = 0, last = 0, wall = 0, t0wall = 0, firstFrame = true, speed = 1, flight = FLIGHT;
     const update = (tt) => {
       applyCamera(tt);
       const b = smooth(clamp((tt - BEND[0]) / (BEND[1] - BEND[0]), 0, 1));
@@ -1154,11 +1170,20 @@ function run(opts, done) {
       raf = 0;
       if (ended) return;
       const real = last ? Math.max(0, (now - last) / 1000) : 0; last = now;
-      if (!t0wall) t0wall = now;
-      if (!(TEST && TEST.hold)) { t += Math.min(real, .25); wall = (now - t0wall) / 1000; }
-      if (wall > END + .6) t = END;                // a slow device skips frames, it never runs long
+      if (!t0wall) {
+        t0wall = now;
+        // the flight gets what is left of the budget (a replay gets the full FLIGHT)
+        flight = opts.force ? FLIGHT : clamp(BUDGET - since(), FLIGHT_MIN, FLIGHT);
+        speed = END / flight;
+      }
+      if (!(TEST && TEST.hold)) { t += Math.min(real, .05) * speed; wall = (now - t0wall) / 1000; }
+      if (wall > flight + .15) t = END;            // a slow device skips frames, it never runs long
       update(Math.min(t, END)); render();
-      if (firstFrame) { firstFrame = false; html.classList.remove('intro-on'); }
+      if (firstFrame) {
+        // the first frame fades in over the poster cover, then the cover goes
+        firstFrame = false; ov.classList.add('is-live');
+        setTimeout(() => html.classList.remove('intro-on'), 140);
+      }
       if (t >= END && !(TEST && TEST.hold)) { target.style.transform = ''; finish(false); return; }
       raf = requestAnimationFrame(frame);
     };

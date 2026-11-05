@@ -1,18 +1,24 @@
 /* Intro overlay for the home page (room/intro.js). Colors follow SwapChain's map ground. */
 
-/* Set by the small <head> snippet: hold a plain cover until the first 3D frame is drawn. */
+/* Set by the small <head> snippet: hold a cover until the first 3D frame is drawn. The cover is the
+   flight's opening shot (a still rendered from this same scene), so the intro starts at first paint
+   and the live canvas fades in over it. */
 html.intro-on::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 2147483000;
-  background: #EFEAE3;
+  background: #EFEAE3 url(poster-desk-light.webp) center / cover no-repeat;
   pointer-events: none;
   /* failsafe: if the script never arrives, the page shows anyway */
-  animation: ian-intro-cover 0s linear 4.5s forwards;
+  animation: ian-intro-cover 0s linear 1.6s forwards;
 }
 @keyframes ian-intro-cover { to { visibility: hidden; } }
-html.intro-on[data-theme="dark"]::after { background: #1A1434; }
+html.intro-on[data-theme="dark"]::after { background-color: #1A1434; background-image: url(poster-desk-dark.webp); }
+@media (orientation: portrait) {
+  html.intro-on::after { background-image: url(poster-phone-light.webp); }
+  html.intro-on[data-theme="dark"]::after { background-image: url(poster-phone-dark.webp); }
+}
 
 html.intro-lock,
 html.intro-lock body { overflow: hidden !important; }
@@ -23,12 +29,13 @@ html.intro-lock { scroll-behavior: auto !important; }
   inset: 0;
   z-index: 2147483001;
   opacity: 1;
-  transition: opacity .38s cubic-bezier(.4, 0, .2, 1);
+  transition: opacity .2s cubic-bezier(.4, 0, .2, 1);
   -webkit-tap-highlight-color: transparent;
 }
 .ian-intro.is-out { opacity: 0; pointer-events: none; }
-.ian-intro.is-fast { transition-duration: .24s; }
-.ian-intro-stage { position: absolute; inset: 0; touch-action: none; }
+.ian-intro.is-fast { transition-duration: .16s; }
+.ian-intro-stage { position: absolute; inset: 0; touch-action: none; opacity: 0; transition: opacity .12s linear; }
+.ian-intro.is-live .ian-intro-stage { opacity: 1; }
 .ian-intro-stage canvas { display: block; width: 100%; height: 100%; }
 
 /* Apple-style glass pill */
