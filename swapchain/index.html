@@ -268,7 +268,9 @@
       shield = fig.querySelector('.live-shield'), hint = fig.querySelector('.live-hint'), html = document.documentElement;
   var frame = null, on = false, touchy = matchMedia('(hover:none), (pointer:coarse)').matches;
   var conn = navigator.connection || {};
-  var auto = !touchy && innerWidth >= 900 && !conn.saveData && ['slow-2g', '2g', '3g'].indexOf(conn.effectiveType) < 0;
+  // auto-start only when the frame is wide enough for the app's desktop layout (1024px and up);
+  // a narrower frame gets the app's phone layout, so smaller windows keep the poster until you click
+  var auto = !touchy && view.clientWidth >= 1024 && !conn.saveData && ['slow-2g', '2g', '3g'].indexOf(conn.effectiveType) < 0;
   var IDLE = touchy ? 'Tap the map to explore' : 'Click the map to explore';
   var LIVE = touchy ? 'Tap outside the map to scroll' : 'Map is live. Esc to scroll the page';
   hint.textContent = IDLE;
@@ -317,9 +319,21 @@
     frame.title = 'SwapChain live 3D campus map';
     frame.tabIndex = -1;
     frame.setAttribute('allow', 'fullscreen');
-    var t = theme();
+    var t = theme(), fixed = false;
+    // The app picks phone or desktop layout once, from the frame's size when its head runs. Put the frame
+    // in the page and force a layout pass before giving it a src, so it never boots at a placeholder size.
+    view.insertBefore(frame, view.firstChild);
+    void view.offsetWidth; void frame.offsetWidth;
     frame.src = 'app/' + (t ? '?theme=' + t : '');
-    frame.addEventListener('load', function () {
+    frame.addEventListener('load', function onload() {
+      // safety net: if the app still chose the wrong layout for the frame it is in, reload it once
+      try {
+        var w = frame.contentWindow, mm = function (q) { return w.matchMedia(q).matches; };
+        var phone = !mm('(min-width: 1024px)') || mm('(max-height: 500px) and (pointer: coarse)');
+        var got = w.document.documentElement.getAttribute('data-layout');
+        if (!fixed && got && got !== (phone ? 'phone' : 'desktop')) { fixed = true; w.location.reload(); return; }
+      } catch (e) {}
+      frame.removeEventListener('load', onload);
       wire();
       // the poster lifts once the map has had a moment to draw its first frame
       var tries = 0;
@@ -329,8 +343,7 @@
         if (ok || ++tries > 60) { fig.classList.add('is-ready'); wait.hidden = true; }
         else setTimeout(ready, 150);
       })();
-    }, { once: true });
-    view.insertBefore(frame, view.firstChild);
+    });
     shield.hidden = false;
     if (activate) { on = false; setOn(true); }
   }
