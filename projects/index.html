@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="../assets/page-intro.css">
 <script src="../assets/page-intro.js" data-intro="title"></script>
 <link rel="expect" href="#main-h1" blocking="render">
-<meta name="description" content="Ian Sabia's projects, each with a demo you can try: SwapChain, a fantasy football agent, a research paper, an AI graphing calculator and a fix inside Omi.">
+<meta name="description" content="Ian Sabia's projects, each with a demo you can try: SwapChain, Continuum's AI golf caddy, a self-driving model for NVIDIA's challenge, a fantasy football agent, a research paper, an AI graphing calculator and a fix inside Omi.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://iansabia.github.io/projects/">
 <meta property="og:title" content="Projects · Ian Sabia">
@@ -46,6 +46,22 @@
   .lead-body h2{margin-top:14px;font-size:clamp(44px,5.4vw,76px);line-height:.95;letter-spacing:-.04em}
   .lead-body p{font-weight:400;font-size:17px;line-height:1.55;color:var(--body);max-width:60ch}
 
+  /* the second lead: Continuum's example hole, a still in a light frame that opens the 3D hole */
+  .lead + .lead{margin-top:clamp(72px,9vw,128px);padding-top:clamp(40px,5vw,60px);border-top:1px solid var(--rule)}
+  .hole-shot{position:relative;display:block;aspect-ratio:16/9;overflow:hidden;background:var(--frame)}
+  .hole-shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s var(--ease)}
+  .hole-shot img.d{display:none}
+  :root[data-theme="dark"] .hole-shot img.l{display:none}
+  :root[data-theme="dark"] .hole-shot img.d{display:block}
+  .hole-shot .go{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 20px;border-radius:var(--r-pill);
+    background:var(--ink);color:var(--bg);font:500 15px/1 var(--sans);white-space:nowrap;transition:background-color .25s,color .25s}
+  .hole-shot .go svg{width:10px;height:12px;flex:none}
+  @media (hover:hover){.hole-shot:hover img{transform:scale(1.015)}.hole-shot:hover .go{background:var(--ball);color:#fff}}
+  /* a mono stat line under each lead and feature card, as on the home cards */
+  .stat{font-size:14px;line-height:1.45;color:var(--body);word-spacing:.14em}
+  .stat b{font-family:var(--mono);font-weight:500;color:var(--acc);font-feature-settings:"zero" 1,"tnum" 1}
+  .lead-body .stat{margin-top:14px}
+
   /* the other projects: a rounded screenshot, then the words */
   .demos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(56px,6vw,88px) clamp(20px,2.6vw,36px);margin-top:clamp(72px,9vw,128px);padding-top:clamp(40px,5vw,60px);border-top:1px solid var(--rule)}
   .demo{display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -68,6 +84,12 @@
     :root[data-theme="dark"] .shot:hover{box-shadow:0 22px 44px -28px rgba(0,0,0,.8)}
     .shot:hover .shot-in{transform:translateY(-4px)}
   }
+  /* the NVIDIA card runs the full width: screenshot left, words right */
+  .demo.wide{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:14px clamp(24px,4vw,56px);align-items:start}
+  .demo.wide > .shot{grid-row:1/span 5;margin-bottom:0}
+  .demo.wide > :not(.shot){grid-column:2}
+  .demo.wide .ctas{margin-top:0}
+  @media (max-width:860px){.demo.wide{display:flex}}
   .tags{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;min-height:16px}
   .demo h2{font-size:clamp(26px,2.5vw,36px);line-height:1.04;letter-spacing:-.03em;text-wrap:balance}
   .demo p{font-weight:400;font-size:16px;line-height:1.55;color:var(--body);max-width:54ch}
@@ -135,7 +157,7 @@
       <nav class="crumb" aria-label="Breadcrumb"><a href="../">Home</a><span aria-hidden="true">/</span><span>Projects</span></nav>
       <div class="ph">
         <h1 id="main-h1"><em>Projects</em></h1>
-        <p class="lede">Smaller things I built because I wanted them to exist. Each one has a demo you can try right here, and its own page with the full write-up.</p>
+        <p class="lede">Things I built because I wanted them to exist. Each one has a demo you can try right here, and its own page with the full write-up.</p>
       </div>
     </header>
 
@@ -155,19 +177,54 @@
           </div>
           <div>
             <p>A room-swap marketplace for BU, built in my product management class with a team of four. BU's swap tools only match pairs. SwapChain finds loops of students who can all move at once (A takes B's room, B takes C's, C takes A's). I built the demo: a 3D campus map, floor plans and the loop finder. The film follows a swap list of 350 students, all made up. No sound.</p>
+            <p class="stat">Team of <b>4</b> &middot; <b>3D</b> campus map &middot; <b>2</b>-min film</p>
             <div class="ctas"><a class="pill" data-demo data-demo-title="SwapChain live demo" data-demo-caption="40 students who want to move, all made up" href="../swapchain/app/">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill ghost" href="../swapchain/">Project page</a></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="lead reveal" id="continuum">
+        <div class="frame">
+          <div class="frame-h"><span class="lbl">Continuum &middot; Example hole &middot; 3D</span><span class="lbl">02</span></div>
+          <a class="hole-shot" data-demo data-demo-title="Miacomet hole 10" href="../continuum/hole/" tabindex="-1" aria-hidden="true">
+            <img class="l" src="../continuum/hole/poster-light.webp" alt="" width="1280" height="720" loading="lazy">
+            <img class="d" src="../continuum/hole/poster-dark.webp" alt="" width="1280" height="720" loading="lazy">
+            <span class="go"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z" fill="currentColor"/></svg>Play the example hole</span>
+          </a>
+        </div>
+        <div class="lead-body">
+          <div>
+            <span class="lbl acc">Work &middot; Co-Founder</span>
+            <h2>Continuum</h2>
+          </div>
+          <div>
+            <p>An AI caddy that runs on your phone. It tracks your shots from ordinary video, gives swing feedback, and tells you where to aim based on where you've been missing. About 70 conversations with golfers moved us from indoor simulators onto the course. I lead product and ML. The demo plays hole 10 at Miacomet Golf Club on Nantucket in 3D. The golfer and the shots are made up. The course is real.</p>
+            <p class="stat"><b>~70</b> golfer conversations &middot; <b>0.91</b> F1 ball tracking</p>
+            <div class="ctas"><a class="pill" data-demo data-demo-title="Miacomet hole 10" href="../continuum/hole/">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill ghost" href="../continuum/">Project page</a></div>
           </div>
         </div>
       </article>
 
       <div class="demos">
 
+        <article class="demo wide reveal" id="nvidia">
+          <a class="shot shot-drive" data-demo data-demo-title="Your call vs. my model" data-demo-caption="4 real dashcam clips" href="../drive/#game" tabindex="-1" aria-hidden="true"><span class="shot-in">
+            <img class="l" src="img/drive-light.webp" alt="" width="1120" height="700" loading="lazy">
+            <img class="d" src="img/drive-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
+          </a>
+          <div class="tags"><span class="lbl acc">03 / Work &middot; NVIDIA challenge</span></div>
+          <h2>Teaching a car to explain itself</h2>
+          <p>NVIDIA's Physical AI challenge asks a self-driving model to explain why the car makes its decision in unusual scenes. I took NVIDIA's own driving model, Alpamayo 1.5, trained it further on the task, and got it running on a MacBook, 4 to 7&times; faster. In the demo you make the call on four real dashcam clips, then see what my model said.</p>
+          <p class="stat"><b>10B</b> parameters &middot; <b>4&ndash;7&times;</b> faster answers &middot; <b>$0</b> spent</p>
+          <div class="ctas"><a class="pill sm" data-demo data-demo-title="Your call vs. my model" data-demo-caption="4 real dashcam clips" href="../drive/#game">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../work/#nvidia">See the case</a></div>
+        </article>
+
         <article class="demo reveal" id="fantasy">
           <a class="shot shot-fantasy" data-demo href="../fantasy/#demo" tabindex="-1" aria-hidden="true"><span class="shot-in">
             <img class="l" src="img/fantasy-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/fantasy-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
-          <div class="tags"><span class="lbl acc">02 / Python &middot; agents</span><span class="stars" data-repo="Iansabia/fantasy-ai"></span></div>
+          <div class="tags"><span class="lbl acc">04 / Python &middot; agents</span><span class="stars" data-repo="Iansabia/fantasy-ai"></span></div>
           <h2>Fantasy AI Manager</h2>
           <p>I was in too many fantasy leagues, so I built an agent that runs three of them for me: lineups, injuries, waivers and trade ideas. Plain code makes every call. The AI only reads the news and explains.</p>
           <div class="ctas"><a class="pill sm" data-demo data-demo-title="A week with the bot" href="../fantasy/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../fantasy/">Project page</a></div>
@@ -178,7 +235,7 @@
             <img class="l" src="img/paper-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/paper-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
-          <div class="tags"><span class="lbl acc">03 / Research &middot; DS340</span><span class="stars" data-repo="Iansabia/DS340-Project"></span></div>
+          <div class="tags"><span class="lbl acc">05 / Research &middot; DS340</span><span class="stars" data-repo="Iansabia/DS340-Project"></span></div>
           <h2>Complexity is not an edge</h2>
           <p>Polymarket and Kalshi often price the same event differently. Does a fancier model profit more from those gaps? No. The simplest model won, with about 30&times; more edge per trade.</p>
           <div class="ctas"><a class="pill sm" data-demo data-demo-title="The headline result" href="../paper/#ladder">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../paper/">Read the paper</a></div>
@@ -189,7 +246,7 @@
             <img class="l" src="img/calc-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/calc-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
-          <div class="tags"><span class="lbl acc">04 / C++ &middot; ESP32-S3</span><span class="stars" data-repo="OtterCadGH/nternet-Link"></span></div>
+          <div class="tags"><span class="lbl acc">06 / C++ &middot; ESP32-S3</span><span class="stars" data-repo="OtterCadGH/nternet-Link"></span></div>
           <h2>An AI graphing calculator</h2>
           <p>A camera and an ESP32 chip wired into a TI-Nspire. It photographs a handwritten problem and shows a worked solution on the calculator. I wrote the firmware, the calculator client and the local proxy.</p>
           <div class="ctas"><a class="pill sm" data-demo href="../calculator/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../calculator/">Project page</a></div>
@@ -200,7 +257,7 @@
             <img class="l" src="img/omi-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/omi-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
-          <div class="tags"><span class="lbl acc">05 / TypeScript &middot; open source</span><span class="stars" data-repo="BasedHardware/omi"></span></div>
+          <div class="tags"><span class="lbl acc">07 / TypeScript &middot; open source</span><span class="stars" data-repo="BasedHardware/omi"></span></div>
           <h2>A fix inside Omi</h2>
           <p>Omi is an open-source AI wearable. Its macOS app broke chat and tasks whenever two database transactions nested. I wrote a failing test first, fixed it, and it was merged into main.</p>
           <div class="ctas"><a class="pill sm" data-demo data-demo-title="Step through the bug" href="../omi/#stack">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../omi/">Project page</a></div>

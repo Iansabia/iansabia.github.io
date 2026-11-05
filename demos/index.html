@@ -9,9 +9,9 @@
 <script>
   try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
   (function () {
-    // old Demos anchors; the demos from work now live on the Work page
-    var map = { play: 'all', watch: 'from-work', toys: 'from-work' };
-    var work = { hole: 'continuum', ccapp: 'continuum', range: 'continuum', drive: 'drive', race: 'medtronic' };
+    // old Demos anchors: the hole and the car game have Projects cards; the other work toys live on the Work page
+    var map = { play: 'all', watch: 'from-work', toys: 'from-work', hole: 'continuum', drive: 'nvidia' };
+    var work = { ccapp: 'continuum', range: 'continuum', race: 'medtronic' };
     var h = location.hash.slice(1);
     if (work[h]) { location.replace('../work/' + location.search + '#' + work[h]); return; }
     var hash = h ? '#' + (map[h] || h) : '';
