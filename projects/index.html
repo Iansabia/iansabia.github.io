@@ -89,7 +89,9 @@
   .demo.wide > .shot{grid-row:1/span 5;margin-bottom:0}
   .demo.wide > :not(.shot){grid-column:2}
   .demo.wide .ctas{margin-top:0}
-  @media (max-width:860px){.demo.wide{display:flex}}
+  .nv-stat{text-wrap:balance}
+  .nv-stat span{white-space:nowrap}
+  @media (max-width:860px){.demo.wide{display:flex;align-items:stretch}}
   .tags{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;min-height:16px}
   .demo h2{font-size:clamp(26px,2.5vw,36px);line-height:1.04;letter-spacing:-.03em;text-wrap:balance}
   .demo p{font-weight:400;font-size:16px;line-height:1.55;color:var(--body);max-width:54ch}
@@ -215,7 +217,7 @@
           <div class="tags"><span class="lbl acc">03 / Work &middot; NVIDIA challenge</span></div>
           <h2>Teaching a car to explain itself</h2>
           <p>NVIDIA's Physical AI challenge asks a self-driving model to explain why the car makes its decision in unusual scenes. I took NVIDIA's own driving model, Alpamayo 1.5, trained it further on the task, and got it running on a MacBook, 4 to 7&times; faster. In the demo you make the call on four real dashcam clips, then see what my model said.</p>
-          <p class="stat"><b>10B</b> parameters &middot; <b>4&ndash;7&times;</b> faster answers &middot; <b>$0</b> spent</p>
+          <p class="stat nv-stat"><span><b>10B</b> parameters</span> &middot; <span><b>4&ndash;7&times;</b> faster answers</span> &middot; <span><b>$0</b> spent</span></p>
           <div class="ctas"><a class="pill sm" data-demo data-demo-title="Your call vs. my model" data-demo-caption="4 real dashcam clips" href="../drive/#game">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../work/#nvidia">See the case</a></div>
         </article>
 

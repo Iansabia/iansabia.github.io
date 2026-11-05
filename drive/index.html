@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your call vs. my model · Ian Sabia</title>
-<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  // inside the demo window (an iframe) the page shows only the game: the window has its own title bar
+  if (window.top !== window) document.documentElement.classList.add('in-window');</script>
 <link rel="stylesheet" href="../assets/desk-transition.css">
 <script src="../assets/desk-transition.js"></script>
 <script type="module" src="../assets/site-chrome.js"></script>
@@ -26,6 +28,11 @@
   /* The car game from the Work page's NVIDIA case, on its own so Projects can open it in the demo window.
      The game's styles below are copied from work/index.html as they are; the code is drive/game.js. */
   .frame-h b{font-weight:500;color:var(--ink)}
+
+  /* in the demo window: just the game, no top bar, hero, back links or footer around it */
+  html.in-window{scroll-padding-top:0}
+  html.in-window header.top,html.in-window .page-hero,html.in-window .back,html.in-window footer,html.in-window .skip{display:none}
+  html.in-window section.block{padding:clamp(16px,3vw,32px) 0}
 
   /* car game: you vs. my model */
   .drive{grid-column:1/-1}
