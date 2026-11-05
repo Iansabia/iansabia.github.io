@@ -30,12 +30,11 @@
   /* Home only. Tokens, type, the top bar, pills, frames, cards, rows, section headers and the footer
      all come from assets/site.css, so the home page and every other page share one look. */
 
-  /* ---- intro: one block. Name, tagline and links on the left, the range on the right, so the work
+  /* ---- intro: one block. Name, tagline and links on the left, my OKRs on the right, so the work
      starts about a screen down. The photo sits in the name line like a portrait stamp. ---- */
-  .hero{padding-top:clamp(24px,3vw,48px);cursor:crosshair}
+  .hero{padding-top:clamp(24px,3vw,48px)}
   /* the first section sits closer under the hero, so on a laptop screen "01 / Currently" (Medtronic, Continuum, NVIDIA) starts in the first view */
   .hero + section.block{padding-top:clamp(56px,6vw,84px)}
-  .hero a,.hero button{cursor:pointer}
   .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,4vw,56px);align-items:stretch}
   .hero-text{min-width:0;display:flex;flex-direction:column;justify-content:center}
   .hero-lbls{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:clamp(22px,2.8vw,36px)}
@@ -57,20 +56,39 @@
   .me img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
   .me::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px var(--rule);pointer-events:none}
 
-  /* ---- the range: the real shot tracer inside a night frame, beside the name ---- */
-  .range-frame{display:flex;flex-direction:column;min-width:0}
-  .range-frame .frame-h > :last-child{white-space:nowrap}
-  .range-frame .frame-h b{color:var(--nacc);font-weight:500;margin-left:4px}
-  .range-body{position:relative;flex:1;min-height:clamp(260px,26vw,380px);touch-action:manipulation}
-  #tracer{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .readout{position:absolute;right:clamp(16px,2vw,26px);bottom:clamp(14px,1.8vw,22px);display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;pointer-events:none}
-  .shotread{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-  .shotread .big{display:flex;align-items:baseline;gap:7px;color:var(--nink)}
-  .shotread .big b{font-family:var(--mono);font-weight:500;font-size:clamp(34px,3.4vw,48px);line-height:1;letter-spacing:-.03em;font-feature-settings:"zero" 1,"tnum" 1}
-  .shotread .big i,.shotread .big span{font-size:16px;color:var(--nbody)}
-  .shotread small{font-size:13px;line-height:1.3;color:var(--nbody)}
-  .range-frame .frame-f dd{color:var(--nink)}
-  .range-frame .frame-f > *{padding:14px 18px 16px}
+  /* ---- my OKRs: the night frame beside the name. Statuses are honest; bars only where a real number exists ---- */
+  .okr{display:flex;flex-direction:column;min-width:0;align-self:center}
+  .okr .frame-h .lbl:first-child{color:var(--nink)}
+  .okr-list{list-style:none;margin:0;padding:0}
+  .okr-o{padding:16px 20px 14px}
+  .okr-o + .okr-o{border-top:1px solid var(--nrule)}
+  .okr-o h3{display:flex;align-items:baseline;gap:10px;margin:0 0 8px;font-weight:500;font-size:clamp(16px,1.3vw,18px);line-height:1.25;letter-spacing:-.01em;color:var(--nink);text-wrap:balance}
+  .okr-o h3 a{color:inherit;text-decoration:none}
+  .okr-o h3 .lbl{flex:none;color:var(--nacc)!important;font-size:11px}
+  .okr-kr{list-style:none;margin:0;padding:0 0 0 30px;display:grid;gap:7px}
+  .kr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:14px;row-gap:6px;font-size:14px;line-height:1.35;color:var(--nbody)}
+  .kr a{color:inherit;text-decoration:underline;text-decoration-color:var(--nrule);text-underline-offset:3px;transition:color .2s,text-decoration-color .2s}
+  @media (hover:hover){.kr a:hover{color:var(--nink);text-decoration-color:var(--nbody)}}
+  .kr b{font-weight:500;color:var(--nink)}
+  .kr .v{font-family:var(--mono);font-weight:500;font-size:12.5px;color:var(--nink);font-feature-settings:"zero" 1,"tnum" 1}
+  .st{display:inline-flex;align-items:center;gap:6px;justify-self:end;padding:3px 8px;border-radius:var(--r-pill);font:500 10px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  .st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+  .st.done{color:var(--nline);background:color-mix(in srgb,var(--nline) 16%,transparent)}
+  .st.done::before{width:8px;height:8px;background:none;border-radius:0;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 4.2l2 2L7 1.8' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 4.2l2 2L7 1.8' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;background-color:currentColor}
+  .st.prog{color:var(--nacc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--nacc) 55%,transparent)}
+  .st.prog::before{animation:okrpulse 1.8s ease-in-out infinite}
+  .st.next{color:var(--nbody);box-shadow:inset 0 0 0 1px var(--nrule)}
+  .st.next::before{background:none;box-shadow:inset 0 0 0 1.5px currentColor}
+  @keyframes okrpulse{50%{opacity:.3}}
+  .bar{grid-column:1/-1;display:flex;align-items:center;gap:10px}
+  .bar i{position:relative;flex:1;height:3px;border-radius:2px;background:var(--nrule);overflow:hidden}
+  .bar i::after{content:"";position:absolute;inset:0;transform-origin:left;transform:scaleX(0);background:var(--nline);border-radius:inherit;transition:transform 1.4s var(--ease)}
+  .bar.warm i::after{background:var(--nacc)}
+  .okr.go .bar i::after{transform:scaleX(var(--p,0))}
+  .bar .v{min-width:3.5ch;text-align:right;font-size:11.5px;color:var(--nbody)}
+  .okr .frame-f > *{padding:12px 20px 14px;flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;font-size:13px;color:var(--nbody)}
+  .okr .frame-f b{font-family:var(--mono);font-weight:500;color:var(--nink);font-feature-settings:"zero" 1,"tnum" 1}
+  @media (prefers-reduced-motion:reduce){.st.prog::before{animation:none}.bar i::after{transition:none}}
 
   /* ---- Currently ---- */
   .rrow .when{white-space:nowrap}
@@ -235,20 +253,16 @@
   /* ---- phones ---- */
   @media (max-width:900px){
     .hero-grid{grid-template-columns:minmax(0,1fr);gap:clamp(28px,5vw,40px)}
-    .range-body{flex:none;height:clamp(220px,40vw,320px);min-height:0}
   }
   @media (max-width:600px){
     .hero-lbls{gap:8px;margin-bottom:20px}
     .hero-lbls .lbl{font-size:11.5px;letter-spacing:.06em}
     .hero-lbls .lbl.now{font-size:12px}
-    .range-body{height:220px}
-    /* the hero label above already says what's Now, so phones keep only Next */
-    .range-frame .frame-f > :first-child{display:none}
-    .range-frame .frame-f{grid-template-columns:minmax(0,1fr)}
-    .range-frame .frame-f > *{padding:14px}
-    .shotread .big b{font-size:32px}
-    .shotread .big i,.shotread .big span{font-size:14px}
-    .shotread small{font-size:12px}
+    .okr-o{padding:14px 14px 12px}
+    .okr-o h3{font-size:16px;gap:8px}
+    .okr-kr{padding-left:0;gap:8px}
+    .kr{font-size:13.5px;column-gap:10px}
+    .okr .frame-f > *{padding:12px 14px}
     .hero .links .pill{flex:1 1 auto}
   }
   @media (max-width:360px){.hero .links .pill{padding-left:12px;padding-right:12px}}
@@ -315,19 +329,35 @@
         </div>
       </div>
 
-      <div class="frame night range-frame">
-        <div class="frame-h"><span class="lbl" id="hint" data-touch="Tap anywhere to hit a shot">Click anywhere to hit a shot</span><span class="lbl">Shots hit<b id="shotCount">0</b></span></div>
-        <div class="range-body" id="heroMain">
-          <canvas id="tracer" aria-hidden="true"></canvas>
-          <div class="readout">
-            <span class="lbl">Last shot</span>
-            <div class="shotread" id="shotread" aria-live="polite"><span class="big"><span>About</span><b>269</b><i>yd</i></span><small>mine, for real</small></div>
-          </div>
-        </div>
-        <dl class="frame-f">
-          <div><dt class="lbl">Now</dt><dd>Looking for a Summer 2027 product management internship</dd></div>
-          <div><dt class="lbl">Next</dt><dd>Spring 2027 on exchange at Bocconi, Milan</dd></div>
-        </dl>
+      <div class="frame night okr" aria-labelledby="okrTitle">
+        <div class="frame-h"><span class="lbl" id="okrTitle">My OKRs &middot; 2026 to 2027</span><span class="lbl">Updated Nov 2026</span></div>
+        <ol class="okr-list">
+          <li class="okr-o">
+            <h3><span class="lbl">O1</span><span>Land a Summer 2027 product management internship</span></h3>
+            <ul class="okr-kr">
+              <li class="kr"><span>Build a portfolio where every case has a <a href="work/">live demo</a></span><span class="st done">Done</span></li>
+              <li class="kr"><span>Applications and interviews</span><span class="st prog">In progress</span></li>
+              <li class="kr"><span>Ready to start <b>June 1</b></span><span class="st next">Next</span></li>
+            </ul>
+          </li>
+          <li class="okr-o">
+            <h3><span class="lbl">O2</span><span>Build <a href="continuum/">Continuum</a>, my AI golf caddy</span></h3>
+            <ul class="okr-kr">
+              <li class="kr"><span>Talk to golfers: <span class="v">~70</span> conversations, one big pivot</span><span class="st done">Done</span></li>
+              <li class="kr"><span>Track the golf ball on video</span><span class="st done">Done</span><span class="bar" style="--p:.91"><i></i><span class="v">0.91 F1</span></span></li>
+              <li class="kr"><span>Ship a playable <a href="continuum/#ccHole">3D example hole</a></span><span class="st done">Done</span></li>
+            </ul>
+          </li>
+          <li class="okr-o">
+            <h3><span class="lbl">O3</span><span>Get ready for a semester in Milan</span></h3>
+            <ul class="okr-kr">
+              <li class="kr"><span>Get selected for BU's exchange at Bocconi, Spring 2027</span><span class="st done">Done</span></li>
+              <li class="kr"><span>Learn Italian on Duolingo, so I can talk to my cousins on Procida</span><span class="st prog">In progress</span></li>
+              <li class="kr"><span><a href="#milan">Count down to takeoff</a></span><span class="st prog">In progress</span><span class="bar warm" id="okrWait"><i></i><span class="v">--%</span></span></li>
+            </ul>
+          </li>
+        </ol>
+        <dl class="frame-f"><div><dt class="lbl">Scorecard</dt><dd><b>5</b> of <b>9</b> key results done. Graded honestly.</dd></div></dl>
       </div>
     </div>
   </section>
@@ -481,7 +511,7 @@
 
   <footer>
     <p>Made in Boston. No trackers. <a class="replay-intro" href="room/">Replay intro</a></p>
-    <div class="stamp"><span>Revised<b>2026-11-04</b></span><span>Shots hit<b data-shots>0</b></span></div>
+    <div class="stamp"><span>Revised<b>2026-11-05</b></span></div>
   </footer>
 </div>
 
@@ -489,7 +519,6 @@
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const root = document.documentElement;
-  const css = (n) => getComputedStyle(root).getPropertyValue(n).trim();
 
   /* theme toggle, remembered per visitor when storage works (applied in <head> so there's no flash) */
   const themeBtn = document.getElementById('theme');
@@ -498,7 +527,6 @@
     root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
     try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
     themeBtn.setAttribute('aria-pressed', root.dataset.theme === 'dark');
-    paint(performance.now());
   });
   /* pinned header: a hairline once you scroll, a menu on phones, and the section you're in underlined */
   const topBar = document.querySelector('.top'), menuBtn = document.getElementById('menuBtn'), menu = document.getElementById('menu');
@@ -535,116 +563,18 @@
   const watch = (el, name, fn) => { handlers[name] = fn; el.dataset.onIn = name; io.observe(el); };
 
 
-  /* hero shot tracer: a down-the-line 3D view, like a TV tracer. World units are yards: x right, y up, z downrange.
-     The camera sits low behind the tee. A reference drive sets how far back it sits, so every shot stays in frame. */
-  const hero = document.getElementById('heroMain'), cv = document.getElementById('tracer'), ctx = cv.getContext('2d');
-  const read = document.getElementById('shotread'), hint = document.getElementById('hint'), countEl = document.getElementById('shotCount');
-  const intro = document.getElementById('intro'), shotMirrors = document.querySelectorAll('[data-shots]');
-  const CAM_Y = 6, REF = { x0: 0, aim: 0, curve: 0, carry: 295, apex: 36 };
-  let shots = [], W = 0, H = 0, dpr = 1, hit = 0, cam = {}, ground = null;
-  const lift = (u) => u * Math.pow(1 - u, 0.6) / 0.347; // 0..1, peaks 62% downrange and falls steeper than it climbs
-  const at = (s, u) => ({ x: s.x0 + (s.aim - s.x0) * u + s.curve * u * u, y: s.apex * lift(u), z: s.carry * u });
-  const proj = (p) => { const k = cam.f / (p.z + cam.d); return { x: cam.cx + p.x * k, y: cam.hy + (CAM_Y - p.y) * k, z: p.z }; };
-  const near = (z) => Math.sqrt(cam.d / (z + cam.d)); // 1 at the tee, toward 0 at the horizon
-  function size() {
-    dpr = Math.min(2, window.devicePixelRatio || 1);
-    const r = hero.getBoundingClientRect();
-    if (Math.abs(r.width - W) > 1) shots = []; // old shots were laid out for the old width; a phone's URL bar only changes the height
-    W = r.width; H = r.height;
-    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // the range has the frame to itself: the tee sits low on the left and the flight sweeps right toward the horizon,
-    // so the big "Last shot" readout in the bottom right corner never covers the ball
-    const narrow = W < 700;
-    cam.cx = W * (narrow ? 0.56 : 0.58);
-    cam.teeY = H - (narrow ? 18 : 26);
-    cam.hy = H * (narrow ? 0.5 : 0.54);
-    cam.teeX = W * (narrow ? 0.14 : 0.12);
-    cam.minX = cam.teeX + W * (narrow ? 0.26 : 0.24); // nothing lands straight above the tee, where the flight would fold back on itself
-    const G = cam.teeY - cam.hy, S = cam.hy - (narrow ? 22 : 30); // tee sits G px below the horizon; the highest point may rise S px above it
-    const reach = (d) => { let m = 0; for (let i = 1; i < 80; i++) { const p = at(REF, i / 80); m = Math.max(m, d * (p.y - CAM_Y) / (p.z + d)); } return G / CAM_Y * m; };
-    let lo = 0.3, hi = 400; for (let i = 0; i < 32; i++) { const mid = (lo + hi) / 2; if (reach(mid) > S) hi = mid; else lo = mid; }
-    cam.d = lo; cam.f = G * lo / CAM_Y;
-    drawGround(); paint(performance.now());
+  /* hero OKRs: the bars fill once the page is showing (after the room intro, if it plays). The Milan bar uses the same
+     wait as the departures board below: time since I was selected (Sep 15) over time until the program starts (Jan 23). */
+  const okr = document.querySelector('.okr');
+  {
+    const from = new Date('2026-09-15T00:00:00-04:00'), to = new Date('2027-01-23T00:00:00+01:00');
+    const p = Math.min(1, Math.max(0, (Date.now() - from) / (to - from))), w = document.getElementById('okrWait');
+    w.style.setProperty('--p', p.toFixed(3));
+    w.querySelector('.v').textContent = Math.round(p * 100) + '%';
+    w.setAttribute('aria-label', Math.round(p * 100) + '% of the wait done');
   }
-  function drawGround() {
-    const g = document.createElement('canvas'); g.width = cv.width; g.height = cv.height;
-    const c = g.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const quad = (z1, z2, w) => { const a = proj({ x: -w, y: 0, z: z1 }), b = proj({ x: w, y: 0, z: z1 }), b2 = proj({ x: w, y: 0, z: z2 }), a2 = proj({ x: -w, y: 0, z: z2 }); c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.lineTo(b2.x, b2.y); c.lineTo(a2.x, a2.y); c.closePath(); };
-    // mowing stripes, 12 yards each: wide by the tee, paper thin at the horizon
-    c.fillStyle = 'rgba(167,159,191,.055)';
-    for (let z = 0, i = 0; z < 480; z += 12, i++) if (i % 2 === 0) { quad(z, z + 12, 28); c.fill(); }
-    c.strokeStyle = 'rgba(167,159,191,.18)'; c.lineWidth = 1;
-    [-28, 28].forEach((x) => { const p = proj({ x, y: 0, z: 0 }), q = proj({ x, y: 0, z: 900 }); c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(q.x, q.y); c.stroke(); });
-    c.strokeStyle = 'rgba(167,159,191,.14)'; c.beginPath(); c.moveTo(0, cam.hy); c.lineTo(W, cam.hy); c.stroke();
-    // fade it out toward the frame's edges, and toward the bottom so the near grass doesn't read as a box
-    c.globalCompositeOperation = 'destination-in';
-    const fade = c.createLinearGradient(0, 0, Math.min(120, W * 0.12), 0);
-    fade.addColorStop(0, 'rgba(0,0,0,0)'); fade.addColorStop(1, 'rgba(0,0,0,1)');
-    c.fillStyle = fade; c.fillRect(0, 0, W, H);
-    const low = c.createLinearGradient(0, cam.hy, 0, H);
-    low.addColorStop(0, 'rgba(0,0,0,1)'); low.addColorStop(0.35, 'rgba(0,0,0,.6)'); low.addColorStop(1, 'rgba(0,0,0,.15)');
-    c.fillStyle = low; c.fillRect(0, 0, W, H);
-    ground = g;
-  }
-  function shoot(px, demo) {
-    const carry = 255 + Math.random() * 35, apex = 27 + Math.random() * 8;
-    const curve = (Math.random() < 0.5 ? -1 : 1) * (1 + Math.random() * 13); // + fades right, - draws left
-    const zL = carry + cam.d, xMin = (cam.minX - cam.cx) * zL / cam.f, xMax = (W - 20 - cam.cx) * zL / cam.f;
-    const land = Math.max(xMin, Math.min(xMax, (px - cam.cx) * zL / cam.f));
-    shots.push({ x0: (cam.teeX - cam.cx) * cam.d / cam.f, aim: land - curve, curve, carry, apex, roll: 8 + Math.random() * 14, t0: performance.now(), dur: reduce ? 1 : 3600 });
-    if (shots.length > 7) shots.shift();
-    if (!demo) {
-      const bend = Math.abs(curve) < 3 ? 'Dead straight' : Math.round(Math.abs(curve)) + ' yd ' + (curve > 0 ? 'fade' : 'draw');
-      read.innerHTML = '<span class="big"><span>Carry</span><b>' + Math.round(carry) + '</b><i>yd</i></span><small>Apex ' + Math.round(apex) + ' yd &middot; ' + bend + ' &middot; yours, a toy</small>';
-      countEl.textContent = ++hit; shotMirrors.forEach((n) => { n.textContent = hit; });
-    }
-    requestAnimationFrame(paint);
-  }
-  function paint(now) {
-    ctx.clearRect(0, 0, W, H);
-    if (!cam.f) return;
-    if (ground) ctx.drawImage(ground, 0, 0, W, H);
-    const acc = css('--nline') || '#9B85FF', warm = css('--nwarm') || '#E08A5C';
-    ctx.fillStyle = 'rgba(167,159,191,.55)'; ctx.fillRect(cam.teeX - 10, cam.teeY + 1, 20, 2);
-    let live = false;
-    shots.forEach((s, idx) => {
-      const t = Math.min(1, (now - s.t0) / s.dur), fly = Math.min(1, t / 0.78), roll = Math.max(0, (t - 0.78) / 0.22);
-      const u = (1 - Math.exp(-1.6 * fly)) / (1 - Math.exp(-1.6)); // the ball slows as it flies
-      const age = shots.length - 1 - idx, alpha = Math.max(0.14, 1 - age * 0.18);
-      const N = 120, w = [], pts = [];
-      for (let i = 0; i <= N; i++) { const p = at(s, u * i / N); w.push(p); pts.push(proj(p)); }
-      ctx.globalAlpha = alpha;
-      // shadow track on the grass, so you can read how high the ball is
-      ctx.setLineDash([2, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(167,159,191,.4)'; ctx.beginPath();
-      for (let i = 0; i <= N; i += 3) { const g = proj({ x: w[i].x, y: 0, z: w[i].z }); i ? ctx.lineTo(g.x, g.y) : ctx.moveTo(g.x, g.y); }
-      ctx.stroke(); ctx.setLineDash([]);
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = acc;
-      if (!age) { ctx.globalAlpha = alpha * 0.2; ctx.lineWidth = 10; ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); ctx.globalAlpha = alpha; }
-      // the line thins as the ball gets farther away
-      for (let i = 1; i <= N; i++) { ctx.lineWidth = 1.3 + 3.7 * near(w[i].z); ctx.beginPath(); ctx.moveTo(pts[i - 1].x, pts[i - 1].y); ctx.lineTo(pts[i].x, pts[i].y); ctx.stroke(); }
-      let ball = w[N];
-      if (fly >= 1) {
-        // bounce and roll out, with a ring where it first landed
-        const e = 1 - Math.pow(1 - roll, 2.5), land = proj(w[N]);
-        ball = { x: w[N].x + s.curve * 0.12 * e, y: 2.2 * Math.abs(Math.sin(Math.PI * 2.2 * roll)) * Math.pow(1 - roll, 2), z: s.carry + s.roll * e };
-        const g = proj({ x: ball.x, y: 0, z: ball.z });
-        ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(land.x, land.y); ctx.lineTo(g.x, g.y); ctx.stroke();
-        if (!age && roll < 1) { const rx = 6 + 22 * roll; ctx.globalAlpha = alpha * (1 - roll) * 0.8; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(land.x, land.y, rx, rx * 0.2, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = alpha; }
-      }
-      const b = proj(ball), r = 1.4 + 3.6 * near(ball.z);
-      ctx.fillStyle = warm; if (!age) { ctx.shadowColor = warm; ctx.shadowBlur = 10; }
-      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
-      ctx.globalAlpha = 1;
-      if (t < 1) live = true;
-    });
-    if (live) requestAnimationFrame(paint);
-  }
-  // a click anywhere in the intro (name, photo or range) hits a shot toward that spot; links and buttons work as usual
-  intro.addEventListener('click', (e) => { if (e.target.closest('a,button')) return; const r = hero.getBoundingClientRect(); shoot(Math.max(0, Math.min(r.width, e.clientX - r.left))); });
-  addEventListener('resize', size);
-  size();
-  if (document.fonts) document.fonts.ready.then(size); // the text width changes once the web fonts arrive
-  setTimeout(() => { if (!hit) shoot(cam.cx + 12, true); }, reduce ? 0 : 600);
+  const fillOkr = () => { if (root.classList.contains('intro-on')) return setTimeout(fillOkr, 250); requestAnimationFrame(() => okr.classList.add('go')); };
+  setTimeout(fillOkr, reduce ? 0 : 300);
 
   /* fantasy records: snapshot pulled from ESPN by my fantasy-ai repo */
   const FANTASY = {
