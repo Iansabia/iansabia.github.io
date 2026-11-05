@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ian Sabia</title>
 <script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script>/* the work cases moved to their own page: old links like /#nvidia land there */
+  (function () { var h = location.hash; if (/^#(medtronic|continuum|nvidia|drive)$/.test(h)) location.replace('work/' + location.search + h); })();</script>
 <link rel="stylesheet" href="room/intro.css">
 <!-- room intro gate: assets/desk-transition.js hides the page until room/intro.js decides -->
 <link rel="stylesheet" href="assets/desk-transition.css">
@@ -199,147 +201,9 @@
     .fcard{scroll-snap-align:start}
   }
 
-  /* work entries */
-  .work{display:grid;gap:clamp(56px,7vw,90px)}
-  .entry{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:24px clamp(24px,4vw,56px);align-items:stretch}
-  /* both columns end on the same line: the left column's link sits at the bottom, and each panel's last box takes up any slack */
-  .entry > div:first-child{display:flex;flex-direction:column}
-  .entry .more{margin-top:auto;align-self:flex-start}
-  .entry > .panel{display:flex;flex-direction:column}
-  #medtronic .lanes,#nvidia .board{flex:1;align-content:space-evenly}
-  #continuum .caddy{flex:1}
-  .stats.band{grid-column:1/-1;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--rule);background:var(--tile)}
-  .stats.band div{border-top:0;border-right:1px solid var(--rule)}
-  .stats.band div:last-child{border-right:0}
-  .stats.mini3 div:nth-child(3n){border-right:0}
-  @media (max-width:1100px){.stats.band{grid-template-columns:repeat(3,minmax(0,1fr))}.stats.band div:nth-child(3n){border-right:0}.stats.band div:nth-child(n+4){border-top:1px solid var(--rule)}}
-  .entry .kicker{color:var(--acc)}
-  .entry h3{font-family:var(--serif);font-weight:600;font-size:clamp(28px,3.4vw,40px);line-height:1.05;letter-spacing:-.02em;margin:8px 0 14px}
-  .entry h3 em{font-weight:500;color:var(--acc)}
-  .entry p{color:var(--body);margin-bottom:14px}
-  .entry p b{color:var(--ink);font-weight:600}
+  /* "See all" and other arrow links */
   .more{display:inline-flex;align-items:center;gap:8px;font-weight:600;text-decoration:none;border-bottom:2px solid var(--acc);padding-bottom:2px;margin-top:6px;transition:gap .3s var(--ease),color .2s}
   @media (hover:hover){.more:hover{gap:14px;color:var(--acc)}}
-  .panel{border:1px solid var(--rule);background:var(--tile);transition:background-color .35s,border-color .35s}
-  .panel-h{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--rule)}
-  .panel-h .mono{color:var(--body)}
-  .btn{white-space:nowrap;font-family:var(--sans);font-size:12px;letter-spacing:.01em;text-transform:none;font-weight:500;background:var(--ink);color:var(--bg);border:0;padding:9px 14px;cursor:pointer;transition:background .2s,transform .15s}
-  @media (hover:hover){.btn:hover{background:var(--acc);color:#fff}}
-  .btn:active{transform:translateY(1px)}
-  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
-  @media (hover:hover){.btn.ghost:hover{border-color:var(--ink);background:transparent;color:var(--ink)}}
-
-  /* medtronic: lookup race */
-  .lanes{padding:16px;display:grid;gap:14px}
-  .lane{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
-  .lane .lbl{font-weight:600;font-size:15px}
-  .lane .lbl small{display:block;color:var(--body);font-weight:400;font-size:13px}
-  .clock{font-family:var(--mono);font-size:26px;font-variant-numeric:tabular-nums;min-width:96px;text-align:right}
-  .chips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
-  .chip{font-family:var(--sans);font-size:11px;letter-spacing:.01em;text-transform:none;padding:6px 9px;border:1px solid var(--rule);color:var(--body);background:var(--bg);transition:background .3s,color .3s,border-color .3s}
-  .chip.on{background:var(--warm);border-color:var(--warm);color:#fff}
-  .chip.done{background:var(--ghost);color:var(--body);border-color:var(--ghost);text-decoration:line-through}
-  .chip.agent.on{background:var(--acc);border-color:var(--acc)}
-  .track{grid-column:1/-1;height:6px;background:var(--ghost);position:relative;overflow:hidden}
-  .track i{position:absolute;inset:0;transform-origin:left;transform:scaleX(0);background:var(--warm)}
-  .lane.b .track i{background:var(--acc)}
-  .verdict{padding:0 16px 14px;color:var(--body);font-size:14px;min-height:22px}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule)}
-  .stats div{padding:14px 16px;border-right:1px solid var(--rule)}
-  .stats:not(.band) div:nth-child(3n){border-right:0}
-  .stats:not(.band) div:nth-child(n+4){border-top:1px solid var(--rule)}
-  .stats b{display:block;font-family:var(--serif);font-weight:500;font-size:28px;line-height:1.05;letter-spacing:-.015em}
-  .stats span{color:var(--body);font-size:13px}
-
-  /* continuum: range */
-  .range{position:relative;aspect-ratio:4/3.4;background:var(--tile);overflow:hidden;cursor:crosshair;touch-action:manipulation}
-  .range svg{position:absolute;inset:0;width:100%;height:100%}
-  .caddy{padding:14px 16px;border-top:1px solid var(--rule);display:flex;gap:12px;align-items:flex-start;min-height:74px}
-  .caddy .dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--acc);margin-top:7px;box-shadow:0 0 0 0 var(--acc);animation:pulse 2.4s infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--acc) 60%,transparent)}70%{box-shadow:0 0 0 10px transparent}100%{box-shadow:0 0 0 0 transparent}}
-  .caddy p{margin:0;color:var(--ink);font-size:15px}
-  .caddy p small{display:block;color:var(--body);font-size:13px;margin-top:2px}
-  .vs{display:grid;gap:10px;margin:18px 0 16px}
-  .bar{display:grid;grid-template-columns:150px 1fr 70px;gap:12px;align-items:center;font-size:14px}
-  .bar .t{height:12px;background:var(--ghost);position:relative}
-  .bar .t i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--body);transition:width 1.4s var(--ease)}
-  .bar.me .t i{background:var(--acc)}
-  .bar .v{font-family:var(--mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
-  .bar.me{font-weight:600}
-
-  /* nvidia board */
-  .board{padding:18px 16px 8px;display:grid;gap:14px}
-  .board .bar{grid-template-columns:170px 1fr 58px}
-  .rank{display:flex;align-items:baseline;gap:14px;padding:16px;border-top:1px solid var(--rule)}
-  .rank b{font-family:var(--serif);font-size:64px;line-height:.8;font-weight:600;color:var(--acc)}
-  .rank span{color:var(--body);font-size:14px}
-  .rank span strong{color:var(--ink);font-weight:600;display:block;font-size:16px}
-  .rank em{font-style:normal}
-  .rank em.live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:6px;vertical-align:1px;animation:pulse 2.4s infinite}
-
-  /* work tabs: one case at a time keeps the page short */
-  .cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-bottom:clamp(28px,4vw,44px)}
-  .case-tab{background:none;border:0;border-right:1px solid var(--rule);color:var(--body);text-align:left;padding:16px 18px 18px;cursor:pointer;display:flex;flex-direction:column;gap:5px;position:relative;font:inherit;transition:background .25s,color .25s}
-  .case-tab:last-child{border-right:0}
-  .case-tab::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--acc);transform:scaleX(0);transform-origin:left;transition:transform .45s var(--ease)}
-  @media (hover:hover){.case-tab:hover{background:var(--tile)}}
-  .case-tab[aria-selected="true"]{color:var(--ink)}
-  .case-tab[aria-selected="true"]::after{transform:scaleX(1)}
-  .case-tab .mono{color:var(--acc)}
-  .case-tab b{font-family:var(--serif);font-weight:600;font-size:clamp(17px,1.7vw,21px);line-height:1.15;letter-spacing:-.015em}
-  .entry[hidden]{display:none}
-  .entry:not([hidden]){animation:caseIn .5s var(--ease)}
-  @keyframes caseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-  .drive{grid-column:1/-1}
-
-  /* car game: you vs. my model */
-  .drive .panel-h{flex-wrap:wrap;gap:4px 12px}
-  .drive-reveal{display:flex;flex-direction:column;gap:12px}
-  .drive-wait{flex:1;min-height:90px;border:1px dashed var(--rule);display:grid;place-items:center;padding:16px;text-align:center;color:var(--body);font-size:14px}
-  .drive-wait[hidden]{display:none}
-  .drive-reveal[hidden],.drive-note[hidden]{display:none}
-  .drive-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
-  .drive-left{display:flex;flex-direction:column;min-width:0}
-  .drive-view{position:relative;margin:0;background:#000;aspect-ratio:16/9;overflow:hidden}
-  .drive-view img,.drive-view video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .drive-view video{opacity:0;transition:opacity .35s}
-  .drive-view.playing video{opacity:1}
-  .drive-tag{position:absolute;left:12px;top:12px;z-index:3;background:rgba(11,8,23,.74);color:#EFEAF8;padding:5px 8px;font-size:10.5px}
-  /* vision layer: an open-source detector's boxes drawn over the clip */
-  .drive-cv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
-  .cv-btn{position:absolute;right:10px;top:10px;z-index:3;display:flex;align-items:center;gap:6px;background:rgba(11,8,23,.74);color:#EFEAF8;border:1px solid rgba(239,234,248,.22);padding:5px 8px;font-size:10.5px;cursor:pointer}
-  .cv-btn::before{content:"";width:7px;height:7px;border-radius:50%;background:#5FE0B0;box-shadow:0 0 8px #5FE0B0}
-  .cv-btn[aria-pressed="false"]{color:#A79FBF}
-  .cv-btn[aria-pressed="false"]::before{background:#6b6480;box-shadow:none}
-  .cv-hud{position:absolute;left:10px;bottom:10px;z-index:3;background:rgba(11,8,23,.74);color:#EFEAF8;padding:5px 8px;font-size:10.5px;max-width:calc(100% - 20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cv-hud:empty{display:none}
-  .cv-hud b{color:#5FE0B0;font-weight:500;margin-right:4px}
-  .drive-credit{padding:8px 16px;font-size:12px;color:var(--body);border-top:1px solid var(--rule)}
-  .drive-credit a{color:var(--body)}
-  .drive-side{padding:18px;display:flex;flex-direction:column;gap:14px;border-left:1px solid var(--rule);min-width:0}
-  .drive-q{font-family:var(--serif);font-size:clamp(22px,2.4vw,28px);font-weight:600;line-height:1.1;letter-spacing:-.015em}
-  .drive-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .opt{position:relative;font:600 15px var(--sans);padding:12px 12px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer;text-align:left;transition:border-color .2s,background .2s,color .2s,transform .2s var(--ease)}
-  @media (hover:hover){.opt:hover:not([disabled]){border-color:var(--ink);transform:translateY(-1px)}}
-  .opt[disabled]{cursor:default;opacity:.55}
-  .opt.you,.opt.model{opacity:1}
-  .opt.you{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-  .opt.model{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
-  .opt small{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:var(--sans);font-size:10px;letter-spacing:.01em;text-transform:none;color:var(--acc)}
-  .opt.you small{color:var(--bg)}
-  .vsrow{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--rule)}
-  .vsrow > div{padding:10px 12px;display:flex;flex-direction:column;gap:2px}
-  .vsrow > div + div{border-left:1px solid var(--rule)}
-  .vsrow .mono{color:var(--body);font-size:11px}
-  .vsrow b{font-family:var(--serif);font-size:22px;font-weight:600;line-height:1.1}
-  .vsrow small{color:var(--body);font-size:12px}
-  .agree{align-self:flex-start;font-family:var(--sans);font-size:11px;letter-spacing:.01em;text-transform:none;padding:4px 8px;color:#fff;background:var(--acc)}
-  .agree.no{background:var(--warm)}
-  .drive blockquote{font-family:var(--mono);font-size:13px;line-height:1.55;color:var(--ink);border-left:3px solid var(--acc);padding:4px 0 4px 12px}
-  .drive-note{color:var(--body);font-size:14px}
-  .drive-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
-  .drive-foot{padding:12px 16px;border-top:1px solid var(--rule);color:var(--body);font-size:13px}
-  @media (max-width:900px){.drive-body{grid-template-columns:1fr}.drive-side{border-left:0;border-top:1px solid var(--rule)}}
 
   /* projects */
   .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
@@ -354,8 +218,14 @@
   .card p{color:var(--body);font-size:15px}
   .card .go{margin-top:auto;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;transition:gap .3s var(--ease)}
   @media (hover:hover){.card:hover .go{gap:14px;color:var(--acc)}}
-  .mini{display:grid;gap:6px;margin:4px 0}
-  .mini .bar{grid-template-columns:110px 1fr 84px;font-size:13px}
+  /* home: a short blurb for Work and for Projects, each a row of small cards and a "See all" link to its page */
+  .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .grid.compact .card{min-height:0;padding:20px 20px 18px;gap:8px}
+  .grid.compact .card h4{font-size:22px}
+  .grid.compact .card.wide h4{font-size:26px}
+  .see-all{margin-top:24px}
+  @media (max-width:900px){.grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
   /* off the clock */
   .off{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:0;border:1px solid var(--rule)}
@@ -455,6 +325,7 @@
     .grid::-webkit-scrollbar{display:none}
     .card{scroll-snap-align:start;border-left:1px solid var(--rule);min-height:0;padding:20px 18px}
     .card.wide{grid-column:auto}
+    .grid.three,.grid.four{grid-template-columns:none}
     /* contact: one full-width row each, with the address showing */
     .contact{grid-template-columns:1fr}
     .contact a{flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 12px;padding:16px 14px}
@@ -528,11 +399,12 @@
       <span class="mono" style="font-size:13px">Ian Sabia</span>
     </a>
     <nav aria-label="Main">
-      <a class="demos-pill" href="demos/"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z"/></svg>Demos</a>
       <span class="links">
         <a href="#currently">Currently</a>
-        <a href="#work">Work</a>
-        <a href="#projects">Projects</a>
+        <a href="work/">Work</a>
+      </span>
+      <a class="demos-pill" href="projects/"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z"/></svg>Projects</a>
+      <span class="links">
         <a href="#milan">Milan</a>
         <a href="#off">Off the clock</a>
         <a href="#contact">Contact</a>
@@ -542,10 +414,9 @@
       <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
     </nav>
     <div class="menu" id="menu">
-      <a href="demos/">Demos <span class="mono" aria-hidden="true">&nearr;</span></a>
       <a href="#currently">Currently <span class="mono">01</span></a>
-      <a href="#work">Work <span class="mono">02</span></a>
-      <a href="#projects">Projects <span class="mono">03</span></a>
+      <a href="work/">Work <span class="mono">02</span></a>
+      <a href="projects/">Projects <span class="mono">03</span></a>
       <a href="#milan">Milan <span class="mono">04</span></a>
       <a href="#off">Off the clock <span class="mono">05</span></a>
       <a href="#contact">Contact <span class="mono">06</span></a>
@@ -579,15 +450,15 @@
     <div class="rule"></div>
     <p class="sub reveal">What I'm building and studying this fall.</p>
     <div class="now reveal">
-      <a href="#medtronic"><b>Medtronic</b><span>Engineering Intern, Quality Systems</span><span class="when mono">May 2026 &ndash; now</span></a>
-      <a href="#continuum"><b>Continuum</b><span>Co-Founder, AI golf caddy</span><span class="when mono">Jul 2025 &ndash; now</span></a>
-      <a href="#nvidia"><b>NVIDIA challenge</b><span>Self-driving reasoning model <span class="pill" data-rank>#3</span></span><span class="when mono">Oct 2026</span></a>
+      <a href="work/#medtronic"><b>Medtronic</b><span>Engineering Intern, Quality Systems</span><span class="when mono">May 2026 &ndash; now</span></a>
+      <a href="work/#continuum"><b>Continuum</b><span>Co-Founder, AI golf caddy</span><span class="when mono">Jul 2025 &ndash; now</span></a>
+      <a href="work/#nvidia"><b>NVIDIA challenge</b><span>Self-driving reasoning model <span class="pill" data-rank>#3</span></span><span class="when mono">Oct 2026</span></a>
       <div class="row"><b>Boston University</b><span>B.S. Data Science, Philosophy minor</span><span class="when mono">Class of 2028</span></div>
     </div>
     <div class="rooting reveal">
       <div class="rooting-h"><span class="mono">Rooting for &middot; fantasy football</span><span class="mono" id="fUpdated"></span></div>
       <div class="fcards" id="fcards"></div>
-      <p class="fnote">My <a href="#projects">Fantasy AI</a> sets all three lineups. <span data-touch="Tap a week to see the score.">Hover a week to see the score.</span></p>
+      <p class="fnote">My <a href="fantasy/">Fantasy AI</a> sets all three lineups. <span data-touch="Tap a week to see the score.">Hover a week to see the score.</span></p>
     </div>
   </section>
 
@@ -595,175 +466,59 @@
     <div class="head reveal"><h2>Work</h2><span class="num mono">02</span></div>
     <div class="rule"></div>
     <p class="sub reveal">Three things real people depend on. Each one has a small toy you can play with.</p>
-
-    <div class="cases reveal" role="tablist" aria-label="Work">
-      <button class="case-tab" role="tab" id="tab-medtronic" aria-controls="medtronic" aria-selected="true"><span class="mono">Medtronic</span><b>An AI agent for a plant's quality team</b></button>
-      <button class="case-tab" role="tab" id="tab-continuum" aria-controls="continuum" aria-selected="false" tabindex="-1"><span class="mono">Continuum</span><b>An AI golf caddy on your phone</b></button>
-      <button class="case-tab" role="tab" id="tab-nvidia" aria-controls="nvidia" aria-selected="false" tabindex="-1"><span class="mono">NVIDIA</span><b>A self-driving model that explains itself</b></button>
+    <div class="grid three compact reveal">
+      <a class="card" href="work/#medtronic">
+        <div class="top-row"><span class="tagline mono">Medtronic</span></div>
+        <h4>An AI agent for a plant's quality team</h4>
+        <span class="go">Run a lookup <span aria-hidden="true">&rarr;</span></span>
+      </a>
+      <a class="card" href="work/#continuum">
+        <div class="top-row"><span class="tagline mono">Continuum</span></div>
+        <h4>An AI golf caddy on your phone</h4>
+        <span class="go">Hit a few <span aria-hidden="true">&rarr;</span></span>
+      </a>
+      <a class="card" href="work/#nvidia">
+        <div class="top-row"><span class="tagline mono">NVIDIA challenge</span></div>
+        <h4>A self-driving model that explains itself</h4>
+        <span class="go">Make the call <span aria-hidden="true">&rarr;</span></span>
+      </a>
     </div>
-
-    <div class="work">
-      <article class="entry" id="medtronic" role="tabpanel" aria-labelledby="tab-medtronic">
-        <div class="reveal">
-          <span class="kicker mono">Medtronic &middot; North Haven, CT</span>
-          <h3>Five systems, <em>one question</em></h3>
-          <p>A medical device plant kept its quality records in five separate systems. Every time someone had a question, the quality team dug through them by hand.</p>
-          <p>I sat with the team first to learn what they actually used. Then I built <b>one Snowflake database across all five</b>, with an AI agent on top that lives in <b>Microsoft Teams</b>, where the plant already works. After I presented it to site leadership, it rolled out across the site.</p>
-          <p>The model was the easy part. What made it accurate was the boring stuff underneath: clean joins, written rules, and sending unsure matches to a human instead of guessing.</p>
-        </div>
-        <div class="panel reveal" aria-label="Lookup race">
-          <div class="panel-h"><span class="mono">Lookup race &middot; sped up 300&times;</span><button class="btn" id="raceBtn">Run a lookup</button></div>
-          <div class="lanes">
-            <div class="lane a">
-              <div class="lbl">By hand<small>10 to 15 minutes in each system</small></div>
-              <div class="clock" id="clockA">0:00</div>
-              <div class="chips" id="chipsA"><span class="chip">Orders &amp; inventory</span><span class="chip">Fix-it records</span><span class="chip">Customer complaints</span><span class="chip">Production line</span><span class="chip">Audit history</span></div>
-              <div class="track"><i id="trackA"></i></div>
-            </div>
-            <div class="lane b">
-              <div class="lbl">Ask the agent<small>One question in Teams</small></div>
-              <div class="clock" id="clockB">0:00</div>
-              <div class="chips"><span class="chip agent" id="chipB">One database, 5 sources</span></div>
-              <div class="track"><i id="trackB"></i></div>
-            </div>
-          </div>
-          <p class="verdict" id="verdict">By hand, a question that touches all five systems is five separate lookups, 10 to 15 minutes each. With the agent, about a minute.</p>
-        </div>
-        <div class="stats band reveal" id="medStats">
-          <div><b data-count="38" data-suffix="M">0</b><span>rows of data in one place</span></div>
-          <div><b data-count="115">0</b><span>tables, all linked</span></div>
-          <div><b data-count="18">0</b><span>tools the AI can use</span></div>
-          <div><b data-count="16">0</b><span>views you can ask in plain English</span></div>
-          <div><b data-count="93700" data-prefix="~">0</b><span>documents it can search</span></div>
-          <div><b data-count="70" data-prefix="15&ndash;" data-suffix="&times;">0</b><span>faster answers after tuning</span></div>
-        </div>
-      </article>
-
-      <article class="entry" id="continuum" role="tabpanel" aria-labelledby="tab-continuum" hidden>
-        <div class="reveal">
-          <span class="kicker mono">Continuum &middot; Co-Founder</span>
-          <h3>The caddy <em>you already own</em></h3>
-          <p>An AI caddy that runs on your phone. It tracks your shots from ordinary video, gives swing feedback, and tells you where to aim based on where you've been missing.</p>
-          <p>We started out building software for indoor simulators. About 70 conversations with golfers moved us onto the course instead. I lead product and ML.</p>
-          <p>We test everything against hand labels before we trust it. When SAM 3.1 beat our own ball tracker on the same 91 hand-labeled frames, in a test that cost under $1, we switched.</p>
-          <div class="vs" id="samBars">
-            <div class="bar me"><span>SAM 3.1</span><div class="t"><i data-w="91"></i></div><span class="v">0.91</span></div>
-            <div class="bar"><span>Our old tracker</span><div class="t"><i data-w="53"></i></div><span class="v">0.53</span></div>
-            <span class="mono" style="color:var(--body);font-size:11px">Accuracy score (F1), 1.0 is perfect</span>
-          </div>
-          <a class="more" href="continuum/">See Continuum <span aria-hidden="true">&rarr;</span></a>
-        </div>
-        <div class="panel reveal" aria-label="Range game">
-          <div class="panel-h"><span class="mono">Range &middot; a toy, not the real model</span><button class="btn ghost" id="rangeReset">Reset</button></div>
-          <div class="range" id="range" role="application" aria-label="Golf range. Click where you want to aim. The caddy learns your miss after three shots.">
-            <svg id="rangeSvg" viewBox="0 0 400 340" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
-          </div>
-          <div class="caddy" aria-live="polite"><span class="dot" aria-hidden="true"></span><p id="caddyTxt">Click where you want to aim. Hit three and I'll tell you what you're doing.<small>150 yards to the flag.</small></p></div>
-        </div>
-      </article>
-
-      <article class="entry" id="nvidia" role="tabpanel" aria-labelledby="tab-nvidia" hidden>
-        <div class="reveal">
-          <span class="kicker mono">NVIDIA Physical AI challenge &middot; solo</span>
-          <h3>Teaching a car <em>to explain itself</em></h3>
-          <p>NVIDIA's challenge asks a self-driving model to explain why the car makes its decision in unusual scenes. A judge model grades each explanation against human labels.</p>
-          <p>I took NVIDIA's own driving model, <b>Alpamayo 1.5</b>, trained it further on the task, and got it running on a MacBook with a rewrite that makes it answer <b>4 to 7&times; faster</b>.</p>
-          <p>Try it below: make the call on four real dashcam clips, then see what my model said. The code goes public after the contest ends on Oct 31.</p>
-          <a class="more" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026" target="_blank" rel="noopener">See the challenge <span aria-hidden="true">&rarr;</span></a>
-        </div>
-        <div class="panel reveal" aria-label="Test set scores">
-          <div class="panel-h"><span class="mono">Judge's score on the test set</span><span class="mono" style="color:var(--acc)">Oct 2026</span></div>
-          <div class="board" id="board">
-            <div class="bar me"><span>My fine-tune</span><div class="t"><i data-w="77.4"></i></div><span class="v" data-num="0.774">0.000</span></div>
-            <div class="bar"><span>GPT-5.5</span><div class="t"><i data-w="50.2"></i></div><span class="v" data-num="0.502">0.000</span></div>
-            <div class="bar"><span>Base Alpamayo 1.5</span><div class="t"><i data-w="41.4"></i></div><span class="v" data-num="0.414">0.000</span></div>
-          </div>
-          <div class="stats mini3">
-            <div><b>10B</b><span>parameters</span></div>
-            <div><b>4&ndash;7&times;</b><span>faster answers</span></div>
-            <div><b>$0</b><span>spent out of pocket</span></div>
-          </div>
-          <div class="rank"><b data-rank>#3</b><span><strong id="rankLine">#3 on the public leaderboard</strong><em id="rankSrc">As of Oct 22, 2026.</em> Baselines are NVIDIA's published numbers.</span></div>
-        </div>
-
-      <div class="drive reveal" id="drive">
-        <div class="panel">
-          <div class="panel-h"><span class="mono">Your call vs. my model &middot; scene <b id="dStep">1</b> of <span id="dTotal">4</span></span><span class="mono" id="dScore">4 real dashcam clips</span></div>
-          <div class="drive-body">
-            <div class="drive-left">
-              <figure class="drive-view" id="dView">
-                <img id="dImg" alt="" loading="lazy">
-                <video id="dVid" muted playsinline preload="none"></video>
-                <canvas class="drive-cv" id="dCv" aria-hidden="true"></canvas>
-                <span class="drive-tag mono" id="dTag">Paused at the moment of decision</span>
-                <button class="cv-btn mono" id="dCvBtn" aria-pressed="true" title="Show or hide the object detector's boxes">Boxes on</button>
-                <span class="cv-hud mono" id="dHud"></span>
-              </figure>
-              <p class="drive-credit" id="dCredit"></p>
-            </div>
-            <div class="drive-side">
-              <p class="drive-q">What should the car do next?</p>
-              <div class="drive-opts" id="dOpts"></div>
-              <div class="drive-wait" id="dWait"><span>Pick one. Your call and my model's answer show up here.</span></div>
-              <div class="drive-reveal" id="dReveal" hidden>
-                <span class="agree" id="dAgree"></span>
-                <div class="vsrow">
-                  <div><span class="mono">You</span><b id="dYou"></b></div>
-                  <div><span class="mono">My model</span><b id="dModel"></b><small id="dVotes"></small></div>
-                </div>
-                <blockquote id="dQuote"></blockquote>
-                <p class="drive-note" id="dNote"></p>
-              </div>
-              <div class="drive-actions"><button class="btn ghost" id="dPlay">Watch what happened</button><button class="btn" id="dNext">Next scene</button></div>
-            </div>
-          </div>
-          <p class="drive-foot">These are real answers from my fine-tuned Alpamayo 1.5, run on public dashcam clips, not on the contest's data. It saw four frames from one front camera and assumed the car was driving straight at a steady speed. It wrote 8 answers per scene. I show its most common action and quote one typical answer word for word. The boxes come from Grounding DINO, a free open-source object detector, run on the same frames. My model never sees them, and the detector makes mistakes too.</p>
-        </div>
-      </div>
-      </article>
-    </div>
+    <a class="more see-all reveal" href="work/" aria-label="See all work">See all <span aria-hidden="true">&rarr;</span></a>
   </section>
 
   <section class="block" id="projects">
     <div class="head reveal"><h2>Projects</h2><span class="num mono">03</span></div>
     <div class="rule"></div>
-    <p class="sub reveal">Smaller things I built because I wanted them to exist. Each one has its own page with a demo or the full write-up. Star counts are live from GitHub.</p>
-    <div class="grid reveal">
-      <a class="card wide" href="swapchain/">
+    <p class="sub reveal">Smaller things I built because I wanted them to exist. Each one has a demo you can try.</p>
+    <div class="grid four compact reveal">
+      <a class="card wide" href="projects/#swapchain">
         <div class="top-row"><span class="tagline mono">Product &middot; DS229 team project</span></div>
         <h4>SwapChain</h4>
-        <p>A room-swap marketplace for BU, built in my product management class with a team of four. BU's swap tools only match pairs, so a swap happens only if the person whose room you want also wants yours. We scored 12 ideas and wrote the PRD, personas and OKRs together. I built the demo: a 3D campus map, floor plans and a loop finder that matches chains of students (A takes B's room, B takes C's, C takes A's). The students in it are made up.</p>
-        <span class="go">Watch the demo <span aria-hidden="true">&rarr;</span></span>
-      </a>
-      <a class="card" href="fantasy/">
-        <div class="top-row"><span class="tagline mono">Python &middot; agents</span><span class="stars" data-repo="Iansabia/fantasy-ai"></span></div>
-        <h4>Fantasy AI Manager</h4>
-        <p>I was in too many fantasy leagues, so I built an agent that runs three of them for me: lineups, injuries, waivers and trade ideas. Plain code makes every call. The AI only reads the news and explains. Its records are up in Currently.</p>
+        <p>A room-swap marketplace for BU that finds loops of students who can all move at once, not just pairs.</p>
         <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
       </a>
-      <a class="card" href="paper/">
-        <div class="top-row"><span class="tagline mono">Research &middot; DS340</span><span class="stars" data-repo="Iansabia/DS340-Project"></span></div>
+      <a class="card" href="projects/#fantasy">
+        <div class="top-row"><span class="tagline mono">Python &middot; agents</span></div>
+        <h4>Fantasy AI Manager</h4>
+        <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
+      </a>
+      <a class="card" href="projects/#paper">
+        <div class="top-row"><span class="tagline mono">Research &middot; DS340</span></div>
         <h4>Complexity is not an edge</h4>
-        <p>Polymarket and Kalshi often price the same event differently. Does a fancier model profit more from those gaps? No. The simplest model won, with about 30&times; more edge per trade.</p>
-        <div class="mini" id="alphaBars">
-          <div class="bar me"><span>Simple model</span><div class="t"><i data-w="100"></i></div><span class="v">+15.0 bps</span></div>
-          <div class="bar"><span>Fanciest model</span><div class="t"><i data-w="3.3"></i></div><span class="v">+0.5 bps</span></div>
-        </div>
-        <span class="go">Read the paper <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
       </a>
-      <a class="card" href="calculator/">
-        <div class="top-row"><span class="tagline mono">C++ &middot; ESP32-S3</span><span class="stars" data-repo="OtterCadGH/nternet-Link"></span></div>
+      <a class="card" href="projects/#calculator">
+        <div class="top-row"><span class="tagline mono">C++ &middot; ESP32-S3</span></div>
         <h4>An AI graphing calculator</h4>
-        <p>A camera and an ESP32 chip wired into a TI-Nspire. It photographs a handwritten problem and shows a worked solution on the calculator. I wrote the firmware, the calculator client and the local proxy.</p>
-        <span class="go">Try the calculator <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
       </a>
-      <a class="card" href="omi/">
-        <div class="top-row"><span class="tagline mono">TypeScript &middot; open source</span><span class="stars" data-repo="BasedHardware/omi"></span></div>
+      <a class="card" href="projects/#omi">
+        <div class="top-row"><span class="tagline mono">TypeScript &middot; open source</span></div>
         <h4>A fix inside Omi</h4>
-        <p>Omi is an open-source AI wearable. Its macOS app broke chat and tasks whenever two database transactions nested. I wrote a failing test first, fixed it, and it was merged into main.</p>
-        <span class="go">See how I fixed it <span aria-hidden="true">&rarr;</span></span>
+        <span class="go">Try the demo <span aria-hidden="true">&rarr;</span></span>
       </a>
     </div>
+    <a class="more see-all reveal" href="projects/" aria-label="See all projects">See all <span aria-hidden="true">&rarr;</span></a>
   </section>
 
   <section class="block" id="milan">
@@ -846,7 +601,7 @@
     root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
     try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
     themeBtn.setAttribute('aria-pressed', root.dataset.theme === 'dark');
-    drawRange(); paint(performance.now());
+    paint(performance.now());
   });
   /* pinned header: a hairline once you scroll, a menu on phones, and the section you're in underlined */
   const topBar = document.querySelector('.top'), menuBtn = document.getElementById('menuBtn'), menu = document.getElementById('menu');
@@ -860,7 +615,7 @@
   document.addEventListener('click', (e) => { if (!menu.contains(e.target)) setMenu(false); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.classList.contains('open')) { setMenu(false); menuBtn.focus(); } });
   const spy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) mark(e.target.id); }), { rootMargin: '-45% 0px -50% 0px' });
-  ['currently', 'work', 'projects', 'milan', 'off', 'contact'].forEach((id) => { const sec = document.getElementById(id); if (sec) spy.observe(sec); });
+  ['currently', 'milan', 'off', 'contact'].forEach((id) => { const sec = document.getElementById(id); if (sec) spy.observe(sec); });
 
   /* phones get "tap", everyone else gets "click" and "hover" */
   const coarse = matchMedia('(pointer: coarse)').matches;
@@ -879,26 +634,6 @@
   document.querySelectorAll('.reveal,.rule').forEach((el) => io.observe(el));
   const watch = (el, name, fn) => { handlers[name] = fn; el.dataset.onIn = name; io.observe(el); };
 
-  const fillBars = (wrap) => wrap.querySelectorAll('.t i').forEach((i) => { i.style.width = i.dataset.w + '%'; });
-  watch(document.getElementById('samBars'), 'sam', () => fillBars(document.getElementById('samBars')));
-  watch(document.getElementById('alphaBars'), 'alpha', () => fillBars(document.getElementById('alphaBars')));
-  watch(document.getElementById('board'), 'board', () => {
-    const b = document.getElementById('board');
-    fillBars(b);
-    b.querySelectorAll('[data-num]').forEach((v) => tween(0, +v.dataset.num, 1400, (x) => { v.textContent = x.toFixed(3); }));
-  });
-  const stats = document.getElementById('medStats');
-  watch(stats, 'stats', () => stats.querySelectorAll('b[data-count]').forEach((b) => {
-    const end = +b.dataset.count, pre = b.dataset.prefix || '', suf = b.dataset.suffix || '';
-    tween(0, end, 1500, (x) => { b.innerHTML = pre + Math.round(x).toLocaleString('en-US') + suf; });
-  }));
-
-  function tween(a, b, ms, cb) {
-    if (reduce) return cb(b);
-    const t0 = performance.now();
-    const step = (t) => { const p = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - p, 3); cb(a + (b - a) * e); if (p < 1) requestAnimationFrame(step); };
-    requestAnimationFrame(step);
-  }
 
   /* hero shot tracer: a down-the-line 3D view, like a TV tracer. World units are yards: x right, y up, z downrange.
      The camera sits low behind the tee. A reference drive sets how far back it sits, so every shot stays in frame. */
@@ -1010,378 +745,6 @@
   if (document.fonts) document.fonts.ready.then(size); // the text width changes once the web fonts arrive
   setTimeout(() => { if (!hit) shoot(cam.cx + 12, true); }, reduce ? 0 : 600);
 
-  /* lookup race: 15 min in each of 5 systems by hand vs about 60 s for the agent, both at 300x */
-  const raceBtn = document.getElementById('raceBtn');
-  const chipsA = [...document.querySelectorAll('#chipsA .chip')], chipB = document.getElementById('chipB');
-  const clockA = document.getElementById('clockA'), clockB = document.getElementById('clockB');
-  const trackA = document.getElementById('trackA'), trackB = document.getElementById('trackB'), verdict = document.getElementById('verdict');
-  const fmt = (s) => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
-  let racing = false;
-  raceBtn.addEventListener('click', () => {
-    if (racing) return; racing = true; raceBtn.textContent = 'Running';
-    chipsA.forEach((c) => c.className = 'chip'); chipB.className = 'chip agent';
-    verdict.textContent = 'Same question, two ways.';
-    const A = 4500, B = 60, speed = reduce ? 1e6 : 300, t0 = performance.now();
-    const step = (now) => {
-      const sim = (now - t0) / 1000 * speed;
-      const a = Math.min(A, sim), b = Math.min(B, sim);
-      clockA.textContent = fmt(a); clockB.textContent = fmt(b);
-      trackA.style.transform = 'scaleX(' + a / A + ')'; trackB.style.transform = 'scaleX(' + b / B + ')';
-      const idx = Math.min(4, Math.floor(a / (A / 5)));
-      chipsA.forEach((c, i) => c.className = 'chip' + (i < idx || a >= A ? ' done' : i === idx ? ' on' : ''));
-      chipB.className = 'chip agent' + (b >= B ? ' done' : ' on');
-      if (b >= B && a < A) verdict.textContent = 'The agent is done. The person is still on system ' + (idx + 1) + ' of 5.';
-      if (a < A) requestAnimationFrame(step);
-      else { racing = false; raceBtn.textContent = 'Run it again'; verdict.textContent = 'By hand: 50 to 75 minutes across five systems. With the agent: about a minute.'; }
-    };
-    requestAnimationFrame(step);
-  });
-
-  /* range: the caddy learns your miss */
-  const svg = document.getElementById('rangeSvg'), rangeEl = document.getElementById('range'), caddy = document.getElementById('caddyTxt');
-  const NS = 'http://www.w3.org/2000/svg', FLAG = { x: 200, y: 70 }, TEE = { x: 200, y: 318 }, YD = 248 / 150; // px per yard along the line
-  let bias, balls, advised;
-  function newGolfer() {
-    const side = Math.random() < 0.5 ? -1 : 1;
-    bias = { x: side * (9 + Math.random() * 8), y: -(3 + Math.random() * 8) }; // yards: + right, - short
-    balls = []; advised = false;
-    caddy.innerHTML = (coarse ? 'Tap' : 'Click') + " where you want to aim. Hit three and I'll tell you what you're doing.<small>150 yards to the flag.</small>";
-    drawRange();
-  }
-  const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); (parent || svg).appendChild(n); return n; };
-  function drawRange() {
-    if (!svg) return;
-    svg.innerHTML = '';
-    const tile = css('--tile'), ghost = css('--ghost'), rule = css('--rule'), body = css('--body'), acc = css('--acc'), warm = css('--warm'), ink = css('--ink');
-    for (let i = 0; i < 9; i++) el('rect', { x: 0, y: i * 38, width: 400, height: 38, fill: i % 2 ? tile : ghost, opacity: .9 });
-    [50, 100, 150].forEach((yd) => {
-      const y = TEE.y - yd * YD;
-      el('line', { x1: 0, x2: 400, y1: y, y2: y, stroke: rule, 'stroke-dasharray': '3 6' });
-      const t = el('text', { x: 8, y: y - 5, fill: body, 'font-family': 'JetBrains Mono, monospace', 'font-size': 10 }); t.textContent = yd + ' YD';
-    });
-    el('circle', { cx: FLAG.x, cy: FLAG.y, r: 26, fill: 'none', stroke: rule, 'stroke-width': 1.5 });
-    el('circle', { cx: FLAG.x, cy: FLAG.y, r: 12, fill: 'none', stroke: rule, 'stroke-width': 1.5 });
-    el('line', { x1: FLAG.x, y1: FLAG.y, x2: FLAG.x, y2: FLAG.y - 30, stroke: ink, 'stroke-width': 2 });
-    el('path', { d: `M${FLAG.x} ${FLAG.y - 30} l18 6 l-18 6 z`, fill: warm });
-    el('rect', { x: TEE.x - 14, y: TEE.y - 4, width: 28, height: 8, fill: body, rx: 2 });
-    (balls || []).forEach((b, i) => {
-      const last = i === balls.length - 1;
-      if (last) el('path', { d: `M${TEE.x} ${TEE.y} Q ${(TEE.x + b.x) / 2} ${b.y - 60} ${b.x} ${b.y}`, fill: 'none', stroke: acc, 'stroke-width': 2, opacity: .7, class: 'arc' });
-      el('line', { x1: b.ax - 4, y1: b.ay - 4, x2: b.ax + 4, y2: b.ay + 4, stroke: body, 'stroke-width': 1.2, opacity: last ? .9 : .35 });
-      el('line', { x1: b.ax - 4, y1: b.ay + 4, x2: b.ax + 4, y2: b.ay - 4, stroke: body, 'stroke-width': 1.2, opacity: last ? .9 : .35 });
-      el('circle', { cx: b.x, cy: b.y, r: last ? 6 : 4.5, fill: b.good ? acc : warm, stroke: css('--bg'), 'stroke-width': 1.5, opacity: last ? 1 : .75 });
-    });
-    hoverG = el('g', { 'pointer-events': 'none' }); drawHover();
-  }
-  /* a faint dotted line from your pointer to the pin, with the yardage */
-  let hoverG = null, hoverAt = null;
-  function drawHover() {
-    if (!hoverG) return;
-    hoverG.innerHTML = '';
-    if (!hoverAt) return;
-    const a = hoverAt, yd = Math.hypot(a.x - FLAG.x, a.y - FLAG.y) / YD, body = css('--body'), ink = css('--ink');
-    el('line', { x1: a.x, y1: a.y, x2: FLAG.x, y2: FLAG.y, stroke: body, 'stroke-width': 1.2, 'stroke-dasharray': '1.5 4', 'stroke-linecap': 'round', opacity: .8 }, hoverG);
-    el('circle', { cx: a.x, cy: a.y, r: 3, fill: 'none', stroke: ink, 'stroke-width': 1.2 }, hoverG);
-    const label = yd < 1.5 ? 'On the pin' : Math.round(yd) + ' yd from the pin';
-    const lx = Math.max(6, Math.min(394, a.x + (a.x > 300 ? -10 : 10))), ly = Math.max(14, a.y - 10);
-    const bg = el('rect', { y: ly - 11, height: 15, rx: 2, fill: css('--bg'), opacity: .92 }, hoverG);
-    const t = el('text', { x: lx, y: ly, fill: ink, 'font-family': 'JetBrains Mono, monospace', 'font-size': 10.5, 'text-anchor': a.x > 300 ? 'end' : 'start' }, hoverG);
-    t.textContent = label;
-    const tw = t.getComputedTextLength();
-    bg.setAttribute('x', (a.x > 300 ? lx - tw : lx) - 4); bg.setAttribute('width', tw + 8);
-  }
-  rangeEl.addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse') return;
-    const a = toSvg(e);
-    hoverAt = a.y > TEE.y - 20 || a.x < 0 || a.x > 400 ? null : a; drawHover();
-  });
-  rangeEl.addEventListener('pointerleave', () => { hoverAt = null; drawHover(); });
-  function toSvg(e) {
-    const r = svg.getBoundingClientRect(), s = Math.min(r.width / 400, r.height / 340);
-    const ox = (r.width - 400 * s) / 2, oy = (r.height - 340 * s) / 2;
-    return { x: (e.clientX - r.left - ox) / s, y: (e.clientY - r.top - oy) / s };
-  }
-  rangeEl.addEventListener('click', (e) => {
-    const a = toSvg(e); if (a.y > TEE.y - 20 || a.x < 0 || a.x > 400) return;
-    const g = () => (Math.random() + Math.random() + Math.random() - 1.5) * 4.5; // yards of scatter
-    const lx = a.x + (bias.x + g()) * YD, ly = a.y - (bias.y + g()) * YD;
-    const missX = (lx - FLAG.x) / YD, missY = (FLAG.y - ly) / YD; // + right, + long
-    const good = Math.hypot(missX, missY) < 7;
-    balls.push({ x: lx, y: ly, ax: a.x, ay: a.y, good, mx: (lx - a.x) / YD, my: (a.y - ly) / YD });
-    drawRange();
-    const arc = svg.querySelector('.arc');
-    if (arc && !reduce) { const L = arc.getTotalLength(); arc.style.strokeDasharray = L; arc.style.strokeDashoffset = L; arc.getBoundingClientRect(); arc.style.transition = 'stroke-dashoffset .7s cubic-bezier(.22,1,.36,1)'; arc.style.strokeDashoffset = 0; }
-    const side = (v) => Math.abs(v) < 1.5 ? 'on line' : Math.round(Math.abs(v)) + ' yd ' + (v > 0 ? 'right' : 'left');
-    const depth = (v) => Math.abs(v) < 1.5 ? 'pin high' : Math.round(Math.abs(v)) + ' yd ' + (v > 0 ? 'long' : 'short');
-    const n = balls.length;
-    if (n < 3) { caddy.innerHTML = 'That one finished ' + side(missX) + ', ' + depth(missY) + '.<small>' + (3 - n) + ' more and I\'ll read your miss.</small>'; return; }
-    const avg = balls.reduce((s, b) => ({ x: s.x + b.mx / n, y: s.y + b.my / n }), { x: 0, y: 0 });
-    if (good) { caddy.innerHTML = 'Flag hunting. That finished ' + Math.round(Math.hypot(missX, missY)) + ' yd from the pin.<small>' + (advised ? 'Aiming off your miss works.' : 'Nice.') + ' Reset to get a new golfer.</small>'; return; }
-    advised = true;
-    const aimX = Math.round(Math.abs(avg.x)), clubs = avg.y < -4 ? ' Take one more club.' : avg.y > 4 ? ' Take one less club.' : '';
-    caddy.innerHTML = 'You\'re missing ' + aimX + ' yd ' + (avg.x > 0 ? 'right' : 'left') + ' on average. Aim ' + aimX + ' yd ' + (avg.x > 0 ? 'left' : 'right') + ' of the flag.' + clubs + '<small>Based on your last ' + n + ' shots. That\'s the whole idea behind Continuum.</small>';
-  });
-  document.getElementById('rangeReset').addEventListener('click', newGolfer);
-  newGolfer();
-
-  /* work tabs; links into a case (the Currently rows, #drive) open its tab first */
-  const tabs = [...document.querySelectorAll('.case-tab')];
-  const panelOf = (t) => document.getElementById(t.getAttribute('aria-controls'));
-  function openCase(id, focus) {
-    tabs.forEach((t) => {
-      const on = t.getAttribute('aria-controls') === id;
-      t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
-      panelOf(t).hidden = !on;
-      if (on && focus) t.focus();
-    });
-  }
-  tabs.forEach((t, i) => {
-    t.addEventListener('click', () => openCase(t.getAttribute('aria-controls')));
-    t.addEventListener('keydown', (e) => {
-      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-      if (d) { e.preventDefault(); openCase(tabs[(i + d + tabs.length) % tabs.length].getAttribute('aria-controls'), true); }
-    });
-  });
-  const caseOf = (hash) => { const el = hash && hash.length > 1 && document.getElementById(hash.slice(1)); const c = el && el.closest('[role=tabpanel]'); return c ? c.id : null; };
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('a[href^="#"]'), id = a && caseOf(a.getAttribute('href'));
-    if (!id) return;
-    e.preventDefault(); openCase(id);
-    document.querySelector('.cases').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    history.replaceState(null, '', a.getAttribute('href'));
-  });
-  if (caseOf(location.hash)) {
-    openCase(caseOf(location.hash)); requestAnimationFrame(() => document.querySelector('.cases').scrollIntoView());
-    let moved = false; ['wheel', 'touchstart', 'keydown'].forEach((t) => addEventListener(t, () => { moved = true; }, { once: true, passive: true }));
-    addEventListener('load', () => setTimeout(() => { if (!moved) document.querySelector('.cases').scrollIntoView(); }, 60), { once: true });
-  }
-
-  /* car game: real answers from my fine-tuned Alpamayo 1.5 on four public dashcam clips (rt/public_clip.py) */
-  const OPTS = ['Keep going', 'Slow down', 'Stop', 'Steer around'];
-  const COMMONS = 'https://commons.wikimedia.org/wiki/File:';
-  const SCENES = [
-    { id: 'deer', alt: 'Dashcam view of a snowy forest road with a deer crossing ahead.', model: 1, votes: '7 of 8 answers',
-      quote: 'Decelerate to maintain a safe distance from the deer crossing the road.', note: '',
-      focus: { c: ['deer'], pick: 'size', say: 'the deer' },
-      credit: 'Clip: Virgo Siil, <a target="_blank" rel="noopener" href="' + COMMONS + 'Metskitsed_autoteel.webm">CC0, via Wikimedia Commons</a>' },
-    { id: 'cow', alt: 'Night dashcam view of a cow standing in the lane, lit by the headlights.', model: 1, votes: '6 of 8 answers',
-      quote: 'Decelerate to maintain a safe distance from the animal crossing the road.',
-      focus: { c: ['cow', 'deer', 'dog'], pick: 'size', say: 'the animal' },
-      note: 'The other two answers kept going and called the cow a "lead vehicle." Night footage is hard.',
-      credit: 'Clip: Luke Byers, <a target="_blank" rel="noopener" href="' + COMMONS + 'Cow_crosses_cattle_grid.webm">CC BY 3.0, via Wikimedia Commons</a>' },
-    { id: 'emergency', alt: 'Dashcam view of police cars and an ambulance stopped across the lanes, with a person on foot.', model: 1, votes: '6 of 8 answers',
-      quote: 'Decelerate to maintain a safe distance from the emergency vehicle ahead.',
-      focus: { c: ['car', 'truck', 'bus'], pick: 'center', say: 'the emergency vehicle' },
-      note: 'The other two steered left around the police car.',
-      credit: 'Clip: Noah Wulf, <a target="_blank" rel="noopener" href="' + COMMONS + 'Hughes_Park_Dr_Rear-Ending.webm">CC BY-SA 3.0, via Wikimedia Commons</a>. My cut is shared under the same license.' },
-    { id: 'fire', alt: 'Dashcam view of a highway with thick black smoke from a vehicle fire ahead.', model: 1, votes: '5 of 8 answers',
-      quote: 'Gentle deceleration to maintain a safe distance from the black car ahead.',
-      focus: { c: ['car'], pick: 'center', say: 'the black car ahead' },
-      note: 'Right call, but most answers blamed a black car ahead. Only one mentioned the fire. Getting the reason right, not just the action, is what I\'m working on next.',
-      credit: 'Clip: Sillerkiil, <a target="_blank" rel="noopener" href="' + COMMONS + 'Veok_p6leng_pikk.webm">CC0, via Wikimedia Commons</a>' },
-  ];
-  const $ = (id) => document.getElementById(id);
-  const dView = $('dView'), dImg = $('dImg'), dVid = $('dVid'), dOpts = $('dOpts'), dReveal = $('dReveal');
-  const picks = {};
-  let scene = 0;
-  $('dTotal').textContent = SCENES.length;
-
-  /* vision layer: boxes from Grounding DINO, an open-source object detector, run on the same frames (rt/site_detect.py).
-     My model never sees them. Still = the frame at the decision; video = 10 detector frames a second, eased in between. */
-  const CVC = { vehicle: '#9B85FF', vru: '#FF6F91', animal: '#F5C84B', control: '#5FE0B0', hazard: '#FF8A3D' };
-  const CVG = { car: 'vehicle', truck: 'vehicle', bus: 'vehicle', motorcycle: 'vehicle', bicycle: 'vru', person: 'vru', deer: 'animal', cow: 'animal',
-    dog: 'animal', 'traffic light': 'control', 'stop sign': 'control', 'traffic cone': 'control', fire: 'hazard', smoke: 'hazard' };
-  const PLURAL = { person: 'people', bus: 'buses', deer: 'deer', smoke: 'smoke', fire: 'fire' };
-  const dCv = $('dCv'), dCx = dCv.getContext('2d'), dHud = $('dHud'), dCvBtn = $('dCvBtn');
-  const boxCache = {};
-  let cvData = null, cvOn = true, cvRaf = 0, cvSeen = false, scanStart = 0, focus = null, focusBox = null;
-  const loadBoxes = (id) => boxCache[id] || (boxCache[id] = fetch('drive/' + id + '.boxes.json').then((r) => (r.ok ? r.json() : null)).catch(() => null));
-  const iou = (a, b) => {
-    const iw = Math.max(0, Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0])), ih = Math.max(0, Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1]));
-    return iw * ih / (a[2] * a[3] + b[2] * b[3] - iw * ih + 1e-9);
-  };
-  function cvSize() {
-    const r = dCv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1), w = Math.round(r.width * d), h = Math.round(r.height * d);
-    if (dCv.width !== w || dCv.height !== h) { dCv.width = w; dCv.height = h; }
-    dCx.setTransform(d, 0, 0, d, 0, 0);
-    FONT = '500 ' + (r.width < 480 ? 11 : 10) + 'px "JetBrains Mono", ui-monospace, monospace'; // phones: labels at 11px
-    return [r.width, r.height];
-  }
-  function cvAt(t) {
-    const F = cvData.frames, k = Math.max(0, Math.min(F.length - 1, t * cvData.fps)), a = Math.floor(k), b = Math.min(F.length - 1, a + 1), u = k - a;
-    const next = new Map(F[b].map((d) => [d.id, d]));
-    return F[a].map((d) => { const e = next.get(d.id); return e ? { ...d, b: d.b.map((v, i) => v + (e.b[i] - v) * u) } : d; });
-  }
-  let FONT = '500 10px "JetBrains Mono", ui-monospace, monospace';
-  const overlaps = (r, placed) => placed.some((q) => r[0] < q[0] + q[2] && q[0] < r[0] + r[2] && r[1] < q[1] + q[3] && q[1] < r[1] + r[3]);
-  function cvTag(text, r, fill, ink, mark) {
-    dCx.font = FONT;
-    dCx.fillStyle = fill; dCx.fillRect(r[0], r[1], r[2], r[3]);
-    if (mark) { dCx.fillStyle = mark; dCx.fillRect(r[0], r[1], 3, r[3]); }
-    dCx.fillStyle = ink; dCx.fillText(text, r[0] + 7, r[1] + 11.5);
-  }
-  // a label goes above the box, else inside its top, else inside its bottom; never over another label,
-  // the tag and toggle along the top, or the count along the bottom. No room: the box keeps its brackets only.
-  function cvSpot(text, x, ys, W, H, placed) {
-    dCx.font = FONT;
-    const tw = dCx.measureText(text).width + 12, tx = Math.min(Math.max(2, x), W - tw - 2);
-    for (const ty of ys) {
-      const r = [tx, ty, tw, 16];
-      if (ty >= 36 && ty + 16 <= H - 34 && !overlaps(r, placed)) { placed.push(r); return r; }
-    }
-    return null;
-  }
-  function cvBox(d, W, H, p, placed) {
-    const c = CVC[CVG[d.c]] || '#fff', x = d.b[0] * W, y = d.b[1] * H, w = d.b[2] * W, h = d.b[3] * H, L = Math.max(4, Math.min(w, h) * .3) * p;
-    dCx.strokeStyle = c; dCx.lineWidth = 1.75;
-    dCx.globalAlpha = .25 * p; dCx.strokeRect(x, y, w, h); dCx.globalAlpha = 1;
-    dCx.beginPath();
-    dCx.moveTo(x, y + L); dCx.lineTo(x, y); dCx.lineTo(x + L, y);
-    dCx.moveTo(x + w - L, y); dCx.lineTo(x + w, y); dCx.lineTo(x + w, y + L);
-    dCx.moveTo(x + w, y + h - L); dCx.lineTo(x + w, y + h); dCx.lineTo(x + w - L, y + h);
-    dCx.moveTo(x + L, y + h); dCx.lineTo(x, y + h); dCx.lineTo(x, y + h - L);
-    dCx.stroke();
-    if (p < .7 || (W < 480 && d.b[2] * d.b[3] < .002)) return;  // phones: tiny far-off boxes keep their brackets only
-    const text = d.c.toUpperCase() + ' ' + Math.round(d.s * 100), r = cvSpot(text, x, [y - 18, y + 2, y + h - 18], W, H, placed);
-    if (!r) return;
-    dCx.globalAlpha = Math.min(1, (p - .7) / .3);
-    cvTag(text, r, 'rgba(11,8,23,.8)', '#EFEAF8', c);
-    dCx.globalAlpha = 1;
-  }
-  function cvFocusRing(f, W, H, now) {
-    const x = f.b[0] * W, y = f.b[1] * H, w = f.b[2] * W, h = f.b[3] * H, k = reduce ? .5 : (Math.sin(now / 240) + 1) / 2, g = 4 + 4 * k;
-    dCx.strokeStyle = '#EFEAF8'; dCx.lineWidth = 1.5; dCx.setLineDash([4, 4]);
-    dCx.strokeRect(x - g, y - g, w + 2 * g, h + 2 * g); dCx.setLineDash([]);
-  }
-  function cvHud(list) {
-    if (!cvOn || !list) { dHud.textContent = ''; return; }
-    const n = {};
-    list.forEach((d) => { n[d.c] = (n[d.c] || 0) + 1; });
-    const parts = Object.entries(n).sort((a, b) => b[1] - a[1]).map(([c, k]) => k + ' ' + (k > 1 ? (PLURAL[c] || c + 's') : c));
-    dHud.innerHTML = '<b>Detector</b>' + (parts.length ? parts.join(' &middot; ') : 'nothing found');
-  }
-  function pickFocus(list) {
-    const c = focus ? list.filter((d) => focus.c.includes(d.c)) : [];
-    if (!c.length) return null;
-    const score = focus.pick === 'center' ? (d) => -Math.abs(d.b[0] + d.b[2] / 2 - .5) : (d) => d.b[2] * d.b[3];
-    return c.reduce((a, b) => (score(b) > score(a) ? b : a));
-  }
-  function cvFrame(now) {
-    cvRaf = 0;
-    const [W, H] = cvSize();
-    dCx.clearRect(0, 0, W, H);
-    if (!cvOn || !cvData || !cvSeen) { cvHud(cvOn && cvData ? cvData.still : null); return; }
-    const playing = dView.classList.contains('playing') && cvData.frames;
-    const list = (playing ? cvAt(dVid.currentTime) : cvData.still).slice().sort((a, b) => b.b[2] * b.b[3] - a.b[2] * a.b[3]);
-    const tag = $('dTag'), placed = W < 480 ? [[tag.offsetLeft, tag.offsetTop, tag.offsetWidth, tag.offsetHeight + 2]] : []; // phones: the tag can wrap to two lines, so labels keep clear of it
-    let again = false, ftag = null;
-    if (focus && focus.shown && focusBox && (playing || reduce || now - scanStart >= 1300)) {
-      if (playing) { // follow the same object from frame to frame
-        let best = .05, hit = null;
-        list.forEach((d) => { const v = CVG[d.c] === CVG[focusBox.c] ? iou(d.b, focusBox.b) : 0; if (v > best) { best = v; hit = d; } });
-        if (hit) focusBox = hit;
-      }
-      const t = 'MY MODEL: ' + focus.say.toUpperCase(), fy = focusBox.b[1] * H, fh = focusBox.b[3] * H;
-      ftag = [t, cvSpot(t, focusBox.b[0] * W - 8, [fy + fh + 10, fy - 28, fy + fh - 20], W, H, placed)];
-    }
-    if (!playing && !reduce && now - scanStart < 1300) { // a scan line sweeps down and "finds" each box as it passes
-      const sy = (now - scanStart) / 1100 * H, grad = dCx.createLinearGradient(0, sy - 46, 0, sy);
-      grad.addColorStop(0, 'rgba(95,224,176,0)'); grad.addColorStop(1, 'rgba(95,224,176,.26)');
-      dCx.fillStyle = grad; dCx.fillRect(0, sy - 46, W, 46);
-      dCx.fillStyle = 'rgba(95,224,176,.9)'; dCx.fillRect(0, sy, W, 1.5);
-      list.forEach((d) => { const p = Math.max(0, Math.min(1, (sy - d.b[1] * H) / (.16 * H))); if (p > 0) cvBox(d, W, H, p, placed); });
-      again = true;
-    } else {
-      list.forEach((d) => cvBox(d, W, H, 1, placed));
-    }
-    if (ftag) {
-      cvFocusRing(focusBox, W, H, now);
-      if (ftag[1]) cvTag(ftag[0], ftag[1], '#6D4FE8', '#fff');
-      again = again || !reduce;
-    }
-    cvHud(list);
-    if (again || (playing && !dVid.paused && !dVid.ended)) cvRaf = requestAnimationFrame(cvFrame);
-  }
-  const cvKick = () => { if (!cvRaf) cvRaf = requestAnimationFrame(cvFrame); };
-  function cvScene(i) {
-    cvData = null; focusBox = null;
-    focus = SCENES[i].focus ? { ...SCENES[i].focus, shown: false } : null;
-    cvKick();
-    loadBoxes(SCENES[i].id).then((d) => {
-      if (scene !== i) return;
-      cvData = d; scanStart = performance.now();
-      if (d && focus && focus.shown) focusBox = pickFocus(d.still);
-      cvKick();
-    });
-  }
-  function cvShowFocus() {
-    if (!focus) return;
-    focus.shown = true;
-    if (cvData) focusBox = pickFocus(cvData.still);
-    cvKick();
-  }
-  new IntersectionObserver(([e]) => { // only animate while the clip is on screen; the scan plays the first time you see it
-    if (e.isIntersecting && !cvSeen) { cvSeen = true; scanStart = performance.now(); }
-    if (e.isIntersecting) cvKick(); else if (cvRaf) { cancelAnimationFrame(cvRaf); cvRaf = 0; }
-  }).observe(dView);
-  dCvBtn.addEventListener('click', () => {
-    cvOn = !cvOn;
-    dCvBtn.setAttribute('aria-pressed', cvOn); dCvBtn.textContent = cvOn ? 'Boxes on' : 'Boxes off';
-    scanStart = performance.now(); cvKick();
-  });
-  ['play', 'seeked', 'ended'].forEach((ev) => dVid.addEventListener(ev, cvKick));
-  addEventListener('resize', cvKick);
-  function tally() {
-    const n = Object.keys(picks).length, m = Object.entries(picks).filter(([i, o]) => SCENES[i].model === o).length;
-    $('dScore').textContent = n ? 'You matched my model on ' + m + ' of ' + n : SCENES.length + ' real dashcam clips';
-  }
-  function reveal(i) {
-    const s = SCENES[i], you = picks[i], same = you === s.model;
-    [...dOpts.children].forEach((b, o) => {
-      b.disabled = true;
-      b.classList.toggle('you', o === you); b.classList.toggle('model', o === s.model);
-      b.querySelector('small').textContent = o === s.model ? (o === you ? 'both' : 'model') : '';
-    });
-    $('dAgree').textContent = same ? 'Same call' : 'Different call';
-    $('dAgree').className = 'agree' + (same ? '' : ' no');
-    $('dYou').textContent = OPTS[you]; $('dModel').textContent = OPTS[s.model]; $('dVotes').textContent = s.votes;
-    $('dQuote').textContent = '“' + s.quote + '”';
-    $('dNote').textContent = s.note; $('dNote').hidden = !s.note;
-    dReveal.hidden = false; $('dWait').hidden = true;
-    cvShowFocus();
-  }
-  function show(i) {
-    scene = i;
-    const s = SCENES[i];
-    $('dStep').textContent = i + 1;
-    dView.classList.remove('playing'); dVid.pause(); dVid.removeAttribute('src'); dVid.load();
-    dImg.src = 'drive/' + s.id + '.jpg'; dImg.alt = s.alt;
-    cvScene(i);
-    $('dTag').textContent = 'Paused at the moment of decision';
-    $('dCredit').innerHTML = s.credit;
-    dOpts.innerHTML = '';
-    OPTS.forEach((label, o) => {
-      const b = document.createElement('button');
-      b.className = 'opt'; b.innerHTML = label + '<small></small>';
-      b.addEventListener('click', () => { picks[i] = o; reveal(i); tally(); });
-      dOpts.appendChild(b);
-    });
-    dReveal.hidden = true; $('dWait').hidden = false;
-    if (i in picks) reveal(i);
-    $('dNext').textContent = i === SCENES.length - 1 ? 'Back to scene 1' : 'Next scene';
-  }
-  // phones: the clip sits far above these buttons, so bring it into view first
-  const phoneLayout = matchMedia('(max-width: 900px), (pointer: coarse)');
-  const clipIntoView = () => { if (phoneLayout.matches) dView.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' }); };
-  $('dPlay').addEventListener('click', () => {
-    clipIntoView();
-    if (!dVid.getAttribute('src')) dVid.src = 'drive/' + SCENES[scene].id + '.mp4';
-    dVid.currentTime = 0;
-    dVid.play().then(() => { dView.classList.add('playing'); $('dTag').textContent = 'What happened next'; }).catch(() => {});
-  });
-  $('dNext').addEventListener('click', () => { show((scene + 1) % SCENES.length); clipIntoView(); });
-  show(0);
-
   /* fantasy records: snapshot pulled from ESPN by my fantasy-ai repo */
   const FANTASY = {
     updated: 'Nov 3, 2026', week: 9,
@@ -1419,7 +782,7 @@
     fwrap.appendChild(card);
   });
 
-  /* live rank from NVIDIA's public leaderboard (a Gradio Space that allows this origin). If it can't be reached, the dated #3 stays. */
+  /* live rank from NVIDIA's public leaderboard (a Gradio Space that allows this origin; work/work.js does the same). If it can't be reached, the dated #3 stays. */
   (async () => {
     const base = 'https://nvidia-physicalai-ood-leaderboard.hf.space/gradio_api/call/lambda';
     let me = null;
@@ -1434,24 +797,8 @@
       } catch (e) {}
     }
     if (!me || !(me.rank > 0) || !(me.score > 0)) return;
-    document.querySelectorAll('[data-rank]').forEach((n) => { n.textContent = '#' + me.rank; });
-    document.getElementById('rankLine').textContent = 'Currently #' + me.rank + ' on the public leaderboard';
-    const src = document.getElementById('rankSrc'); src.textContent = 'Live from the leaderboard.'; src.className = 'live';
-    const mine = document.querySelector('#board .bar.me'), v = mine.querySelector('.v');
-    v.dataset.num = me.score; mine.querySelector('.t i').dataset.w = me.score * 100;
-    const apply = () => { v.textContent = me.score.toFixed(3); mine.querySelector('.t i').style.width = me.score * 100 + '%'; };
-    if (document.getElementById('board').classList.contains('in')) { apply(); setTimeout(apply, 1500); } // after any count-up already running
+    document.querySelectorAll('[data-rank]').forEach((n) => { n.textContent = '#' + me.rank; }); // the NVIDIA row in Currently (the full board is on work/)
   })();
-
-  /* live GitHub stars, cached for the session */
-  document.querySelectorAll('.stars[data-repo]').forEach(async (s) => {
-    const repo = s.dataset.repo; let n = null;
-    try { n = JSON.parse(sessionStorage.getItem('stars:' + repo)); } catch (e) {}
-    if (n == null) {
-      try { const r = await fetch('https://api.github.com/repos/' + repo); if (r.ok) { n = (await r.json()).stargazers_count; try { sessionStorage.setItem('stars:' + repo, n); } catch (e) {} } } catch (e) {}
-    }
-    if (typeof n === 'number' && n >= 5) { s.textContent = '★ ' + (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n); s.classList.add('ok'); }
-  });
 
   /* Milan departures board: spring program starts Jan 23, 2027 (Milan time). Wait measured from the Sep 15 acceptance. */
   const start = new Date('2027-01-23T00:00:00+01:00'), from = new Date('2026-09-15T00:00:00-04:00');

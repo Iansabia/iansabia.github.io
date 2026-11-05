@@ -7,7 +7,7 @@
       view transition, so a click plays the same desk swap as going to another page
       (assets/desk-transition.css). Plain scrolling never animates; reduced motion just jumps.
    4. Full-screen demos (swapchain/app/, continuum/hole/) opened on their own: the site's top bar
-      (name, Demos, menu, theme switch) and a Back pill under it. The demo fills the rest of the screen.
+      (name, Currently, Work, the Projects pill, Milan, Off the clock, Contact, menu, theme switch) and a Back pill under it. The demo fills the rest of the screen.
       Nothing inside the apps changes: the layout is moved down with injected CSS only. */
 
 const html = document.documentElement;
@@ -85,9 +85,12 @@ ${hole
   html.classList.add('sc-demo');
 
   const home = ROOT.href;
-  const demos = new URL('demos/', ROOT).href;
-  const sections = [['currently', 'Currently'], ['work', 'Work'], ['projects', 'Projects'], ['milan', 'Milan'], ['off', 'Off the clock'], ['contact', 'Contact']];
-  const pill = `<a class="sc-pill" href="${demos}"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z"/></svg>Demos</a>`;
+  // the same bar as every page: Currently, Work, Projects (the pill), Milan, Off the clock, Contact.
+  // Work and Projects are their own pages; the rest are sections of the home page.
+  const items = [[home + '#currently', 'Currently'], [new URL('work/', ROOT).href, 'Work'], [new URL('projects/', ROOT).href, 'Projects'],
+    [home + '#milan', 'Milan'], [home + '#off', 'Off the clock'], [home + '#contact', 'Contact']];
+  const link = ([href, t]) => `<a href="${href}">${t}</a>`;
+  const pill = `<a class="sc-pill" href="${items[2][0]}"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z"/></svg>Projects</a>`;
 
   // where Back goes: the page on this site the visitor came from, else the home page
   let from = null;
@@ -105,14 +108,14 @@ ${hole
       <span>Ian Sabia</span>
     </a>
     <nav class="sc-nav" aria-label="Site">
+      <span class="sc-links">${items.slice(0, 2).map(link).join('')}</span>
       ${pill}
-      <span class="sc-links">${sections.map(([id, t]) => `<a href="${home}#${id}">${t}</a>`).join('')}</span>
+      <span class="sc-links">${items.slice(3).map(link).join('')}</span>
       <button class="sc-menu-btn" type="button" aria-expanded="false" aria-controls="sc-menu">Menu <i aria-hidden="true"></i></button>
       <button class="sc-toggle" type="button" aria-label="Switch between light and dark"><i></i></button>
     </nav>
     <div class="sc-menu" id="sc-menu">
-      <a href="${demos}">Demos <span aria-hidden="true">&nearr;</span></a>
-      ${sections.map(([id, t], i) => `<a href="${home}#${id}">${t} <span>0${i + 1}</span></a>`).join('')}
+      ${items.map(([href, t], i) => `<a href="${href}">${t} <span>0${i + 1}</span></a>`).join('')}
     </div>
   </header>
   <div class="sc-backrow">
