@@ -21,10 +21,11 @@
     return matchMedia('(max-width: 760px)').matches ? 'scrub p' : 'scrub l';
   };
   (function (m) { var d = document.documentElement.dataset; d.cc = m.split(' ')[0]; d.ccTier = m.split(' ')[1] || ''; })(window.ccMode());
-  /* The 3D hole plays as the reader scrolls (the frame is pinned while its track scrolls past). A short window, like a
-     phone on its side or a short desktop window, gets the frame with its own play controls instead: below 560px the
-     pinned figure would not fit, and the caption would cover the readout in the shrunken frame. */
-  document.documentElement.dataset.hole = matchMedia('(min-height: 560px)').matches ? 'scroll' : 'play';
+  /* The 3D hole sits right under the title and plays by itself while it is in view ("auto"), with this page's step
+     rail and a play/pause button. A short window, like a phone on its side or a short desktop window, gets the frame
+     with its own play controls instead: below 560px the title and the frame would not fit one screen, and the caption
+     would cover the readout in the shrunken frame. */
+  document.documentElement.dataset.hole = matchMedia('(min-height: 560px)').matches ? 'auto' : 'play';
 </script>
 <meta name="description" content="An AI golf caddy that runs on your phone. It tracks your shots from ordinary video and tells you where to aim. I co-founded it and lead product and ML.">
 <meta property="og:type" content="article">
@@ -78,18 +79,35 @@
   /* the anchor target must not move after a jump lands on it: no reveal slide, and it stops a little under the bar */
   #ccHole{scroll-margin-top:8px}
   .hole-fig.reveal{transform:none}
-  /* scroll mode: a tall track, the figure pinned under the bar, the frame as tall as the screen allows */
-  .hole-track{position:relative;margin-top:clamp(20px,3vw,28px)}
+
+  /* ===== First screen: the title, then the hole right under it, sized so both fit one screen ===== */
+  .cc-top.page-hero{padding:clamp(6px,1.2vw,16px) 0 clamp(12px,1.4vw,18px);border-bottom:0}
+  .cc-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px 28px;flex-wrap:wrap}
+  .cc-top.page-hero h1{font-size:clamp(40px,4.6vw,68px);line-height:.95;margin:2px 0 0;max-width:none}
+  .cc-tag{color:var(--body);font-size:15px;line-height:1.4;max-width:44ch;text-align:right}
+  /* the copy that used to open the page now follows the hole */
+  .cc-hero{padding:clamp(36px,5vw,64px) 0 clamp(32px,4vw,52px);border-bottom:1px solid var(--rule)}
+  .cc-head{font-family:var(--sans);font-weight:500;font-size:clamp(44px,6.4vw,96px);line-height:.93;letter-spacing:-.035em;margin:0 0 22px;max-width:16ch;text-wrap:balance;color:var(--ink)}
+  .cc-head em{font-style:normal;font-weight:500;color:var(--body)}
+
+  .hole-track{position:relative}
   .hole-track .hole-fig{margin-top:0}
-  [data-hole="scroll"] .hole-track{height:var(--hole-len,380vh)}
-  [data-hole="scroll"] .hole-pin{position:sticky;top:calc(var(--bar) + 12px)}   /* nothing above this may set overflow, or sticky stops working */
-  [data-hole="scroll"] .hole-view{height:max(280px,calc(100vh - var(--bar) - 24px - var(--hole-chrome,150px)))}
-  @supports (height:100svh){[data-hole="scroll"] .hole-view{height:max(280px,calc(100svh - var(--bar) - 24px - var(--hole-chrome,150px)))}}
+  /* auto mode: the frame gets the height the bar, the title and the frame's own header, rail and footer leave
+     (the script measures --hole-above and --hole-chrome), so the whole figure shows on arrival */
+  [data-hole="auto"] .hole-view{height:clamp(300px,calc(100vh - var(--hole-above,230px) - var(--hole-chrome,150px) - 16px),820px)}
+  @supports (height:100svh){[data-hole="auto"] .hole-view{height:clamp(300px,calc(100svh - var(--hole-above,230px) - var(--hole-chrome,150px) - 16px),820px)}}
   .hole-scrim{display:none}
-  [data-hole="scroll"] .hole-scrim{display:block;position:absolute;inset:0;z-index:2}   /* the wheel and the finger scroll this page, never the frame */
+  [data-hole="auto"] .hole-scrim{display:block;position:absolute;inset:0;z-index:2;cursor:pointer}   /* the wheel and the finger scroll this page, never the frame; a click plays or pauses */
   .hole-say{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
   .hole-rail{display:none}
-  [data-hole="scroll"] .hole-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,.72fr);gap:12px;padding:11px 18px 12px;border-top:1px solid var(--rule);background:var(--hg)}
+  [data-hole="auto"] .hole-rail{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr)) minmax(0,.72fr);align-items:end;gap:12px;padding:10px 18px 12px 12px;border-top:1px solid var(--rule);background:var(--hg)}
+  .hole-rail .hole-pp{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--rule);color:var(--ink);transition:box-shadow .2s,color .2s}
+  .hole-rail .hole-pp svg{width:14px;height:14px;fill:currentColor}
+  .hole-rail .hole-pp svg.i-again{fill:none}
+  .hole-rail .hole-pp .i-pause,.hole-rail .hole-pp .i-again{display:none}
+  .hole-rail .hole-pp.is-playing .i-play,.hole-rail .hole-pp.is-ended .i-play{display:none}
+  .hole-rail .hole-pp.is-playing .i-pause,.hole-rail .hole-pp.is-ended .i-again{display:block}
+  @media (hover:hover){.hole-rail .hole-pp:hover{box-shadow:inset 0 0 0 1px var(--acc);color:var(--acc)}}
   :root[data-theme="dark"] .hole-rail{background:var(--hg);border-color:rgba(143,127,247,.18)}
   .hole-rail button{display:grid;gap:6px;min-width:0;padding:0;background:none;border:0;cursor:pointer;text-align:left;font:500 11px/1.2 var(--mono);letter-spacing:.06em;color:var(--body);transition:color .25s}
   .hole-rail button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -209,8 +227,9 @@
     .cc-f-l{display:none}
     .cc-f-s{display:inline}
     .hole-view{height:clamp(480px,calc(100vh - var(--bar) - 170px),640px)}
-    [data-hole="scroll"] .hole-track{--hole-len:360vh}
-    [data-hole="scroll"] .hole-rail{gap:8px;padding:9px 14px 10px}
+    [data-hole="auto"] .hole-rail{gap:8px;padding:8px 12px 9px 8px}
+    .cc-title{display:block}
+    .cc-tag{text-align:left;font-size:14px;margin-top:6px}
     .hole-rail button{font-size:10.5px;letter-spacing:.03em}
     .hole-f{font-size:12px;padding:8px 12px}
     .hole-f-l{display:none}
@@ -218,8 +237,8 @@
     .cc-iphone{--ph:clamp(240px,calc(var(--cc-avail) - 41px - var(--cc-cap,170px) - 34px),560px)}
   }
   @supports (height:100svh){@media (max-width:760px){.hole-view{height:clamp(480px,calc(100svh - var(--bar) - 170px),640px)}}}
-  @media (max-width:760px){[data-hole="scroll"] .hole-view{height:max(280px,calc(100vh - var(--bar) - 24px - var(--hole-chrome,150px)))}}
-  @supports (height:100svh){@media (max-width:760px){[data-hole="scroll"] .hole-view{height:max(280px,calc(100svh - var(--bar) - 24px - var(--hole-chrome,150px)))}}}
+  @media (max-width:760px){[data-hole="auto"] .hole-view{height:clamp(250px,calc(100vh - var(--hole-above,230px) - var(--hole-chrome,150px) - 12px),640px)}}
+  @supports (height:100svh){@media (max-width:760px){[data-hole="auto"] .hole-view{height:clamp(250px,calc(100svh - var(--hole-above,230px) - var(--hole-chrome,150px) - 12px),640px)}}}
   @media (max-width:560px){[data-cc="scrub"] .cc-h .cc-scrub-only{display:none}}
   /* phones: the frame header stays on one line (short "Full screen", tighter tracking) */
   @media (max-width:560px){
@@ -228,9 +247,14 @@
     .hole-full-o{display:none}
     .hole-full-s{display:inline}
   }
-  /* the smallest phones (320px): the rail sizes each step to its label, and the header keeps to one line */
+  /* phones up to 430px: the rail sizes each step to its label, so none is cut off next to the play button */
+  @media (max-width:430px){
+    [data-hole="auto"] .hole-rail{grid-template-columns:auto repeat(5,auto);justify-content:space-between;gap:8px;padding:8px 12px 9px 8px}
+    .hole-rail button{font-size:10px;letter-spacing:.02em}
+  }
+  /* the smallest phones (320px): tighter still, and the header keeps to one line */
   @media (max-width:360px){
-    [data-hole="scroll"] .hole-rail{grid-template-columns:repeat(5,auto);gap:7px;padding:8px 10px 9px}
+    [data-hole="auto"] .hole-rail{gap:6px;padding:8px 8px 9px 6px}
     .hole-rail button{font-size:10px;letter-spacing:0}
     .hole-h{padding:8px 10px}
     .hole-h>.mono,.hole-full{font-size:10px;letter-spacing:.02em}
@@ -275,17 +299,10 @@
   </header>
 
   <main id="main" class="cc">
-    <header class="page-hero">
+    <header class="page-hero cc-top">
       <div class="kicker mono"><a href="../work/">Work</a><span aria-hidden="true">/</span><span>Co-founder &middot; Continuum Technologies</span></div>
-      <h1 id="main-h1">The caddy<br><em>you already own</em></h1>
-      <p class="lede">Continuum is an AI golf caddy that tracks your shots from ordinary phone video and tells you where to aim, based on where you've been missing. After the shot, it helps you find your ball. I&nbsp;<span class="nw">co-founded</span> it and lead <span class="nw">product and ML.</span></p>
-      <div class="facts mono"><span>Role<b>Co-founder</b></span><span>Since<b>Jul 2025</b></span><span>My part<b>Product and ML</b></span><span>Golfer conversations<b>~70</b></span></div>
-      <div class="actions"><a class="more" data-demo href="#ccHole">See the 3D example hole <span aria-hidden="true">&darr;</span></a><a class="more quiet" href="https://iansabia.github.io/continuum-caddy/" target="_blank" rel="noopener noreferrer">See the Continuum product site <span aria-hidden="true">&nearr;</span></a></div>
+      <div class="cc-title"><h1 id="main-h1">Continuum</h1><p class="cc-tag">An AI golf caddy on your phone. One example play of hole 10 at Miacomet, Nantucket.</p></div>
     </header>
-
-    <section class="block" id="how">
-      <div class="shead reveal"><div><span class="lbl acc">01 / How it works</span><h2>How it works</h2></div></div>
-      <p class="lead-in reveal">One example play of a real hole, hole 10 at Miacomet Golf Club on Nantucket, a par 4. Keep scrolling and it plays through.</p>
 
       <div class="hole-track" id="ccHole">
       <div class="hole-pin">
@@ -298,14 +315,25 @@
           <noscript><iframe src="hole/?embed=1" loading="lazy" title="3D example play of Miacomet hole 10"></iframe></noscript>
           <div class="hole-scrim" aria-hidden="true"></div>
         </div>
-        <div class="hole-rail" role="group" aria-label="Where you are in the hole. Pick a step to scroll there.">
-          <button type="button" data-step="0"><span>Tee shot</span><i></i></button><button type="button" data-step="1"><span>Find ball</span><i></i></button><button type="button" data-step="2"><span>Aim</span><i></i></button><button type="button" data-step="3"><span>Putt</span><i></i></button><button type="button" data-step="4"><span>Recap</span><i></i></button>
+        <div class="hole-rail" role="group" aria-label="Where you are in the hole. Pick a step to jump there.">
+          <button type="button" class="hole-pp" aria-label="Play"><svg class="i-play" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 4.2v11.6L16 10z"/></svg><svg class="i-pause" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4.5h2.6v11H6zM11.4 4.5H14v11h-2.6z"/></svg><svg class="i-again" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10a5.5 5.5 0 1 0 1.7-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4.2 3.6v3.2h3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" data-step="0"><span>Tee shot</span><i></i></button><button type="button" data-step="1"><span>Find ball</span><i></i></button><button type="button" data-step="2"><span>Aim</span><i></i></button><button type="button" data-step="3"><span>Putt</span><i></i></button><button type="button" data-step="4"><span>Recap</span><i></i></button>
         </div>
         <p class="hole-say" id="ccHoleSay" aria-live="polite"></p>
         <p class="hole-f"><span class="hole-tag">Illustrative example, not real tracked data</span> <span class="hole-f-l">The golfer, the shots and the yardages are made up to show how the app works. The course is real, built from OpenStreetMap outlines and real elevation.</span><span class="hole-f-s">The golfer and the shots are made up. The course is real.</span> <span class="nw">Map data &copy; <a target="_blank" href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">OpenStreetMap contributors</a> &middot;</span> <span class="nw">Elevation: AWS Terrain Tiles</span></p>
       </figure>
       </div>
       </div>
+
+    <section class="cc-hero">
+      <h2 class="cc-head">The caddy<br><em>you already own</em></h2>
+      <p class="lede">Continuum is an AI golf caddy that tracks your shots from ordinary phone video and tells you where to aim, based on where you've been missing. After the shot, it helps you find your ball. I&nbsp;<span class="nw">co-founded</span> it and lead <span class="nw">product and ML.</span></p>
+      <div class="facts mono"><span>Role<b>Co-founder</b></span><span>Since<b>Jul 2025</b></span><span>My part<b>Product and ML</b></span><span>Golfer conversations<b>~70</b></span></div>
+      <div class="actions"><a class="more" data-demo href="#ccHole">See the 3D example hole <span aria-hidden="true">&uarr;</span></a><a class="more quiet" href="https://iansabia.github.io/continuum-caddy/" target="_blank" rel="noopener noreferrer">See the Continuum product site <span aria-hidden="true">&nearr;</span></a></div>
+    </section>
+
+    <section class="block" id="how">
+      <div class="shead reveal"><div><span class="lbl acc">01 / How it works</span><h2>How it works</h2></div></div>
+      <p class="lead-in reveal">The 3D hole at the top of this page is one example play of a real hole, hole 10 at Miacomet Golf Club on Nantucket, a par 4.</p>
 
       <p class="loop-note reveal"><b>Why I show it this way.</b> Our first investor was not technical, so I showed what the product does instead of how the tracking works. My view: consumers and investors care that it works, the way runners trust Strava without knowing its algorithm.</p>
 
@@ -401,65 +429,67 @@
 </div>
 <script src="../assets/site.js"></script>
 <script>
-  /* The 3D hole. The frame loads when it comes near and follows this page's theme. In scroll mode the reader's scroll
-     drives it: the figure is pinned while its track scrolls past, and the scroll progress (0 to 1) goes to the frame, which
-     eases its play-through toward it. Native scroll only: nothing here touches wheel or touch events. */
+  /* The 3D hole, the first thing on the page. The frame loads right away and follows this page's theme. In auto mode
+     this page runs the clock: the hole plays by itself while it is in view, pauses when it leaves (or when the reader
+     pauses it, or the tab is hidden) and holds the recap at the end. The page sends the frame its progress (0 to 1),
+     and the frame eases its play-through toward it. Wheel and finger always scroll this page: a scrim covers the frame.
+     Reduced motion: nothing plays until the reader presses play, then it steps through still pictures. */
   (() => {
     'use strict';
     const track = document.getElementById('ccHole'), view = document.querySelector('#ccHole .hole-view'), frame = document.getElementById('ccHoleFrame');
     if (!track || !view || !frame) return;
     const root = document.documentElement;
-    const scrollMode = root.dataset.hole === 'scroll';
-    const pin = track.querySelector('.hole-pin'), fig = track.querySelector('.hole-fig'), rail = track.querySelector('.hole-rail');
-    const bars = rail ? [...rail.querySelectorAll('button')] : [];
+    const autoMode = root.dataset.hole === 'auto';
+    const fig = track.querySelector('.hole-fig'), rail = track.querySelector('.hole-rail');
+    const bars = rail ? [...rail.querySelectorAll('button[data-step]')] : [];
+    const pp = rail && rail.querySelector('.hole-pp');
     const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
     const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
     const theme = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');   // the site is light unless the reader picked dark
     const send = (msg) => { try { frame.contentWindow.postMessage(msg, location.origin); } catch (e) {} };
-    let loaded = false, last = -1, queued = false, queue = () => {};
-    // where each step starts and where a tap lands, in scroll progress (each caption has an equal share; the hole sends its own on ready)
+    let loaded = false, ready = false;
+    // where each step starts and where a jump lands, in progress (the hole sends its own on ready)
     let steps = [{ from: 0, key: 0.0424 }, { from: 0.2949, key: 0.2995 }, { from: 0.5513, key: 0.5557 }, { from: 0.8718, key: 0.8732 }, { from: 0.9359, key: 1 }];
     const NAMES = ['Tee shot', 'Find the ball', 'Aim', 'Putt', 'Recap'];
-    let holeP = null;   // where the hole really is (it reports back), so the rail follows the picture, not the scroll
+    let onReady = () => {};
     // the poster shows until the hole says it is drawn (or a slow machine has had 40s), so the reader never sees a blank frame
     const show = () => view.classList.add('is-on');
+    let paintRail = () => {};
     window.addEventListener('message', (e) => {
       if (e.origin !== location.origin || e.source !== frame.contentWindow || !e.data) return;
-      if (e.data.type === 'hole-time') { if (scrollMode && Number.isFinite(e.data.p)) { holeP = e.data.p; paintRail(holeP); } return; }
+      if (e.data.type === 'hole-time') { if (autoMode && Number.isFinite(e.data.p)) paintRail(e.data.p); return; }
       if (e.data.type !== 'cc-hole-ready') return;
       if (Array.isArray(e.data.steps) && e.data.steps.length === 5) steps = e.data.steps.map((s, i) => ({ from: i ? +s.from : 0, key: +s.key }));
-      show(); last = -1; queue();
+      show(); ready = true; onReady();
     });
-    frame.addEventListener('load', () => { if (!loaded) return; send({ type: 'cc-hole', theme: theme() }); last = -1; queue(); setTimeout(show, 40000); });
-    const load = () => { if (loaded) return; loaded = true; frame.src = 'hole/?embed=1' + (scrollMode ? '&scroll=1' : '') + '&theme=' + theme(); };
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver((es, io) => { if (es.some((e) => e.isIntersecting)) { load(); io.disconnect(); } }, { rootMargin: '100% 0px' }).observe(track);
-      // a frame that only touches the screen edge still counts as intersecting, so pause below 2% in view
-      new IntersectionObserver((es) => { if (loaded && es[es.length - 1].intersectionRatio < .02) send({ type: 'cc-hole', pause: true }); }, { threshold: [0, .02] }).observe(view);
-    } else load();
+    frame.addEventListener('load', () => { if (!loaded) return; send({ type: 'cc-hole', theme: theme() }); setTimeout(show, 40000); });
+    // "scroll=1" is the frame's driven mode: the page around it sets the progress and it shows no controls of its own
+    const load = () => { if (loaded) return; loaded = true; frame.src = 'hole/?embed=1' + (autoMode ? '&scroll=1&cue=0' : '') + '&theme=' + theme(); };
     document.addEventListener('themechange', () => { if (loaded) send({ type: 'cc-hole', theme: theme() }); });
-    if (!scrollMode) return;
+    if (!autoMode) {
+      // short windows: the frame plays with its own controls; it loads when near and pauses when it leaves the screen
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver((es, io) => { if (es.some((e) => e.isIntersecting)) { load(); io.disconnect(); } }, { rootMargin: '100% 0px' }).observe(track);
+        new IntersectionObserver((es) => { if (loaded && es[es.length - 1].intersectionRatio < .02) send({ type: 'cc-hole', pause: true }); }, { threshold: [0, .02] }).observe(view);
+      } else load();
+      return;
+    }
+    load();   // it is at the top of the page: load now
 
-    // ---- scroll progress -> the frame ----
-    // The end of the track holds the recap (at least 60% of a screen) before the figure unpins, so the last
-    // picture is the summary, not a hole still catching up.
-    let pinTop = 0;
-    const measure = () => {   // the frame gets the height the header, the rail and the footer leave
-      pinTop = parseFloat(getComputedStyle(pin).top) || 0;
+    // ---- size: the title and the whole figure fit the first screen ----
+    const measure = () => {
+      root.style.setProperty('--hole-above', Math.round(track.getBoundingClientRect().top + scrollY) + 'px');
       const chrome = fig.offsetHeight - view.offsetHeight;
-      if (chrome > 0) pin.style.setProperty('--hole-chrome', chrome + 'px');
+      if (chrome > 0) root.style.setProperty('--hole-chrome', chrome + 'px');
     };
-    const dist = () => track.offsetHeight - pin.offsetHeight;
-    const holdOf = (d) => Math.min(.3, Math.max(.16, innerHeight * .6 / Math.max(1, d)));
-    const raw = () => { const d = dist(); return d > 0 ? (pinTop - track.getBoundingClientRect().top) / d : 0; };
-    const drive = (p, fast) => {
-      // same origin: call the frame directly; otherwise (or before it is ready) post a message it checks
-      try { const w = frame.contentWindow; if (w && typeof w.holeSetProgress === 'function') { w.holeSetProgress(p, fast); return; } } catch (e) { /* another origin */ }
-      send({ type: 'hole-progress', t: p, fast });
-    };
+    measure();
+    addEventListener('resize', measure);
+    if (document.fonts) document.fonts.ready.then(measure);
+
+    // ---- the rail ----
     const say = document.getElementById('ccHoleSay');
     let on = -1;
-    const paintRail = (p) => {
+    paintRail = (p) => {
       bars.forEach((b, i) => {
         const a = steps[i].from, z = i < steps.length - 1 ? steps[i + 1].from : 1;
         b.querySelector('i').style.setProperty('--p', clamp((p - a) / Math.max(.001, z - a)).toFixed(3));
@@ -472,22 +502,77 @@
         if (!first && say) say.textContent = 'Step ' + (k + 1) + ' of ' + steps.length + ': ' + NAMES[k];
       }
     };
-    const frameTick = () => {
-      queued = false;
-      const r0 = raw(), p = clamp(r0 / (1 - holdOf(dist())));
-      if (holeP == null) paintRail(p);
-      // past the end (the frame is leaving): the hole goes straight to the recap instead of playing through
-      if (loaded && (Math.abs(p - last) > .0004 || (r0 > 1.03 && last !== 1.0001))) { const fast = r0 > 1.03; last = fast ? 1.0001 : p; drive(p, fast); }
+
+    // ---- the clock: hole time in seconds, turned into progress with the hole's own map ----
+    const hole = () => { try { const h = frame.contentWindow.__hole; return h && typeof h.tToP === 'function' ? h : null; } catch (e) { return null; } };
+    const LEN = 52;   // seconds, only until the hole reports its own length
+    const total = () => { const h = hole(); return h ? h.TOTAL : LEN; };
+    const pOf = (t) => { const h = hole(); return clamp(h ? h.tToP(t) : t / LEN); };
+    const tOf = (p) => { const h = hole(); return h ? h.pToT(p) : p * LEN; };
+    const drive = (p, fast) => {
+      try { const w = frame.contentWindow; if (w && typeof w.holeSetProgress === 'function') { w.holeSetProgress(p, fast); return; } } catch (e) { /* another origin */ }
+      send({ type: 'hole-progress', t: p, fast });
     };
-    queue = () => { if (!queued) { queued = true; requestAnimationFrame(frameTick); } };
-    bars.forEach((b, i) => b.addEventListener('click', () => {   // jump to that step: the page scrolls there and the hole plays to it
-      const r = track.getBoundingClientRect(), d = dist();
-      scrollTo({ top: scrollY + r.top - pinTop + steps[i].key * (1 - holdOf(d)) * d + 1, behavior: reduced() ? 'auto' : 'smooth' });
+    let t = 0, playing = false, ended = false, inView = true, raf = 0, last = 0, rmTimer = 0;
+    let held = reduced();   // the reader paused it (under reduced motion it waits for a press)
+    const introOn = () => root.classList.contains('pi-on');
+    const sync = () => {
+      if (!pp) return;
+      pp.classList.toggle('is-playing', playing);
+      pp.classList.toggle('is-ended', !playing && ended);
+      pp.setAttribute('aria-label', playing ? 'Pause the hole' : ended ? 'Play the hole again' : 'Play the hole');
+    };
+    const stop = () => { playing = false; cancelAnimationFrame(raf); raf = 0; clearTimeout(rmTimer); sync(); };
+    const tick = (now) => {
+      raf = 0;
+      if (!playing) return;
+      const dt = last ? Math.min(.25, (now - last) / 1000) : 0; last = now;
+      t = Math.min(total(), t + dt);
+      drive(pOf(t));
+      if (t >= total()) { ended = true; stop(); return; }
+      raf = requestAnimationFrame(tick);
+    };
+    // reduced motion: one still picture per step, a few seconds each
+    const rmStep = () => {
+      const k = Math.min(steps.length - 1, on + 1);
+      t = tOf(steps[k].key); drive(steps[k].key); paintRail(steps[k].key);
+      if (k >= steps.length - 1) { ended = true; stop(); return; }
+      rmTimer = setTimeout(rmStep, 6000);
+    };
+    const start = () => {
+      if (playing || !ready || held || ended || !inView || document.hidden || introOn()) return;
+      playing = true; sync();
+      if (reduced()) { rmTimer = setTimeout(rmStep, on < 0 ? 0 : 6000); return; }
+      last = 0; raf = requestAnimationFrame(tick);
+    };
+    const toggle = () => {
+      if (playing) { held = true; stop(); return; }
+      held = false;
+      if (ended) { ended = false; t = 0; on = -1; const h = hole(); if (h && h.seekNow) h.seekNow(0); drive(0, true); paintRail(0); }   // again: a clean cut back to the tee
+      start();
+    };
+    onReady = () => { drive(pOf(t)); paintRail(pOf(t)); start(); };
+    if (pp) pp.addEventListener('click', toggle);
+    const scrim = view.querySelector('.hole-scrim');
+    if (scrim) scrim.addEventListener('click', toggle);
+    bars.forEach((b, i) => b.addEventListener('click', () => {   // jump to that step; the hole plays to it, and on from there
+      const k = steps[i].key;
+      stop(); ended = false;
+      t = tOf(k); drive(k, reduced()); paintRail(k);
+      if (i === steps.length - 1) { ended = true; sync(); return; }
+      start();
     }));
-    addEventListener('scroll', queue, { passive: true });
-    addEventListener('resize', () => { measure(); queue(); });
-    if (document.fonts) document.fonts.ready.then(() => { measure(); queue(); });
-    measure(); paintRail(0); queue();
+    // play only while it is on screen (at least a third of the frame) and the tab is showing
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((es) => {
+        inView = es[es.length - 1].intersectionRatio >= .33;
+        if (inView) start(); else stop();
+      }, { threshold: [0, .33] }).observe(view);
+    }
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else start(); });
+    // the short intro covers the page on a first visit: start when it lifts
+    if (introOn()) new MutationObserver((ms, mo) => { if (!introOn()) { mo.disconnect(); start(); } }).observe(root, { attributes: true, attributeFilter: ['class'] });
+    paintRail(0); sync();
   })();
 </script>
 <script>
