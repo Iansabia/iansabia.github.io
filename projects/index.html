@@ -22,6 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/swapfilm.css">
 <style>
   /* Projects page (it took over the old Demos page): the SwapChain film leads in a full-width frame, then every
      project as a rounded screenshot on the page ground (a light and a dark copy, swapped with the theme), a short
@@ -38,10 +39,6 @@
   .lead{display:grid;gap:clamp(24px,3vw,36px)}
   .film{position:relative;aspect-ratio:16/9;background:#000}
   .film video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:block}
-  .vid-play{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:0 12px 16px;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
-  .vid-play[hidden]{display:none}
-  .vid-play span{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 20px;border-radius:var(--r-pill);background:var(--nink);color:#0B0817;font:500 15px/1 var(--sans)}
-  .vid-play svg{width:10px;height:12px;flex:none}
   .lead-body{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:18px clamp(24px,4.5vw,72px);align-items:start}
   .lead-body h2{margin-top:14px;font-size:clamp(44px,5.4vw,76px);line-height:.95;letter-spacing:-.04em}
   .lead-body p{font-weight:400;font-size:17px;line-height:1.55;color:var(--body);max-width:60ch}
@@ -187,11 +184,10 @@
       </article>
 
       <article class="lead reveal" id="swapchain">
-        <div class="frame night">
+        <div class="frame night" data-swapfilm>
           <div class="frame-h"><span class="lbl">SwapChain &middot; Film &middot; 2 min</span><span class="lbl">02</span></div>
-          <div class="film">
-            <video id="leadFilm" src="../swapchain/media/swapchain-demo.mp4" poster="../swapchain/media/poster.jpg" width="1920" height="1080" controls muted playsinline loop preload="none" aria-label="Two-minute demo of SwapChain"></video>
-            <button class="vid-play" id="leadPlay" type="button" hidden><span><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z" fill="currentColor"/></svg>Play the film</span></button>
+          <div class="film sf-view">
+            <video id="leadFilm" src="../swapchain/media/swapchain-demo.mp4" data-phone="../swapchain/media/swapchain-demo-phone.mp4" poster="../swapchain/media/poster.jpg" width="1920" height="1080" controls muted playsinline preload="none" aria-label="Two-minute demo of SwapChain"></video>
           </div>
         </div>
         <div class="lead-body">
@@ -281,6 +277,7 @@
   </footer>
 </div>
 <script src="../assets/site.js"></script>
+<script src="../assets/swapfilm.js"></script>
 <script>
   /* the dark previews are lazy while hidden; load them on the first switch to dark, or once the page is idle */
   (function(){
@@ -290,28 +287,6 @@
     if (document.documentElement.dataset.theme === 'dark') eager();
     var idle = window.requestIdleCallback || function(f){ return setTimeout(f, 2500); };
     addEventListener('load', function(){ idle(eager); });
-  })();
-</script>
-<script>
-  /* the lead film: desktop plays it muted once it is on screen (not under reduced motion or save data);
-     phones load nothing until a tap, then play a smaller copy right here in the page */
-  (function(){
-    var v=document.getElementById('leadFilm'), b=document.getElementById('leadPlay');
-    if(!v) return;
-    var phone=b && matchMedia('(pointer: coarse)').matches && Math.min(screen.width,screen.height)<600;
-    if(phone){
-      v.src='../swapchain/media/swapchain-demo-phone.mp4'; v.controls=false; v.loop=false; b.hidden=false;
-      b.addEventListener('click',function(){ b.hidden=true; v.controls=true; v.play().catch(function(){}); });
-      v.addEventListener('ended',function(){ v.controls=false; b.hidden=false; });
-      return;
-    }
-    v.preload='metadata';
-    var save=navigator.connection && navigator.connection.saveData;
-    if(save || matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
-    new IntersectionObserver(function(es){ es.forEach(function(e){
-      if(e.isIntersecting) v.play().catch(function(){});
-      else if(!v.paused) v.pause();
-    }); },{threshold:.35}).observe(v);
   })();
 </script>
 <script>
