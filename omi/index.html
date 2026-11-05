@@ -20,7 +20,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
 <style>
   /* page: A fix inside Omi. Warm means the old, broken path. Violet means the fix. */
@@ -90,23 +90,23 @@
   .lab small{font:400 12px var(--sans);letter-spacing:0;text-transform:none;opacity:.85;margin-left:6px}
   /* a stack grows up from the floor: the outer call sits at the bottom */
   .frames{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding-bottom:10px;border-bottom:2px solid var(--rule)}
-  .frame{position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 12px 12px 15px;border:1px dashed var(--rule);color:var(--body);background:transparent;transition:border-color .3s,background-color .3s,color .3s,opacity .3s}
-  .frame b{display:block;font-weight:600;font-size:15px;line-height:1.25}
-  .frame .fn{display:block;font-family:var(--mono);font-size:11.5px;margin-top:2px;color:var(--body)}
-  .frame .fn wbr{display:none} /* break points in the function names are for phones only */
-  .frame::before{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:4px;background:transparent}
-  .frame[data-state="own"],.frame[data-state="wait"],.frame[data-state="join"],.frame[data-state="run"],.frame[data-state="commit"]{border-style:solid;border-color:var(--rule);background:var(--tile);color:var(--ink)}
-  .frame[data-state="own"]::before,.frame[data-state="wait"]::before,.frame[data-state="commit"]::before{background:var(--acc)}
-  .frame[data-state="join"]::before{background:repeating-linear-gradient(var(--acc) 0 5px,transparent 5px 9px)}
-  .frame[data-state="crash"]{border-style:solid;border-color:var(--warm);background:color-mix(in srgb,var(--warm) 12%,var(--bg));color:var(--ink);animation:shake .5s var(--ease)}
-  .frame[data-state="fail"]{border-style:solid;border-color:var(--warm);color:var(--ink)}
-  .frame[data-state="fail"]::before{background:var(--warm)}
-  .frame[data-state="gone"],.frame[data-state="done"]{border-style:dashed;color:var(--body)}
-  .frame[data-state="gone"] b,.frame[data-state="done"] b{font-weight:500}
-  .frame[data-state="gone"]{border-color:color-mix(in srgb,var(--warm) 60%,transparent)}
-  .frame.active{border-color:var(--ink)}
-  .frame[data-state="crash"].active{border-color:var(--warm)}
-  .frame.pushed{animation:push .45s var(--ease)}
+  .sframe{position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 12px 12px 15px;border:1px dashed var(--rule);color:var(--body);background:transparent;transition:border-color .3s,background-color .3s,color .3s,opacity .3s}
+  .sframe b{display:block;font-weight:600;font-size:15px;line-height:1.25}
+  .sframe .fn{display:block;font-family:var(--mono);font-size:11.5px;margin-top:2px;color:var(--body)}
+  .sframe .fn wbr{display:none} /* break points in the function names are for phones only */
+  .sframe::before{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:4px;background:transparent}
+  .sframe[data-state="own"],.sframe[data-state="wait"],.sframe[data-state="join"],.sframe[data-state="run"],.sframe[data-state="commit"]{border-style:solid;border-color:var(--rule);background:var(--tile);color:var(--ink)}
+  .sframe[data-state="own"]::before,.sframe[data-state="wait"]::before,.sframe[data-state="commit"]::before{background:var(--acc)}
+  .sframe[data-state="join"]::before{background:repeating-linear-gradient(var(--acc) 0 5px,transparent 5px 9px)}
+  .sframe[data-state="crash"]{border-style:solid;border-color:var(--warm);background:color-mix(in srgb,var(--warm) 12%,var(--bg));color:var(--ink);animation:shake .5s var(--ease)}
+  .sframe[data-state="fail"]{border-style:solid;border-color:var(--warm);color:var(--ink)}
+  .sframe[data-state="fail"]::before{background:var(--warm)}
+  .sframe[data-state="gone"],.sframe[data-state="done"]{border-style:dashed;color:var(--body)}
+  .sframe[data-state="gone"] b,.sframe[data-state="done"] b{font-weight:500}
+  .sframe[data-state="gone"]{border-color:color-mix(in srgb,var(--warm) 60%,transparent)}
+  .sframe.active{border-color:var(--ink)}
+  .sframe[data-state="crash"].active{border-color:var(--warm)}
+  .sframe.pushed{animation:push .45s var(--ease)}
   .tag{flex:none;font-family:var(--sans);font-size:10.5px;letter-spacing:.01em;text-transform:none;padding:4px 7px;border:1px solid var(--rule);color:var(--body);white-space:nowrap;background:var(--bg)}
   .tag.ok{background:var(--acc);border-color:var(--acc);color:var(--bg)}
   .tag.bad{background:color-mix(in srgb,var(--warm) 16%,var(--bg));border-color:color-mix(in srgb,var(--warm) 60%,transparent);color:var(--bad)}
@@ -257,8 +257,8 @@
     .tag,.chip,.sql .meta{font-size:11px}
     /* a frame too narrow for its name and its tag puts the tag on the next line; the log keeps room for that so the panel height holds.
        A name too long for its frame breaks after insertAdapter or openNew. */
-    .frame{flex-wrap:wrap}
-    .frame .fn wbr{display:inline}
+    .sframe{flex-wrap:wrap}
+    .sframe .fn wbr{display:inline}
     .sql{min-height:121px}
     .proof{grid-template-columns:1fr}
     .proof li+li{border-left:0;border-top:1px solid var(--rule)}
@@ -276,9 +276,9 @@
     .lab{margin-bottom:8px;font-size:11px}
     .lab small{font-size:11.5px}
     .frames{gap:6px;padding-bottom:8px}
-    .frame{flex-direction:column;align-items:flex-start;gap:6px;padding:8px 6px 8px 10px}
-    .frame b{font-size:14px}
-    .frame .fn{font-size:11px;letter-spacing:-.02em}
+    .sframe{flex-direction:column;align-items:flex-start;gap:6px;padding:8px 6px 8px 10px}
+    .sframe b{font-size:14px}
+    .sframe .fn{font-size:11px;letter-spacing:-.02em}
     .tag{font-size:11px;padding:3px 6px}
     .slot{padding:6px 8px;gap:8px;margin-bottom:6px;min-height:49.2px}
     .slot b{font-size:26px}
@@ -319,7 +319,7 @@
   @media (min-width:901px) and (max-height:540px) and (orientation:landscape) and (pointer:coarse){
     .ctl{position:sticky;bottom:0;z-index:5;margin:auto -18px -8px;padding:8px 18px;background:var(--tile);border-top:1px solid var(--rule);flex-wrap:nowrap}
     .dots{min-width:0}
-    .frame .fn wbr{display:inline}
+    .sframe .fn wbr{display:inline}
   }
   /* touch screens: tap areas of at least 44px, grown with invisible pseudo elements so nothing moves */
   @media (pointer:coarse){
@@ -340,7 +340,7 @@
   <header class="top">
     <a class="brand" href="../" aria-label="Ian Sabia, home">
       <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
-      <span class="mono" style="font-size:13px">Ian Sabia</span>
+      <span>Ian Sabia</span>
     </a>
     <nav aria-label="Main">
       <span class="links">
@@ -424,8 +424,8 @@
               <div>
                 <span class="mono lab">Call stack<small>newest on top</small></span>
                 <div class="frames">
-                  <div class="frame" id="fInner" data-state="idle"><div><b>Inner code</b><span class="fn">insertAdapter<wbr>Binding()</span></div><span class="tag" id="tInner">Not called yet</span></div>
-                  <div class="frame" id="fOuter" data-state="idle"><div><b>Outer code</b><span class="fn">openNew<wbr>Binding()</span></div><span class="tag" id="tOuter">Not called yet</span></div>
+                  <div class="sframe" id="fInner" data-state="idle"><div><b>Inner code</b><span class="fn">insertAdapter<wbr>Binding()</span></div><span class="tag" id="tInner">Not called yet</span></div>
+                  <div class="sframe" id="fOuter" data-state="idle"><div><b>Outer code</b><span class="fn">openNew<wbr>Binding()</span></div><span class="tag" id="tOuter">Not called yet</span></div>
                 </div>
               </div>
               <div>
