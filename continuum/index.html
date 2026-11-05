@@ -21,9 +21,10 @@
     return matchMedia('(max-width: 760px)').matches ? 'scrub p' : 'scrub l';
   };
   (function (m) { var d = document.documentElement.dataset; d.cc = m.split(' ')[0]; d.ccTier = m.split(' ')[1] || ''; })(window.ccMode());
-  /* The 3D hole plays as the reader scrolls (the frame is pinned while its track scrolls past). Only a very short
-     window, like a phone on its side, gets the frame with its own play controls instead. */
-  document.documentElement.dataset.hole = matchMedia('(min-height: 460px)').matches ? 'scroll' : 'play';
+  /* The 3D hole plays as the reader scrolls (the frame is pinned while its track scrolls past). A short window, like a
+     phone on its side or a short desktop window, gets the frame with its own play controls instead: below 560px the
+     pinned figure would not fit, and the caption would cover the readout in the shrunken frame. */
+  document.documentElement.dataset.hole = matchMedia('(min-height: 560px)').matches ? 'scroll' : 'play';
 </script>
 <meta name="description" content="An AI golf caddy that runs on your phone. It tracks your shots from ordinary video and tells you where to aim. I co-founded it and lead product and ML.">
 <meta property="og:type" content="article">
@@ -106,7 +107,8 @@
   .hole-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 14px;min-height:41px;border-bottom:1px solid var(--rule);background:var(--bg);color:var(--body)}
   .hole-h>.mono{font-size:11px;letter-spacing:.06em}
   .hole-full{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.06em;color:var(--acc);text-decoration:none;white-space:nowrap;padding:4px 0}
-  .hole-full svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s var(--ease)}
+  .hole-full-s{display:none}
+  .hole-full svg{flex:none;width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s var(--ease)}
   .hole-full:hover{text-decoration:underline;text-underline-offset:3px}
   .hole-full:hover svg{transform:translate(1px,-1px)}
   .hole-view{position:relative;background:var(--hg) var(--poster) center/cover no-repeat;height:clamp(520px,calc(100vh - var(--bar) - 150px),720px)}
@@ -216,6 +218,16 @@
   @media (max-width:760px){[data-hole="scroll"] .hole-view{height:max(280px,calc(100vh - var(--bar) - 24px - var(--hole-chrome,150px)))}}
   @supports (height:100svh){@media (max-width:760px){[data-hole="scroll"] .hole-view{height:max(280px,calc(100svh - var(--bar) - 24px - var(--hole-chrome,150px)))}}}
   @media (max-width:560px){[data-cc="scrub"] .cc-h .cc-scrub-only{display:none}}
+  /* the smallest phones (320px): the rail sizes each step to its label, and the header keeps to one line */
+  @media (max-width:360px){
+    [data-hole="scroll"] .hole-rail{grid-template-columns:repeat(5,auto);gap:7px;padding:8px 10px 9px}
+    .hole-rail button{font-size:10px;letter-spacing:0}
+    .hole-h{padding:8px 10px}
+    .hole-h>.mono,.hole-full{font-size:10px;letter-spacing:.02em}
+    .hole-h>.mono{white-space:nowrap}
+    .hole-full-o{display:none}
+    .hole-full-s{display:inline}
+  }
   /* touch: give the small step tabs a taller hit area */
   @media (pointer:coarse){.cc-tab{position:relative}.cc-tab::after{content:"";position:absolute;inset:-10px -2px}}
 </style>
@@ -271,7 +283,7 @@
       <div class="hole-pin">
       <figure class="hole-fig reveal" aria-labelledby="ccHoleLbl">
         <figcaption class="hole-h"><span class="mono" id="ccHoleLbl">Miacomet hole 10 &middot; Par 4</span>
-          <a class="hole-full mono" data-demo="off" data-demo-title="Miacomet hole 10 · Par 4" href="hole/">Open full screen <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 2.5h5v5M9.5 2.5 3 9"/></svg></a></figcaption>
+          <a class="hole-full mono" data-demo="off" data-demo-title="Miacomet hole 10 · Par 4" href="hole/"><span class="hole-full-o">Open full screen</span><span class="hole-full-s">Full screen</span> <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 2.5h5v5M9.5 2.5 3 9"/></svg></a></figcaption>
         <div class="hole-view">
           <div class="hole-wait" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M12 50 C 22 8, 44 6, 52 30" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#C0632F"/></svg><span>Building the hole</span></div>
           <iframe id="ccHoleFrame" title="3D example play of Miacomet hole 10" allow="fullscreen" referrerpolicy="same-origin"></iframe>
@@ -378,7 +390,7 @@
       </ol>
     </section>
 
-    <div class="back"><a class="more" href="../work/#continuum"><span aria-hidden="true">&larr;</span> All work</a></div>
+    <div class="back"><a class="more" href="../work/#continuum"><span aria-hidden="true">&larr;</span> All work</a><a class="more quiet" href="https://iansabia.github.io/continuum-caddy/" target="_blank" rel="noopener noreferrer">See the Continuum product site <span aria-hidden="true">&nearr;</span></a></div>
   </main>
 
   <footer>

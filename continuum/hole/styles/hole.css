@@ -429,6 +429,10 @@ html[data-layout="phone"] .readout .chip { justify-self: start; }
 html[data-layout="phone"] .readout .chip { padding: 8px 12px; gap: 8px; }
 html[data-layout="phone"] .readout .chip b { font-size: 20px; }
 html[data-layout="phone"] .readout .chip span { font-size: 12px; }
+/* phones: the readout stays inside the frame; the carry chip's "estimated from the video" note drops to its own line */
+html[data-layout="phone"] .readout { right: var(--gutter); }
+html[data-layout="phone"] .readout .chip { align-self: start; flex-wrap: wrap; row-gap: 2px; max-width: 100%; white-space: normal; }
+html[data-layout="phone"] .readout .chip em { flex-basis: 100%; }
 html[data-layout="phone"] .lbl { height: 26px; font-size: 12px; padding: 0 10px; }
 html[data-layout="phone"] .attr { font-size: 9.5px; right: 8px; bottom: 2px; }
 html[data-layout="phone"] .about { padding: 40px var(--gutter) 48px; }
