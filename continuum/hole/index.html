@@ -20,6 +20,8 @@
       if (q.get("embed") === "1") root.classList.add("embed");
       // embedded with scroll=1: the page around it drives the play-through from its own scroll (no play button)
       if (q.get("embed") === "1" && q.get("scroll") === "1") root.classList.add("driven");
+      // cue=0: the page plays the hole on its own clock, so there is no "Scroll to play" cue
+      if (q.get("cue") === "0") root.classList.add("nocue");
       var t = q.get("theme");
       if (t !== "light" && t !== "dark") { try { t = localStorage.getItem("theme"); } catch (e) { t = null; } }
       if (t === "light" || t === "dark") root.setAttribute("data-theme", t);
