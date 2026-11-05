@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Work · Ian Sabia</title>
-<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  // the old range toy is gone: its links (/work/#range, /demos/#range, /#range) land on the Continuum case
+  if (location.hash === '#range') try { history.replaceState(null, '', location.pathname + location.search + '#continuum'); } catch (e) {}</script>
 <link rel="stylesheet" href="../assets/desk-transition.css">
 <script src="../assets/desk-transition.js"></script>
 <script type="module" src="../assets/site-chrome.js"></script>
@@ -24,7 +26,7 @@
 <link rel="stylesheet" href="../assets/site.css">
 <style>
   /* Work page: the three cases, stacked under a sticky segmented jump bar. Each case is prose on the left
-     and its toy in a rounded frame on the right (the caddy's hole figure). Shared pieces come from assets/site.css. */
+     and its toy in a rounded frame on the right (Continuum's is the 3D example hole). Shared pieces come from assets/site.css. */
   html{scroll-padding-top:calc(var(--bar) + 76px)}
   .page-hero{padding-bottom:clamp(28px,3.4vw,44px)}
   .ph{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(20px,4.5vw,68px);align-items:end}
@@ -126,15 +128,27 @@
   .bar .v{font-family:var(--mono);font-size:14px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"zero" 1,"tnum" 1}
   .vs .bar .t{background:var(--bg)}
 
-  /* continuum: the range, on night ground like the caddy's own hole figure (the drawing reads these from #range) */
-  .range-fr{--tile:var(--nbg);--ghost:var(--ntile);--rule:var(--nrule);--body:var(--nbody);--ink:var(--nink);--acc:var(--nacc);--warm:var(--nwarm);--bg:var(--nbg);--line:var(--nline)}
-  .range{position:relative;flex:1;min-height:0;aspect-ratio:4/3.4;overflow:hidden;cursor:crosshair;touch-action:manipulation}
-  .range svg{position:absolute;inset:0;width:100%;height:100%}
-  .caddy{display:flex;gap:12px;align-items:flex-start;min-height:78px;padding:16px 22px 18px;border-top:1px solid var(--rule)}
-  .caddy .dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--nwarm);margin-top:7px;animation:pulse 2.4s infinite}
+  /* continuum: the 3D example hole (continuum/hole/) in the case's frame, on the hole's own ground colour, which
+     follows the theme. It plays by itself once it is on screen and pauses when it leaves; its own bar has play,
+     pause and the steps. The poster shows until the hole says it is drawn. */
+  .hole-fr{--hg:#EFEAE3;--poster:url(../continuum/hole/poster-light.webp);background:var(--hg)}
+  :root[data-theme="dark"] .hole-fr{--hg:#120E24;--poster:url(../continuum/hole/poster-dark.webp)}
+  .hole-fr .frame-h{background:var(--hg)}
+  .hole-full{display:inline-flex;align-items:center;gap:6px;color:var(--acc);text-decoration:none;white-space:nowrap;padding:4px 0}
+  .hole-full svg{flex:none;width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s var(--ease)}
+  @media (hover:hover){.hole-full:hover{text-decoration:underline;text-underline-offset:3px}.hole-full:hover svg{transform:translate(1px,-1px)}}
+  .hole-view{position:relative;flex:1;min-height:440px;background:var(--hg) var(--poster) center/cover no-repeat}
+  .hole-view iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:transparent;opacity:0;transition:opacity .5s var(--ease)}
+  .hole-view.is-on iframe{opacity:1}
+  .hole-wait{position:absolute;left:12px;bottom:12px;display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 9px;border-radius:var(--r-pill);background:color-mix(in srgb,var(--hg) 82%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 0 0 .5px var(--rule);color:var(--body);font-size:12.5px;transition:opacity .4s var(--ease)}
+  .hole-wait svg{width:18px;height:18px;color:var(--acc)}
+  .hole-view.is-on .hole-wait{opacity:0}
+  .hole-f{padding:10px 18px 12px;border-top:1px solid var(--rule);background:var(--hg);color:var(--body);font-size:12.5px;line-height:1.5}
+  .hole-f a{color:inherit;text-underline-offset:2px}
+  .hole-tag{display:inline-flex;align-items:center;gap:6px;font-weight:500;color:var(--acc);margin-right:2px}
+  .nw{white-space:nowrap}
+  .hole-tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
   @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ball) 60%,transparent)}70%{box-shadow:0 0 0 10px transparent}100%{box-shadow:0 0 0 0 transparent}}
-  .caddy p{margin:0;color:var(--nink);font-size:15px;line-height:1.4}
-  .caddy p small{display:block;margin-top:3px;color:var(--nbody);font-size:13px}
 
   /* nvidia: the judge's board and the rank */
   .board{flex:1;padding:26px 22px 22px;display:grid;gap:18px;align-content:space-evenly}
@@ -199,10 +213,66 @@
   .drive-foot{padding:16px 22px 18px;border-top:1px solid var(--rule);color:var(--body);font-size:13px;font-weight:400;line-height:1.5}
   @media (max-width:900px){.drive-body{grid-template-columns:minmax(0,1fr)}.drive-side{border-left:0;border-top:1px solid var(--rule)}}
 
+  /* nvidia on one screen, like the other two cases: the prose on the left, and on the right the judge's board on top
+     with the car game under it, instead of the game in its own row below the case. Both are trimmed to fit. */
+  .case-copy .case-fine{margin:4px 0 0;font-size:13px;line-height:1.5;max-width:60ch}
+  .nv-stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .nv-board .board{flex:none;padding:16px 22px 14px;gap:9px}
+  .nv-board .stats.mini3 div{padding:9px 20px 11px}
+  .nv-board .stats.mini3 b{font-size:20px}
+  .nv-board .stats.mini3 span{margin-top:5px;font-size:12.5px}
+  .nv-board .rank{padding:11px 22px 13px;gap:16px}
+  .nv-board .rank b{font-size:40px}
+  .nv-board .rank span{font-size:13px;line-height:1.4}
+  .nv-board .rank span strong{font-size:15px}
+  .nv-stack .drive{flex:1;display:flex;flex-direction:column}
+  .nv-stack .drive > .frame{flex:1;display:flex;flex-direction:column}
+  .nv-stack .drive-body{flex:1}
+  .nv-stack .drive-credit{padding:8px 14px 10px;font-size:11.5px;line-height:1.45}
+  .nv-stack .drive-side{gap:10px;padding:14px 16px 16px}
+  .nv-stack .drive-q{font-size:19px;line-height:1.15;letter-spacing:-.02em}
+  .nv-stack .opt{padding:10px 12px;font-size:14px;border-radius:12px}
+  .nv-stack .drive-wait{min-height:0;padding:12px;font-size:13px}
+  /* after a pick the answer takes the question's place; the You / My model row already says what each one chose */
+  .nv-stack .drive-side:has(.drive-reveal:not([hidden])) :is(.drive-q,.drive-opts){display:none}
+  .nv-stack .drive-reveal{gap:8px}
+  .nv-stack .vsrow > div{padding:9px 12px}
+  .nv-stack .vsrow b{font-size:17px}
+  .nv-stack .drive blockquote{font-size:14px;line-height:1.42}
+  .nv-stack .drive-note{font-size:13px;line-height:1.42}
+  .nv-stack .drive-tag{max-width:calc(100% - 132px);border-radius:12px}
+  /* wide screens: the clip and the question sit side by side, and the two buttons move under the clip's credit,
+     where there is room, so the answer on the right has the whole column */
+  @media (min-width:901px){
+    .nv-stack .drive-body{position:relative;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+    .nv-stack .drive-left{padding-bottom:58px}
+    .nv-stack .drive-actions{position:absolute;left:14px;bottom:14px;width:calc(55.5% - 28px);margin:0;flex-wrap:nowrap;gap:6px}
+    .nv-stack .drive-actions .pill{white-space:nowrap}
+  }
+
   @media (max-width:900px){.entry{grid-template-columns:minmax(0,1fr)}}
+  /* short laptop screens (1366x768 and the like): a little tighter, so each case still fits under the two bars */
+  @media (min-width:901px) and (max-height:800px){
+    .entry h2{margin-bottom:16px}
+    .case-copy > .lbl{margin-bottom:12px}
+    .case-copy p{font-size:16px;margin-bottom:10px}
+    .case-copy .case-fine{font-size:12.5px}
+    .entry-links{padding-top:12px}
+    .vs{padding:14px 18px 16px;gap:10px}
+    .stats.band div{padding-top:16px;padding-bottom:18px}
+    .entry h2{font-size:clamp(32px,3.2vw,44px)}
+    .entry + .entry{scroll-margin-top:calc(12px - clamp(72px,9vw,128px))}
+    .nv-board .board{padding-top:13px;padding-bottom:11px}
+    .nv-board .rank{padding-top:9px;padding-bottom:11px}
+    .nv-stack .drive-side,.nv-stack .drive-reveal{gap:7px}
+    .nv-stack .drive blockquote{font-size:13.5px;line-height:1.38}
+    .nv-stack .drive-note{font-size:12.5px;line-height:1.38}
+  }
   @media (max-width:640px){
     .lanes{padding:20px 16px;gap:22px}
-    .verdict,.caddy{padding-left:16px;padding-right:16px}
+    .verdict{padding-left:16px;padding-right:16px}
+    .hole-f{padding:8px 14px 10px;font-size:12px}
+    .hole-lbl-l{display:none}
     .board{padding:22px 16px 18px}
     .board .bar{grid-template-columns:118px minmax(0,1fr) 46px;font-size:14px}
     .bar{grid-template-columns:112px minmax(0,1fr) 46px;gap:10px}
@@ -228,14 +298,12 @@
     .drive-tag{max-width:calc(100% - 140px);border-radius:12px}
     .frame-h .lbl{letter-spacing:.06em}
     .verdict,.drive-note,.drive-wait,.rank span,.drive-foot{font-size:15px}
-    .stats.band span,.caddy p small{font-size:14px}
+    .stats.band span{font-size:14px}
     .drive-credit{font-size:13px}
   }
-  @media (max-width:480px){.range svg > text{font-size:14px}}
-  @media (max-width:350px){.range svg > text{font-size:15.5px}.case-tab .lbl{letter-spacing:.04em}}
+  @media (max-width:350px){.case-tab .lbl{letter-spacing:.04em}}
   @media (orientation:landscape) and (max-height:520px) and (max-width:932px){
-    .range{aspect-ratio:auto;height:calc(100vh - 150px);height:calc(100svh - 150px);min-height:190px}
-    .range svg > text{font-size:20px}
+    .hole-view{flex:none;min-height:0;height:calc(100vh - 150px);height:calc(100svh - 150px)}
     .drive-body{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
     .drive-side{border-left:1px solid var(--rule);border-top:0}
   }
@@ -338,15 +406,18 @@
             <div class="bar me"><span>SAM 3.1</span><div class="t"><i data-w="91"></i></div><span class="v">0.91</span></div>
             <div class="bar"><span>Our old tracker</span><div class="t"><i data-w="53"></i></div><span class="v">0.53</span></div>
           </div>
-          <div class="entry-links"><a class="pill sm" href="../continuum/">See Continuum <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" data-demo data-demo-title="Miacomet hole 10" href="../continuum/hole/">Play the example hole <span aria-hidden="true">&rarr;</span></a></div>
+          <div class="entry-links"><a class="pill sm" href="../continuum/">See Continuum <span aria-hidden="true">&rarr;</span></a></div>
         </div>
-        <div class="frame night range-fr reveal" aria-label="Range game">
-          <div class="frame-h"><span class="lbl">Range &middot; a toy, not the real model</span><button class="pill sm ghost" id="rangeReset">Reset</button></div>
-          <div class="range" id="range" role="application" aria-label="Golf range. Click where you want to aim. The caddy learns your miss after three shots.">
-            <svg id="rangeSvg" viewBox="0 0 400 340" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+        <figure class="frame hole-fr reveal" id="ccHole" aria-labelledby="ccHoleLbl">
+          <figcaption class="frame-h"><span class="lbl" id="ccHoleLbl">3D example hole<span class="hole-lbl-l"> &middot; Miacomet 10, par 4</span></span>
+            <a class="hole-full lbl" data-demo data-demo-title="Miacomet hole 10 &middot; Par 4" href="../continuum/hole/">Full screen <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 2.5h5v5M9.5 2.5 3 9"/></svg></a></figcaption>
+          <div class="hole-view">
+            <div class="hole-wait" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M12 50 C 22 8, 44 6, 52 30" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#C0632F"/></svg><span>Building the hole</span></div>
+            <iframe id="ccHoleFrame" title="3D example play of Miacomet hole 10" allow="fullscreen" referrerpolicy="same-origin"></iframe>
+            <noscript><iframe src="../continuum/hole/?embed=1" loading="lazy" title="3D example play of Miacomet hole 10"></iframe></noscript>
           </div>
-          <div class="caddy" aria-live="polite"><span class="dot" aria-hidden="true"></span><p id="caddyTxt">Click where you want to aim. Hit three and I'll tell you what you're doing.<small>150 yards to the flag.</small></p></div>
-        </div>
+          <p class="hole-f"><span class="hole-tag">Illustrative example, not real tracked data</span> The golfer and the shots are made up. The course is real. <span class="nw">Map data &copy; <a target="_blank" href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">OpenStreetMap contributors</a> &middot;</span> <span class="nw">Elevation: AWS Terrain Tiles</span></p>
+        </figure>
       </article>
 
       <article class="entry" id="nvidia" aria-label="NVIDIA challenge">
@@ -355,58 +426,59 @@
           <h2>Teaching a car <em>to explain itself</em></h2>
           <p>NVIDIA's challenge asks a self-driving model to explain why the car makes its decision in unusual scenes. A judge model grades each explanation against human labels.</p>
           <p>I took NVIDIA's own driving model, <b>Alpamayo 1.5</b>, trained it further on the task, and got it running on a MacBook with a rewrite that makes it answer <b>4 to 7&times; faster</b>.</p>
-          <p>Try it below: make the call on four real dashcam clips, then see what my model said. The contest closed on Oct 31.</p>
+          <p>Try it yourself: make the call on four real dashcam clips, then see what my model said. The contest closed on Oct 31.</p>
+          <p class="case-fine">The game shows real answers from my fine-tuned Alpamayo 1.5, run on public dashcam clips, not on the contest's data. It saw four frames from one front camera and assumed the car was driving straight at a steady speed. It wrote 8 answers per scene. I show its most common action and quote one typical answer word for word. The boxes come from Grounding DINO, a free open-source object detector, run on the same frames. My model never sees them, and the detector makes mistakes too.</p>
           <div class="entry-links"><a class="pill sm ghost" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026" target="_blank" rel="noopener noreferrer">See the challenge <span aria-hidden="true">&nearr;</span></a></div>
         </div>
-        <div class="frame reveal" aria-label="Test set scores">
-          <div class="frame-h"><span class="lbl">Judge's score on the test set</span><span class="lbl acc">Oct 2026</span></div>
-          <div class="board" id="board">
-            <div class="bar me"><span>My fine-tune</span><div class="t"><i data-w="78.3"></i></div><span class="v" data-num="0.783">0.000</span></div>
-            <div class="bar"><span>GPT-5.5</span><div class="t"><i data-w="50.2"></i></div><span class="v" data-num="0.502">0.000</span></div>
-            <div class="bar"><span>Base Alpamayo 1.5</span><div class="t"><i data-w="41.4"></i></div><span class="v" data-num="0.414">0.000</span></div>
-          </div>
-          <div class="stats mini3">
-            <div><b>10B</b><span>parameters</span></div>
-            <div><b>4&ndash;7&times;</b><span>faster answers</span></div>
-            <div><b>$0</b><span>spent out of pocket</span></div>
-          </div>
-          <div class="rank"><b data-rank>#16</b><span><strong id="rankLine">#16 on the public leaderboard</strong><em id="rankSrc">As of Nov 4, 2026.</em> Baselines are NVIDIA's published numbers.</span></div>
-        </div>
-
-      <div class="drive reveal" id="drive">
-        <div class="frame">
-          <div class="frame-h"><span class="lbl">Your call vs. my model &middot; scene <b id="dStep">1</b> of <span id="dTotal">4</span></span><span class="lbl acc" id="dScore">4 real dashcam clips</span></div>
-          <div class="drive-body">
-            <div class="drive-left">
-              <figure class="drive-view" id="dView">
-                <img id="dImg" alt="" loading="lazy">
-                <video id="dVid" muted playsinline preload="none"></video>
-                <canvas class="drive-cv" id="dCv" aria-hidden="true"></canvas>
-                <span class="drive-tag" id="dTag">Paused at the moment of decision</span>
-                <button class="cv-btn" id="dCvBtn" aria-pressed="true" title="Show or hide the object detector's boxes">Boxes on</button>
-                <span class="cv-hud" id="dHud"></span>
-              </figure>
-              <p class="drive-credit" id="dCredit"></p>
+        <div class="nv-stack">
+          <div class="frame nv-board reveal" aria-label="Test set scores">
+            <div class="frame-h"><span class="lbl">Judge's score on the test set</span><span class="lbl acc">Oct 2026</span></div>
+            <div class="board" id="board">
+              <div class="bar me"><span>My fine-tune</span><div class="t"><i data-w="78.3"></i></div><span class="v" data-num="0.783">0.000</span></div>
+              <div class="bar"><span>GPT-5.5</span><div class="t"><i data-w="50.2"></i></div><span class="v" data-num="0.502">0.000</span></div>
+              <div class="bar"><span>Base Alpamayo 1.5</span><div class="t"><i data-w="41.4"></i></div><span class="v" data-num="0.414">0.000</span></div>
             </div>
-            <div class="drive-side">
-              <p class="drive-q">What should the car do next?</p>
-              <div class="drive-opts" id="dOpts"></div>
-              <div class="drive-wait" id="dWait"><span>Pick one. Your call and my model's answer show up here.</span></div>
-              <div class="drive-reveal" id="dReveal" hidden>
-                <span class="agree" id="dAgree"></span>
-                <div class="vsrow">
-                  <div><span class="lbl">You</span><b id="dYou"></b></div>
-                  <div><span class="lbl">My model</span><b id="dModel"></b><small id="dVotes"></small></div>
+            <div class="stats mini3">
+              <div><b>10B</b><span>parameters</span></div>
+              <div><b>4&ndash;7&times;</b><span>faster answers</span></div>
+              <div><b>$0</b><span>spent out of pocket</span></div>
+            </div>
+            <div class="rank"><b data-rank>#16</b><span><strong id="rankLine">#16 on the public leaderboard</strong><em id="rankSrc">As of Nov 4, 2026.</em> Baselines are NVIDIA's published numbers.</span></div>
+          </div>
+          <div class="drive reveal" id="drive">
+            <div class="frame">
+              <div class="frame-h"><span class="lbl">Your call vs. my model &middot; scene <b id="dStep">1</b> of <span id="dTotal">4</span></span><span class="lbl acc" id="dScore">4 real dashcam clips</span></div>
+              <div class="drive-body">
+                <div class="drive-left">
+                  <figure class="drive-view" id="dView">
+                    <img id="dImg" alt="" loading="lazy">
+                    <video id="dVid" muted playsinline preload="none"></video>
+                    <canvas class="drive-cv" id="dCv" aria-hidden="true"></canvas>
+                    <span class="drive-tag" id="dTag">Paused at the moment of decision</span>
+                    <button class="cv-btn" id="dCvBtn" aria-pressed="true" title="Show or hide the object detector's boxes">Boxes on</button>
+                    <span class="cv-hud" id="dHud"></span>
+                  </figure>
+                  <p class="drive-credit" id="dCredit"></p>
                 </div>
-                <blockquote id="dQuote"></blockquote>
-                <p class="drive-note" id="dNote"></p>
+                <div class="drive-side">
+                  <p class="drive-q">What should the car do next?</p>
+                  <div class="drive-opts" id="dOpts"></div>
+                  <div class="drive-wait" id="dWait"><span>Pick one. Your call and my model's answer show up here.</span></div>
+                  <div class="drive-reveal" id="dReveal" hidden>
+                    <span class="agree" id="dAgree"></span>
+                    <div class="vsrow">
+                      <div><span class="lbl">You</span><b id="dYou"></b></div>
+                      <div><span class="lbl">My model</span><b id="dModel"></b><small id="dVotes"></small></div>
+                    </div>
+                    <blockquote id="dQuote"></blockquote>
+                    <p class="drive-note" id="dNote"></p>
+                  </div>
+                  <div class="drive-actions"><button class="pill sm ghost" id="dPlay">Watch what happened</button><button class="pill sm" id="dNext">Next scene</button></div>
+                </div>
               </div>
-              <div class="drive-actions"><button class="pill sm ghost" id="dPlay">Watch what happened</button><button class="pill sm" id="dNext">Next scene</button></div>
             </div>
           </div>
-          <p class="drive-foot">These are real answers from my fine-tuned Alpamayo 1.5, run on public dashcam clips, not on the contest's data. It saw four frames from one front camera and assumed the car was driving straight at a steady speed. It wrote 8 answers per scene. I show its most common action and quote one typical answer word for word. The boxes come from Grounding DINO, a free open-source object detector, run on the same frames. My model never sees them, and the detector makes mistakes too.</p>
         </div>
-      </div>
       </article>
     </div>
     </section>
