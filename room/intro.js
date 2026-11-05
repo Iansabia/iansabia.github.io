@@ -31,7 +31,8 @@ let T = null;                                // the three.js namespace once load
 // shows without the 3D (the poster frame just fades).
 const STORY = 5.6;
 const FLIGHT = 1.1, FLIGHT_MIN = .7, BUDGET = 1.5, READY_BY = .8;
-const FADE = .2, FADE_SKIP = .16;
+const LATE = 1.3;   // the head gate's cover starts fading at 1.4 s; a first visit that starts later does not play
+const FADE = .2, FADE_SKIP = .16, LIVE_FADE = .1;   // LIVE_FADE: canvas over the poster, camera held still
 
 // ---------------------------------------------------------------- gate
 function hasWebGL() {
@@ -171,6 +172,16 @@ export function playIntro(opts = {}) {
   const html = document.documentElement;
   if (window.__introEarly) { window.__introEarly.remove(); window.__introEarly = null; }   // the head gate's early Skip pill
   if (!opts.force && (window.__introSkipped || !shouldPlay())) { html.classList.remove('intro-on'); return Promise.resolve(false); }
+  // a first visit whose cover has already timed out (slow network) shows the page as it is: no late flight
+  if (!opts.force && !TEST && typeof window.__introT0 === 'number' && (performance.now() - window.__introT0) / 1000 > LATE) {
+    try { sessionStorage.setItem(KEY, '1'); } catch (e) { /* fine */ }
+    // let the cover finish its own fade (1.4 s + .2 s from when it was first styled), then drop the class
+    const drop = () => { html.removeEventListener('animationend', onEnd); html.classList.remove('intro-on'); };
+    const onEnd = (e) => { if (e.target === html && e.pseudoElement === '::after') drop(); };
+    html.addEventListener('animationend', onEnd);
+    setTimeout(drop, 2000);
+    return Promise.resolve(false);
+  }
   if (!opts.force) { try { sessionStorage.setItem(KEY, '1'); } catch (e) { /* gate already checked */ } }
   let resolve; const promise = new Promise(r => { resolve = r; });
   active = { promise };
@@ -210,6 +221,18 @@ function run(opts, done) {
   stopEvents.forEach(ev => addEventListener(ev, onInput, { capture: true, passive: ev !== 'keydown' }));
   btn.addEventListener('click', () => finish(true));
 
+  // The head gate's poster cover (html.intro-on::after) moved onto the overlay itself, so its own
+  // 1.4 s failsafe fade no longer matters once the intro has it
+  function carryCover() {
+    if (!html.classList.contains('intro-on') || ov.style.backgroundImage) return;
+    try {
+      const c = getComputedStyle(html, '::after');
+      if (c.visibility === 'hidden' || c.content === 'none') return;
+      ov.style.background = c.backgroundColor + ' ' + c.backgroundImage + ' center / cover no-repeat';
+      html.classList.remove('intro-on');
+    } catch (e) { /* no cover to carry */ }
+  }
+
   function finish(skipped) {
     if (ended) return;
     ended = true;
@@ -219,6 +242,9 @@ function run(opts, done) {
     if (mo) mo.disconnect();
     mq.removeEventListener && mq.removeEventListener('change', checkTheme);
     target.style.transform = ''; target.style.transformOrigin = ''; target.style.willChange = '';
+    // ending before the canvas is in (three.js late, or a skip): the poster cover moves onto the
+    // overlay so it fades out with it instead of cutting
+    if (!ov.classList.contains('is-live')) carryCover();
     html.classList.remove('intro-on', 'intro-lock');
     if (toHash) {                                   // images may have moved the section while the intro played
       land(false); showWhere();
@@ -1155,7 +1181,7 @@ function run(opts, done) {
       target.style.transform = m ? `matrix3d(${m.join(',')})` : 'scale(0.0001)';
     };
 
-    let t = 0, last = 0, wall = 0, t0wall = 0, firstFrame = true, speed = 1, flight = FLIGHT;
+    let t = 0, last = 0, wall = 0, t0wall = 0, firstFrame = true, liveIn = false, speed = 1, flight = FLIGHT;
     const update = (tt) => {
       applyCamera(tt);
       const b = smooth(clamp((tt - BEND[0]) / (BEND[1] - BEND[0]), 0, 1));
@@ -1166,24 +1192,40 @@ function run(opts, done) {
       warp();
     };
     const render = () => renderer.render(scene, camera);
+    // Story time follows the wall clock, so a slow device drops frames but still flies through every
+    // shot. Two things never count against the flight: the first frame (shot 0 held still while the
+    // canvas fades in over the poster cover, which is the same shot), and any one long frame (a shader
+    // compile or a stall), which only moves the story a seventh of the flight.
     const frame = (now) => {
       raf = 0;
       if (ended) return;
-      const real = last ? Math.max(0, (now - last) / 1000) : 0; last = now;
-      if (!t0wall) {
-        t0wall = now;
-        // the flight gets what is left of the budget (a replay gets the full FLIGHT)
-        flight = opts.force ? FLIGHT : clamp(BUDGET - since(), FLIGHT_MIN, FLIGHT);
-        speed = END / flight;
-      }
-      if (!(TEST && TEST.hold)) { t += Math.min(real, .05) * speed; wall = (now - t0wall) / 1000; }
-      if (wall > flight + .15) t = END;            // a slow device skips frames, it never runs long
-      update(Math.min(t, END)); render();
       if (firstFrame) {
-        // the first frame fades in over the poster cover, then the cover goes
-        firstFrame = false; ov.classList.add('is-live');
-        setTimeout(() => html.classList.remove('intro-on'), 140);
+        firstFrame = false;
+        // the flight gets what is left of the budget (a replay gets the full FLIGHT)
+        flight = opts.force ? FLIGHT : clamp(BUDGET - since() - LIVE_FADE, FLIGHT_MIN, FLIGHT);
+        speed = END / flight;
+        update(Math.min(t, END)); render();
+        // the poster goes under the canvas, which fades in over it; once the canvas is fully in the
+        // poster goes (the monitor's screen is see-through to the page)
+        carryCover();
+        ov.classList.add('is-live');
+        t0wall = performance.now();
+        // the clock starts once the canvas is fully in (its fade can itself be delayed by a stall)
+        const inDone = () => { if (!liveIn) { liveIn = true; html.classList.remove('intro-on'); ov.style.background = ''; } };
+        canvasHost.addEventListener('transitionend', inDone, { once: true });
+        setTimeout(inDone, LIVE_FADE * 1000 + 400);
+        raf = requestAnimationFrame(frame);
+        return;
       }
+      if (!liveIn) { last = now; raf = requestAnimationFrame(frame); return; }
+      const real = Math.max(0, (now - last) / 1000); last = now;
+      if (!(TEST && TEST.hold)) {
+        const step = Math.min(real, flight / 7);
+        t += step * speed; wall += step;
+        // a very slow device still lands: never more than about 1.5 s past the planned flight
+        if ((performance.now() - t0wall) / 1000 > flight + LIVE_FADE + 1.5) t = END;
+      }
+      update(Math.min(t, END)); render();
       if (t >= END && !(TEST && TEST.hold)) { target.style.transform = ''; finish(false); return; }
       raf = requestAnimationFrame(frame);
     };

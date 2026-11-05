@@ -27,14 +27,14 @@
         // the intro's clock: room/intro.js fits the whole flight in about 1.5 s from here, and
         // shows the page without the 3D if three.js is not drawing by then
         window.__introT0 = performance.now();
-        var hold = '1.6s';
+        var hold = '1.4s';
         // the cover is the flight's opening shot (room/poster-*.webp), so the intro starts at first paint
         var room = new URL('../room/', document.currentScript.src).href;
         var cover = document.createElement('style');
         cover.textContent = 'html.intro-on.intro-on::after{content:"";position:fixed;inset:0;z-index:2147483000;' +
           'background:#EFEAE3 url(' + room + 'poster-desk-light.webp) center/cover no-repeat;pointer-events:none;' +
-          'animation:ian-intro-cover 0s linear ' + hold + ' forwards}' +
-          '@keyframes ian-intro-cover{to{visibility:hidden}}' +
+          'animation:ian-intro-cover .2s linear ' + hold + ' forwards}' +
+          '@keyframes ian-intro-cover{from{opacity:1}to{opacity:0;visibility:hidden}}' +
           'html.intro-on.intro-on[data-theme="dark"]::after{background-color:#1A1434;background-image:url(' + room + 'poster-desk-dark.webp)}' +
           '@media (orientation:portrait){html.intro-on.intro-on::after{background-image:url(' + room + 'poster-phone-light.webp)}' +
           'html.intro-on.intro-on[data-theme="dark"]::after{background-image:url(' + room + 'poster-phone-dark.webp)}}' +
@@ -42,6 +42,12 @@
           '.ian-intro-early{position:fixed!important;z-index:2147483002;animation:ian-intro-cover 0s linear ' + hold + ' forwards}' +
           'html:not(.intro-on) .ian-intro-early{display:none}';
         document.head.appendChild(cover);
+        // fetch this visitor's poster first, so the cover is the street still, not a plain color
+        var shot = document.createElement('link');
+        var darkShot = false; try { darkShot = localStorage.getItem('theme') === 'dark'; } catch (e) { /* light */ }
+        shot.rel = 'preload'; shot.as = 'image'; shot.setAttribute('fetchpriority', 'high');
+        shot.href = room + 'poster-' + (matchMedia('(orientation: portrait)').matches ? 'phone' : 'desk') + '-' + (darkShot ? 'dark' : 'light') + '.webp';
+        document.head.appendChild(shot);
         // three.js starts downloading now, while the page parses
         var pre = document.createElement('link');
         pre.rel = 'modulepreload'; pre.href = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js'; pre.crossOrigin = 'anonymous';
