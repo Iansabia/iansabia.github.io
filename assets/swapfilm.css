@@ -74,3 +74,8 @@
 .sf-stage.sf-popped{flex:none;width:min(100%,max(320px,calc((100cqh - 176px) * 16 / 9)));margin:auto}
 .sf-popped .sf-view{width:100%;margin:0}
 .sf-popped .sf-cap{margin:12px 12px 0}
+/* before the first play: a big play mark on the picture, so the film reads as playable from the first screen */
+.sf[data-state="idle"] .sf-hit::before{content:"";position:absolute;left:50%;top:76%;width:clamp(64px,7vw,88px);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);background:var(--nink);box-shadow:0 12px 34px rgba(0,0,0,.4);transition:background-color .25s,transform .25s var(--ease)}
+.sf[data-state="idle"] .sf-hit::after{content:"";position:absolute;left:50%;top:76%;width:clamp(20px,2.2vw,28px);aspect-ratio:13/15;transform:translate(-38%,-50%);background:var(--nbg);clip-path:polygon(0 0,100% 50%,0 100%)}
+@media (hover:hover){.sf[data-state="idle"] .sf-hit:hover::before{background:var(--nacc);transform:translate(-50%,-50%) scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.sf[data-state="idle"] .sf-hit::before{transition:none}}
