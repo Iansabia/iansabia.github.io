@@ -3,7 +3,7 @@
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const root = document.documentElement;
-  const css = (n) => getComputedStyle(root).getPropertyValue(n).trim();
+  const css = (n) => getComputedStyle(document.getElementById('range') || root).getPropertyValue(n).trim(); // the range frame sets its own night colors
   const coarse = matchMedia('(pointer: coarse)').matches;
 
   /* blocks that animate once they come on screen */
@@ -94,7 +94,7 @@
     el('rect', { x: TEE.x - 14, y: TEE.y - 4, width: 28, height: 8, fill: body, rx: 2 });
     (balls || []).forEach((b, i) => {
       const last = i === balls.length - 1;
-      if (last) el('path', { d: `M${TEE.x} ${TEE.y} Q ${(TEE.x + b.x) / 2} ${b.y - 60} ${b.x} ${b.y}`, fill: 'none', stroke: acc, 'stroke-width': 2, opacity: .7, class: 'arc' });
+      if (last) el('path', { d: `M${TEE.x} ${TEE.y} Q ${(TEE.x + b.x) / 2} ${b.y - 60} ${b.x} ${b.y}`, fill: 'none', stroke: css('--line'), 'stroke-width': 2, opacity: .9, class: 'arc' });
       el('line', { x1: b.ax - 4, y1: b.ay - 4, x2: b.ax + 4, y2: b.ay + 4, stroke: body, 'stroke-width': 1.2, opacity: last ? .9 : .35 });
       el('line', { x1: b.ax - 4, y1: b.ay + 4, x2: b.ax + 4, y2: b.ay - 4, stroke: body, 'stroke-width': 1.2, opacity: last ? .9 : .35 });
       el('circle', { cx: b.x, cy: b.y, r: last ? 6 : 4.5, fill: b.good ? acc : warm, stroke: css('--bg'), 'stroke-width': 1.5, opacity: last ? 1 : .75 });
@@ -157,8 +157,22 @@
   const jumps = [...document.querySelectorAll('.case-tab')];
   const markCase = (id) => jumps.forEach((j) => (j.getAttribute('href') === '#' + id ? j.setAttribute('aria-current', 'true') : j.removeAttribute('aria-current')));
   markCase('medtronic');
-  const caseSpy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) markCase(e.target.id); }), { rootMargin: '-40% 0px -55% 0px' });
-  document.querySelectorAll('.entry').forEach((el) => caseSpy.observe(el));
+  /* the band goes solid once it sticks under the top bar, and the case that fills most of the screen
+     below the two bars is the one marked (so the Medtronic stats still count as Medtronic) */
+  const band = document.querySelector('.cases-band'), entries = [...document.querySelectorAll('.entry')];
+  let spyQueued = false;
+  const spyCases = () => {
+    spyQueued = false;
+    const barH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bar')) || 64;
+    const stuck = band.getBoundingClientRect().top <= barH + 0.5 && scrollY > 0;
+    band.classList.toggle('stuck', stuck); document.body.classList.toggle('cases-stuck', stuck);
+    const top = barH + 56, bottom = innerHeight;
+    let best = null, bestH = 0;
+    entries.forEach((el) => { const r = el.getBoundingClientRect(), t0 = el.firstElementChild.getBoundingClientRect().top, h = Math.min(bottom, r.bottom) - Math.max(top, t0); if (h > bestH) { bestH = h; best = el; } });
+    if (best) markCase(best.id);
+  };
+  const queueSpy = () => { if (!spyQueued) { spyQueued = true; requestAnimationFrame(spyCases); } };
+  addEventListener('scroll', queueSpy, { passive: true }); addEventListener('resize', queueSpy); spyCases();
 
   /* car game: real answers from my fine-tuned Alpamayo 1.5 on four public dashcam clips (rt/public_clip.py) */
   const OPTS = ['Keep going', 'Slow down', 'Stop', 'Steer around'];

@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="../assets/page-intro.css">
 <script src="../assets/page-intro.js" data-intro="title"></script>
 <link rel="expect" href="#main-h1" blocking="render">
-<meta name="description" content="Ian Sabia's projects, each with a demo you can try: SwapChain, a fantasy football agent, a research paper, an AI graphing calculator and a fix inside Omi.">
+<meta name="description" content="Ian Sabia's projects, each with a demo you can try: SwapChain, Continuum's AI golf caddy, a self-driving model for NVIDIA's challenge, a fantasy football agent, a research paper, an AI graphing calculator and a fix inside Omi.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://iansabia.github.io/projects/">
 <meta property="og:title" content="Projects · Ian Sabia">
@@ -19,85 +19,107 @@
 <meta property="og:image" content="https://iansabia.github.io/projects/img/app-light.webp">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
 <style>
-  /* Projects page (it took over the old Demos page): every project, each with a preview from its demo
-     (a light and a dark copy, swapped with the theme), a short blurb, "Try the demo" (opens the demo window)
-     and its project page. The demos from work live on the Work page, one line points there. */
-  .shot{position:relative;display:block;aspect-ratio:16/10;overflow:hidden;background:var(--tile);border-bottom:1px solid var(--rule)}
-  .shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+  /* Projects page (it took over the old Demos page): the SwapChain film leads in a full-width frame, then every
+     project as a rounded screenshot on the page ground (a light and a dark copy, swapped with the theme), a short
+     blurb, "Try the demo" (opens the demo window) and its project page. Shared pieces come from assets/site.css. */
+  .page-hero{padding-bottom:clamp(28px,3.4vw,44px)}
+  .ph{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(20px,4.5vw,68px);align-items:end}
+  .page-hero h1{margin:8px 0 0}
+  .page-hero h1 em{color:var(--ink)}
+  .ph .lede{justify-self:start;text-align:left;text-wrap:pretty;max-width:40ch;padding-bottom:.35em}
+  @media (max-width:860px){.ph{grid-template-columns:minmax(0,1fr);gap:16px}.ph .lede{justify-self:start;text-align:left;padding-bottom:0}}
+  #all{padding-top:clamp(32px,4vw,52px)}
+
+  /* the lead: the film in a frame, the words under it on the page ground */
+  .lead{display:grid;gap:clamp(24px,3vw,36px)}
+  .film{position:relative;aspect-ratio:16/9;background:#000}
+  .film video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:block}
+  .vid-play{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:0 12px 16px;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .vid-play[hidden]{display:none}
+  .vid-play span{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 20px;border-radius:var(--r-pill);background:var(--nink);color:#0B0817;font:500 15px/1 var(--sans)}
+  .vid-play svg{width:10px;height:12px;flex:none}
+  .lead-body{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:18px clamp(24px,4.5vw,72px);align-items:start}
+  .lead-body h2{margin-top:14px;font-size:clamp(44px,5.4vw,76px);line-height:.95;letter-spacing:-.04em}
+  .lead-body p{font-weight:400;font-size:17px;line-height:1.55;color:var(--body);max-width:60ch}
+
+  /* the second lead: Continuum's example hole, a still in a light frame that opens the 3D hole */
+  .lead + .lead{margin-top:clamp(72px,9vw,128px);padding-top:clamp(40px,5vw,60px);border-top:1px solid var(--rule)}
+  .hole-shot{position:relative;display:block;aspect-ratio:16/9;overflow:hidden;background:var(--frame)}
+  .hole-shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s var(--ease)}
+  .hole-shot img.d{display:none}
+  :root[data-theme="dark"] .hole-shot img.l{display:none}
+  :root[data-theme="dark"] .hole-shot img.d{display:block}
+  .hole-shot .go{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 20px;border-radius:var(--r-pill);
+    background:var(--ink);color:var(--bg);font:500 15px/1 var(--sans);white-space:nowrap;transition:background-color .25s,color .25s}
+  .hole-shot .go svg{width:10px;height:12px;flex:none}
+  @media (hover:hover){.hole-shot:hover img{transform:scale(1.015)}.hole-shot:hover .go{background:var(--ball);color:#fff}}
+  /* a mono stat line under each lead and feature card, as on the home cards */
+  .stat{font-size:14px;line-height:1.45;color:var(--body);word-spacing:.14em}
+  .stat b{font-family:var(--mono);font-weight:500;color:var(--acc);font-feature-settings:"zero" 1,"tnum" 1}
+  .lead-body .stat{margin-top:14px}
+
+  /* the other projects: a rounded screenshot, then the words */
+  .demos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(56px,6vw,88px) clamp(20px,2.6vw,36px);margin-top:clamp(72px,9vw,128px);padding-top:clamp(40px,5vw,60px);border-top:1px solid var(--rule)}
+  .demo{display:flex;flex-direction:column;gap:14px;min-width:0}
+  /* the screenshot sits on a mat inside the frame and runs off the bottom edge, at the same scale
+     as the home cards, so nothing in it touches the frame's rounded corners */
+  .shot{position:relative;display:block;overflow:hidden;margin-bottom:6px;border-radius:var(--r-frame);background:var(--tile);
+    padding:clamp(18px,3vw,40px) clamp(18px,3vw,40px) 0;transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
+  .shot::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px var(--rule);pointer-events:none}
+  .shot-in{position:relative;display:block;aspect-ratio:16/10;margin-bottom:-5%;
+    -webkit-mask-image:linear-gradient(#000 72%,transparent 98%);mask-image:linear-gradient(#000 72%,transparent 98%);overflow:hidden;border-radius:var(--r-inner) var(--r-inner) 0 0;background:var(--frame);
+    box-shadow:0 0 0 1px var(--rule);transition:transform .8s var(--ease)}
+  .shot img{position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:50% 0;display:block}
+  /* the Fantasy shot is a phone chat: trim the phone's dark edges and its header band */
+  .shot-fantasy img{left:-2.6%;width:105.2%;top:-7%;height:107%}
   .shot img.d{display:none}
   :root[data-theme="dark"] .shot img.l{display:none}
   :root[data-theme="dark"] .shot img.d{display:block}
-  .shot .badge{position:absolute;left:14px;bottom:14px;display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:7px 12px 7px 10px;
-    background:color-mix(in srgb,var(--nbg) 82%,transparent);color:var(--nink);font:500 12px/1 var(--sans);letter-spacing:.01em;
-    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
-  .shot .badge svg{width:9px;height:11px;flex:none}
-  @media (hover:hover){.demo:hover .shot img{transform:scale(1.025)}}
-
-  .demo{display:flex;flex-direction:column;border:1px solid var(--rule);background:var(--bg);min-width:0}
-  .demo .body{display:flex;flex-direction:column;gap:10px;padding:20px 22px 22px;flex:1}
-  .demo .tags{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-  .demo .type{color:var(--acc)}
-  .demo .where{color:var(--body)}
-  .demo h3{font-family:var(--serif);font-weight:600;font-size:26px;line-height:1.1;letter-spacing:-.015em}
-  .demo p{color:var(--body);font-size:15px;max-width:52ch}
-  .demo .ctas{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-top:auto;padding-top:8px}
-
-  /* the two ways in: a filled button for the demo, a quiet one for the project page; both 44px tall */
-  .cta{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px;background:var(--acc);color:#fff;font-weight:600;font-size:15px;text-decoration:none;transition:gap .3s var(--ease),background-color .2s}
-  :root[data-theme="dark"] .cta{color:#0B0817}
-  @media (hover:hover){.cta:hover{gap:16px}}
-  .cta2{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 2px;color:var(--ink);font-weight:500;font-size:15px;text-decoration:underline;text-decoration-thickness:2px;text-decoration-color:var(--rule);text-underline-offset:6px;transition:text-decoration-color .2s,color .2s}
-  @media (hover:hover){.cta2:hover{text-decoration-color:var(--acc);color:var(--acc)}}
-
-  .demos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
-  /* the lead demo spans the row: big preview on the left, words on the right */
-  .demo.lead{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
-  .demo.lead .shot{border-bottom:0;border-right:1px solid var(--rule)}
-  .demo.lead .body{padding:clamp(22px,3vw,36px);justify-content:center;gap:14px}
-  .demo.lead h3{font-size:clamp(28px,3.2vw,38px)}
-  .demo.lead p{font-size:16px}
-  .demo.lead .ctas{margin-top:10px}
-
-  /* short hero so the first demo shows on the first screen */
-  .page-hero{padding-bottom:32px}
-  .page-hero h1{margin-bottom:12px}
-  #all{padding-top:clamp(32px,4vw,48px)}
-  .from-work{padding-top:clamp(28px,4vw,40px)}
-  .from-work .sub{margin:0}
-  .from-work .more{margin-left:2px}
-  .page-hero .kicker a,.back .more{display:inline-flex;align-items:center;min-height:44px}
-
-  @media (max-width:960px){
-    .demo p{font-size:15px}
+  @media (hover:hover){
+    .shot:hover{transform:translateY(-3px);box-shadow:0 22px 44px -28px color-mix(in srgb,var(--ink) 55%,transparent)}
+    :root[data-theme="dark"] .shot:hover{box-shadow:0 22px 44px -28px rgba(0,0,0,.8)}
+    .shot:hover .shot-in{transform:translateY(-4px)}
   }
-  @media (max-width:760px){
-    .demos{grid-template-columns:minmax(0,1fr);gap:16px}
-    .demo.lead{display:flex}
-    .demo.lead .shot{border-right:0;border-bottom:1px solid var(--rule)}
-    .demo.lead .body{padding:20px 18px 22px}
-    .demo .body{padding:18px 18px 20px}
-    .demo h3{font-size:24px}
-  }
-  @media (max-width:380px){
-    .cta{padding:0 14px}
-  }
-
-  /* the SwapChain film leads the page and plays right here; the live app is the secondary button */
-  .shot.vid{width:100%;aspect-ratio:16/9;background:#000;align-self:start}
-  .shot.vid video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:block}
-  .demo.lead .shot.vid{align-self:center;border-right:0}
-  .demo.lead{background:var(--bg)}
-  .vid-play{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:0 12px 14px;background:none;border:0;cursor:pointer;color:#0B0817;font:600 15px/1.2 var(--sans);-webkit-tap-highlight-color:transparent}
-  .vid-play[hidden]{display:none}
-  .vid-play span{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px;background:var(--nacc)}
-  .vid-play svg{width:11px;height:13px;flex:none}
+  /* the NVIDIA card runs the full width: screenshot left, words right */
+  .demo.wide{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:14px clamp(24px,4vw,56px);align-items:start}
+  .demo.wide > .shot{grid-row:1/span 5;margin-bottom:0}
+  .demo.wide > :not(.shot){grid-column:2}
+  .demo.wide .ctas{margin-top:0}
+  .nv-stat{text-wrap:balance}
+  .nv-stat span{white-space:nowrap}
+  @media (max-width:860px){.demo.wide{display:flex;align-items:stretch}}
+  .tags{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;min-height:16px}
+  .demo h2{font-size:clamp(26px,2.5vw,36px);line-height:1.04;letter-spacing:-.03em;text-wrap:balance}
+  .demo p{font-weight:400;font-size:16px;line-height:1.55;color:var(--body);max-width:54ch}
+  .ctas{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:auto;padding-top:8px}
+  .lead .ctas{margin-top:22px;padding-top:0}
   /* live GitHub stars, as on the old home page cards */
-  .stars{font-family:var(--mono);font-size:12px;color:var(--body);white-space:nowrap;opacity:0;transition:opacity .4s}
+  .stars{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--body);white-space:nowrap;opacity:0;transition:opacity .4s;font-feature-settings:"zero" 1,"tnum" 1}
   .stars.ok{opacity:1}
-  .cta2.ext{font-size:13px;color:var(--body);text-decoration-thickness:1px}
-  @media (max-width:760px){.demo.lead .shot.vid{border-bottom:1px solid var(--rule)}}
+
+  /* one ruled row points to the work demos */
+  .from-work{padding-top:clamp(72px,9vw,128px)}
+  a.fw{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 0;border-top:1px solid var(--rule);color:var(--ink);text-decoration:none;
+    font-size:clamp(19px,1.6vw,24px);line-height:1.2;letter-spacing:-.02em;transition:background-color .25s,padding .25s var(--ease),margin .25s var(--ease),border-radius .25s}
+  a.fw .lbl{display:block;margin-bottom:8px}
+  a.fw .arrow-chip{background:var(--tile)}
+  @media (hover:hover){
+    a.fw:hover{background:var(--tile);border-radius:var(--r-card);border-color:transparent;padding-inline:20px;margin-inline:-20px}
+    a.fw:hover .arrow-chip{background:var(--ink);color:var(--bg)}
+    a.fw:hover .arrow-chip span{transform:translateX(4px)}
+  }
+
+  @media (max-width:860px){.lead-body{grid-template-columns:minmax(0,1fr)}}
+  @media (max-width:760px){.demos{grid-template-columns:minmax(0,1fr)}}
+  @media (max-width:600px){
+    .demos{gap:52px;margin-top:64px;padding-top:36px}
+    .demo h2{font-size:28px}
+    .lead-body p,.demo p{font-size:16px}
+  }
 </style>
 </head>
 <body>
@@ -106,7 +128,7 @@
   <header class="top">
     <a class="brand" href="../" aria-label="Ian Sabia, home">
       <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
-      <span class="mono" style="font-size:13px">Ian Sabia</span>
+      <span>Ian Sabia</span>
     </a>
     <nav aria-label="Main">
       <span class="links">
@@ -134,84 +156,120 @@
 
   <main id="main">
     <header class="page-hero">
-      <div class="kicker mono"><a href="../">Home</a><span aria-hidden="true">/</span><span>Projects</span></div>
-      <h1 id="main-h1"><em>Projects</em></h1>
-      <p class="lede">Smaller things I built because I wanted them to exist. Each one has a demo you can try right here, and its own page with the full write-up.</p>
+      <nav class="crumb" aria-label="Breadcrumb"><a href="../">Home</a><span aria-hidden="true">/</span><span>Projects</span></nav>
+      <div class="ph">
+        <h1 id="main-h1"><em>Projects</em></h1>
+        <p class="lede">Things I built because I wanted them to exist. Each one has a demo you can try right here, and its own page with the full write-up.</p>
+      </div>
     </header>
 
     <section class="block" id="all">
-      <div class="demos">
+      <article class="lead reveal" id="continuum">
+        <div class="frame">
+          <div class="frame-h"><span class="lbl">Continuum &middot; Example hole &middot; 3D</span><span class="lbl">01</span></div>
+          <a class="hole-shot" data-demo data-demo-title="Miacomet hole 10" href="../continuum/hole/" tabindex="-1" aria-hidden="true">
+            <img class="l" src="../continuum/hole/poster-light.webp" alt="" width="1280" height="720" loading="lazy">
+            <img class="d" src="../continuum/hole/poster-dark.webp" alt="" width="1280" height="720" loading="lazy">
+            <span class="go"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z" fill="currentColor"/></svg>Play the example hole</span>
+          </a>
+        </div>
+        <div class="lead-body">
+          <div>
+            <span class="lbl acc">Work &middot; Co-Founder</span>
+            <h2>Continuum</h2>
+          </div>
+          <div>
+            <p>An AI caddy that runs on your phone. It tracks your shots from ordinary video, gives swing feedback, and tells you where to aim based on where you've been missing. About 70 conversations with golfers moved us from indoor simulators onto the course. I lead product and ML. The demo plays hole 10 at Miacomet Golf Club on Nantucket in 3D. The golfer and the shots are made up. The course is real.</p>
+            <p class="stat"><b>~70</b> golfer conversations &middot; <b>0.91</b> F1 ball tracking</p>
+            <div class="ctas"><a class="pill" data-demo data-demo-title="Miacomet hole 10" href="../continuum/hole/">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill ghost" href="../continuum/">Project page</a></div>
+          </div>
+        </div>
+      </article>
 
-        <article class="demo lead reveal" id="swapchain">
-          <div class="shot vid">
+      <article class="lead reveal" id="swapchain">
+        <div class="frame night">
+          <div class="frame-h"><span class="lbl">SwapChain &middot; Film &middot; 2 min</span><span class="lbl">02</span></div>
+          <div class="film">
             <video id="leadFilm" src="../swapchain/media/swapchain-demo.mp4" poster="../swapchain/media/poster.jpg" width="1920" height="1080" controls muted playsinline loop preload="none" aria-label="Two-minute demo of SwapChain"></video>
             <button class="vid-play" id="leadPlay" type="button" hidden><span><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z" fill="currentColor"/></svg>Play the film</span></button>
           </div>
-          <div class="body">
-            <div class="tags"><span class="mono type">Product &middot; DS229 team project</span><span class="mono where">Film &middot; 2 min</span></div>
-            <h3>SwapChain</h3>
-            <p>A room-swap marketplace for BU, built in my product management class with a team of four. BU's swap tools only match pairs. SwapChain finds loops of students who can all move at once (A takes B's room, B takes C's, C takes A's). I built the demo: a 3D campus map, floor plans and the loop finder. The film follows a swap list of 350 students, all made up. No sound.</p>
-            <div class="ctas"><a class="cta" data-demo data-demo-title="SwapChain live demo" data-demo-caption="40 students who want to move, all made up" href="../swapchain/app/">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../swapchain/">Project page</a></div>
+        </div>
+        <div class="lead-body">
+          <div>
+            <span class="lbl acc">Product &middot; DS229 team project</span>
+            <h2>SwapChain</h2>
           </div>
+          <div>
+            <p>A room-swap marketplace for BU, built in my product management class with a team of four. BU's swap tools only match pairs. SwapChain finds loops of students who can all move at once (A takes B's room, B takes C's, C takes A's). I built the demo: a 3D campus map, floor plans and the loop finder. The film follows a swap list of 350 students, all made up. No sound.</p>
+            <p class="stat">Team of <b>4</b> &middot; <b>3D</b> campus map &middot; <b>2</b>-min film</p>
+            <div class="ctas"><a class="pill" data-demo data-demo-title="SwapChain live demo" data-demo-caption="40 students who want to move, all made up" href="../swapchain/app/">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill ghost" href="../swapchain/">Project page</a></div>
+          </div>
+        </div>
+      </article>
+
+      <div class="demos">
+
+        <article class="demo wide reveal" id="nvidia">
+          <a class="shot shot-drive" data-demo data-demo-title="Your call vs. my model" data-demo-caption="4 real dashcam clips" href="../drive/#game" tabindex="-1" aria-hidden="true"><span class="shot-in">
+            <img class="l" src="img/drive-light.webp" alt="" width="1120" height="700" loading="lazy">
+            <img class="d" src="img/drive-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
+          </a>
+          <div class="tags"><span class="lbl acc">03 / Work &middot; NVIDIA challenge</span></div>
+          <h2>Teaching a car to explain itself</h2>
+          <p>NVIDIA's Physical AI challenge asks a self-driving model to explain why the car makes its decision in unusual scenes. I took NVIDIA's own driving model, Alpamayo 1.5, trained it further on the task, and got it running on a MacBook, 4 to 7&times; faster. In the demo you make the call on four real dashcam clips, then see what my model said.</p>
+          <p class="stat nv-stat"><span><b>10B</b> parameters</span> &middot; <span><b>4&ndash;7&times;</b> faster answers</span> &middot; <span><b>$0</b> spent</span></p>
+          <div class="ctas"><a class="pill sm" data-demo data-demo-title="Your call vs. my model" data-demo-caption="4 real dashcam clips" href="../drive/#game">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../work/#nvidia">See the case</a></div>
         </article>
 
         <article class="demo reveal" id="fantasy">
-          <a class="shot" data-demo href="../fantasy/#demo" tabindex="-1" aria-hidden="true">
+          <a class="shot shot-fantasy" data-demo href="../fantasy/#demo" tabindex="-1" aria-hidden="true"><span class="shot-in">
             <img class="l" src="img/fantasy-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/fantasy-dark.webp" alt="" width="1120" height="700" loading="lazy">
+            <img class="d" src="img/fantasy-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Python &middot; agents</span><span class="stars" data-repo="Iansabia/fantasy-ai"></span></div>
-            <h3>Fantasy AI Manager</h3>
-            <p>I was in too many fantasy leagues, so I built an agent that runs three of them for me: lineups, injuries, waivers and trade ideas. Plain code makes every call. The AI only reads the news and explains.</p>
-            <div class="ctas"><a class="cta" data-demo data-demo-title="A week with the bot" href="../fantasy/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
-          </div>
+          <div class="tags"><span class="lbl acc">04 / Python &middot; agents</span><span class="stars" data-repo="Iansabia/fantasy-ai"></span></div>
+          <h2>Fantasy AI Manager</h2>
+          <p>I was in too many fantasy leagues, so I built an agent that runs three of them for me: lineups, injuries, waivers and trade ideas. Plain code makes every call. The AI only reads the news and explains.</p>
+          <div class="ctas"><a class="pill sm" data-demo data-demo-title="A week with the bot" href="../fantasy/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../fantasy/">Project page</a></div>
         </article>
 
         <article class="demo reveal" id="paper">
-          <a class="shot" data-demo href="../paper/#ladder" tabindex="-1" aria-hidden="true">
+          <a class="shot shot-paper" data-demo href="../paper/#ladder" tabindex="-1" aria-hidden="true"><span class="shot-in">
             <img class="l" src="img/paper-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/paper-dark.webp" alt="" width="1120" height="700" loading="lazy">
+            <img class="d" src="img/paper-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">Research &middot; DS340</span><span class="stars" data-repo="Iansabia/DS340-Project"></span></div>
-            <h3>Complexity is not an edge</h3>
-            <p>Polymarket and Kalshi often price the same event differently. Does a fancier model profit more from those gaps? No. The simplest model won, with about 30&times; more edge per trade.</p>
-            <div class="ctas"><a class="cta" data-demo data-demo-title="The headline result" href="../paper/#ladder">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../paper/">Read the paper</a></div>
-          </div>
+          <div class="tags"><span class="lbl acc">05 / Research &middot; DS340</span><span class="stars" data-repo="Iansabia/DS340-Project"></span></div>
+          <h2>Complexity is not an edge</h2>
+          <p>Polymarket and Kalshi often price the same event differently. Does a fancier model profit more from those gaps? No. The simplest model won, with about 30&times; more edge per trade.</p>
+          <div class="ctas"><a class="pill sm" data-demo data-demo-title="The headline result" href="../paper/#ladder">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../paper/">Read the paper</a></div>
         </article>
 
         <article class="demo reveal" id="calculator">
-          <a class="shot" data-demo href="../calculator/#demo" tabindex="-1" aria-hidden="true">
+          <a class="shot shot-calculator" data-demo href="../calculator/#demo" tabindex="-1" aria-hidden="true"><span class="shot-in">
             <img class="l" src="img/calc-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/calc-dark.webp" alt="" width="1120" height="700" loading="lazy">
+            <img class="d" src="img/calc-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">C++ &middot; ESP32-S3</span><span class="stars" data-repo="OtterCadGH/nternet-Link"></span></div>
-            <h3>An AI graphing calculator</h3>
-            <p>A camera and an ESP32 chip wired into a TI-Nspire. It photographs a handwritten problem and shows a worked solution on the calculator. I wrote the firmware, the calculator client and the local proxy.</p>
-            <div class="ctas"><a class="cta" data-demo href="../calculator/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../calculator/">Project page</a></div>
-          </div>
+          <div class="tags"><span class="lbl acc">06 / C++ &middot; ESP32-S3</span><span class="stars" data-repo="OtterCadGH/nternet-Link"></span></div>
+          <h2>An AI graphing calculator</h2>
+          <p>A camera and an ESP32 chip wired into a TI-Nspire. It photographs a handwritten problem and shows a worked solution on the calculator. I wrote the firmware, the calculator client and the local proxy.</p>
+          <div class="ctas"><a class="pill sm" data-demo href="../calculator/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../calculator/">Project page</a></div>
         </article>
 
         <article class="demo reveal" id="omi">
-          <a class="shot" data-demo href="../omi/#stack" tabindex="-1" aria-hidden="true">
+          <a class="shot shot-omi" data-demo href="../omi/#stack" tabindex="-1" aria-hidden="true"><span class="shot-in">
             <img class="l" src="img/omi-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/omi-dark.webp" alt="" width="1120" height="700" loading="lazy">
+            <img class="d" src="img/omi-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
-          <div class="body">
-            <div class="tags"><span class="mono type">TypeScript &middot; open source</span><span class="stars" data-repo="BasedHardware/omi"></span></div>
-            <h3>A fix inside Omi</h3>
-            <p>Omi is an open-source AI wearable. Its macOS app broke chat and tasks whenever two database transactions nested. I wrote a failing test first, fixed it, and it was merged into main.</p>
-            <div class="ctas"><a class="cta" data-demo data-demo-title="Step through the bug" href="../omi/#stack">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../omi/">Project page</a></div>
-          </div>
+          <div class="tags"><span class="lbl acc">07 / TypeScript &middot; open source</span><span class="stars" data-repo="BasedHardware/omi"></span></div>
+          <h2>A fix inside Omi</h2>
+          <p>Omi is an open-source AI wearable. Its macOS app broke chat and tasks whenever two database transactions nested. I wrote a failing test first, fixed it, and it was merged into main.</p>
+          <div class="ctas"><a class="pill sm" data-demo data-demo-title="Step through the bug" href="../omi/#stack">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../omi/">Project page</a></div>
         </article>
 
       </div>
     </section>
 
-    <section class="block from-work" id="from-work">
-      <p class="sub reveal">Demos from my work are on the <a class="more" href="../work/">Work page <span aria-hidden="true">&rarr;</span></a></p>
+    <section class="from-work" id="from-work">
+      <a class="fw reveal" href="../work/"><span><span class="lbl">Work</span>Demos from my work are on the Work page</span><span class="arrow-chip" aria-hidden="true"><span>&rarr;</span></span></a>
     </section>
 
     <div class="back"><a class="more" href="../"><span aria-hidden="true">&larr;</span> Home</a><a class="more quiet" href="../work/">Work <span aria-hidden="true">&rarr;</span></a></div>

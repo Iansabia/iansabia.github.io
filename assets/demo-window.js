@@ -130,7 +130,8 @@ function tuneOnce(d) {
     requestClose();
   }, true);
   const s = d.createElement('style');
-  s.textContent = 'header.top,.skip{display:none!important}:root{--bar:0px}';
+  // no bar in the window, so an anchor lands flush with the window's top edge (nothing from the section above peeks in)
+  s.textContent = 'header.top,.skip{display:none!important}:root{--bar:0px}html{scroll-padding-top:0!important}';
   d.head && d.head.appendChild(s);
   d.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !e.defaultPrevented) requestClose(); });
 }

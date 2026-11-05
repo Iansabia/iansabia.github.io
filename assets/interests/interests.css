@@ -1,15 +1,13 @@
 /* Off the clock: interest chips that open photos, and the on-site lightbox (assets/interests/interests.js) */
-.likes li.has-ph,.likes li.has-jump{padding:0;border-color:color-mix(in srgb,var(--acc) 38%,var(--rule))}
-.likes li.has-ph button,.likes li.has-jump a{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;font:inherit;font-size:14px;color:inherit;background:none;border:0;cursor:pointer;text-decoration:none;line-height:inherit}
-.likes li.has-ph svg,.likes li.has-jump svg{width:13px;height:13px;flex:none;color:var(--acc);transition:color .25s}
-.likes li.has-ph,.likes li.has-jump{cursor:pointer}
-/* plain interests read as text: no lift on hover */
+.likes li.has-ph,.likes li.has-jump{padding:0;cursor:pointer}
+.likes li.has-ph button,.likes li.has-jump a{display:inline-flex;align-items:center;gap:8px;min-height:inherit;padding:0 16px 0 14px;font:inherit;font-size:15px;line-height:1;color:inherit;background:none;border:0;border-radius:inherit;cursor:pointer;text-decoration:none}
+.likes li.has-ph svg,.likes li.has-jump svg{width:14px;height:14px;flex:none;color:var(--acc);transition:color .25s}
+/* plain interests read as text: no hover; the ones that open something fill with ink */
 @media (hover:hover){
-  .likes li:not(.has-ph):not(.has-jump):hover{background:transparent;color:inherit;border-color:var(--rule);transform:none}
-  .likes li.has-ph:hover,.likes li.has-jump:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .likes li.has-ph:hover,.likes li.has-jump:hover{background:var(--ink);color:var(--bg);box-shadow:inset 0 0 0 1px var(--ink);transform:translateY(-1px)}
   .likes li.has-ph:hover svg,.likes li.has-jump:hover svg{color:var(--bg)}
 }
-.likes li.has-ph button:focus-visible,.likes li.has-jump a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.likes li.has-ph button:focus-visible,.likes li.has-jump a:focus-visible{outline:2px solid var(--line);outline-offset:3px}
 
 /* lightbox: always a dark viewer, in both themes */
 .ilb{position:fixed;inset:0;z-index:2000;display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:rgba(11,8,23,.985);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);color:#EFEAF8;opacity:0;transition:opacity .22s ease;-webkit-tap-highlight-color:transparent}
@@ -21,16 +19,16 @@
 .ilb-x{padding:0;width:40px}
 @media (hover:hover){.ilb-btn:hover{background:rgba(239,234,248,.16);border-color:rgba(239,234,248,.45)}}
 .ilb-btn:focus-visible{outline:2px solid #9B85FF;outline-offset:2px}
-.ilb-count{color:#A79FBF;font:500 13px/1 var(--sans);font-variant-numeric:tabular-nums}
+.ilb-count{color:#A79FBF;font:500 11px/1 var(--mono);letter-spacing:.1em;font-variant-numeric:tabular-nums}
 .ilb-stage{position:relative;display:flex;align-items:center;justify-content:center;padding:0 16px;min-height:0;touch-action:pan-y}
-.ilb-stage img,.ilb-stage video{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:6px;background:#15102A;user-select:none;-webkit-user-drag:none}
+.ilb-stage img,.ilb-stage video{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:var(--r-frame,18px);background:#15102A;user-select:none;-webkit-user-drag:none}
 .ilb-stage img.in,.ilb-stage video.in{animation:ilbIn .28s ease}
 @keyframes ilbIn{from{opacity:0}to{opacity:1}}
 .ilb-nav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;padding:0}
 .ilb-nav svg{width:18px;height:18px}
 .ilb-prev{left:16px}.ilb-next{right:16px}
 .ilb-nav[hidden]{display:none}
-.ilb-cap{text-align:center;padding:12px 16px max(16px,env(safe-area-inset-bottom));font:600 17px/1.3 var(--sans);letter-spacing:-.01em}
+.ilb-cap{text-align:center;padding:12px 16px max(16px,env(safe-area-inset-bottom));font:500 17px/1.3 var(--sans);letter-spacing:-.01em}
 @media (min-width:861px){.ilb-stage{padding:0 84px}}
 @media (max-width:860px){.ilb-nav{display:none}}
 @media (prefers-reduced-motion:reduce){.ilb{transition:none}.ilb-stage img.in,.ilb-stage video.in{animation:none}}

@@ -51,6 +51,18 @@ html.intro-lock { scroll-behavior: auto !important; }
   cursor: pointer;
   transition: transform .2s cubic-bezier(.32, .72, 0, 1), background-color .2s;
 }
+/* Phones: while the page is warped onto the desk, its transformed box can grow the layout
+   viewport, so right/bottom would carry the pill off screen. The small-viewport units stay the
+   size of the screen, so pin the pill from the top left instead. */
+@supports (height: 100svh) and (translate: 0 0) {
+  .ian-intro-skip {
+    right: auto;
+    bottom: auto;
+    left: calc(100svw - max(16px, env(safe-area-inset-right)));
+    top: calc(100svh - max(16px, env(safe-area-inset-bottom)));
+    translate: -100% -100%;
+  }
+}
 .ian-intro-skip:hover { background: rgba(255, 253, 250, .9); }
 .ian-intro-skip:active { transform: scale(.96); }
 .ian-intro-skip:focus-visible { outline: 2px solid #604C9C; outline-offset: 3px; }
