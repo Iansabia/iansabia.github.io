@@ -393,7 +393,7 @@
     </section>
 
     <section class="block" id="why">
-      <div class="shead reveal"><div><span class="lbl acc">02 / Why it broke</span><h2>Why it broke</h2></div><p class="sub">A transaction inside a transaction, and a check that trusted the wrong answer.</p></div>
+      <div class="shead reveal"><div><span class="lbl acc">02 / Why it broke</span><h2>Why it broke</h2></div><p class="sub long">A transaction inside a transaction, and a check that trusted the wrong answer.</p></div>
       <dl class="terms reveal">
         <div><dt class="mono">SQLite</dt><dd>A small database that lives in one file. Omi's agent keeps its state there.</dd></div>
         <div><dt class="mono">Transaction</dt><dd>A group of writes that all happen or none do. BEGIN starts one. COMMIT keeps the writes, ROLLBACK undoes them.</dd></div>
@@ -534,7 +534,7 @@
     </section>
 
     <section class="block" id="proof">
-      <div class="shead reveal"><div><span class="lbl acc">04 / How I proved it</span><h2>How I proved it</h2></div><p class="sub">A test that failed for the same reason the app did. Then the fix. Then the whole suite.</p></div>
+      <div class="shead reveal"><div><span class="lbl acc">04 / How I proved it</span><h2>How I proved it</h2></div><p class="sub long">A test that failed for the same reason the app did. Then the fix. Then the whole suite.</p></div>
       <ol class="proof reveal">
         <li class="red"><span class="mono st">Fail</span><b>Test first</b><p>On the old logic, the inner call sends a second BEGIN and the fake database throws &ldquo;cannot start a transaction within a transaction,&rdquo; the same error as the app. The test never reaches its check.</p></li>
         <li><span class="mono st">Pass</span><b>Then the fix</b><p>With the counter in place, the inner call joins the outer one. The log reads BEGIN, COMMIT, and the test passes.</p></li>

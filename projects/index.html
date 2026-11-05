@@ -30,7 +30,7 @@
   .ph{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,4.5vw,68px);align-items:end}
   .page-hero h1{margin:8px 0 0}
   .page-hero h1 em{color:var(--ink)}
-  .ph .lede{justify-self:end;text-align:right;max-width:40ch;padding-bottom:.35em}
+  .ph .lede{justify-self:end;text-align:left;text-wrap:pretty;max-width:40ch;padding-bottom:.35em}
   @media (max-width:860px){.ph{grid-template-columns:minmax(0,1fr);gap:16px}.ph .lede{justify-self:start;text-align:left;padding-bottom:0}}
   #all{padding-top:clamp(32px,4vw,52px)}
 
@@ -49,17 +49,24 @@
   /* the other projects: a rounded screenshot, then the words */
   .demos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(56px,6vw,88px) clamp(20px,2.6vw,36px);margin-top:clamp(72px,9vw,128px);padding-top:clamp(40px,5vw,60px);border-top:1px solid var(--rule)}
   .demo{display:flex;flex-direction:column;gap:14px;min-width:0}
-  .shot{position:relative;display:block;aspect-ratio:16/10;overflow:hidden;margin-bottom:6px;border-radius:var(--r-frame);background:var(--frame);
-    transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
+  /* the screenshot sits on a mat inside the frame and runs off the bottom edge, at the same scale
+     as the home cards, so nothing in it touches the frame's rounded corners */
+  .shot{position:relative;display:block;overflow:hidden;margin-bottom:6px;border-radius:var(--r-frame);background:var(--tile);
+    padding:clamp(18px,3vw,40px) clamp(18px,3vw,40px) 0;transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
   .shot::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px var(--rule);pointer-events:none}
-  .shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+  .shot-in{position:relative;display:block;aspect-ratio:16/10;margin-bottom:-5%;
+    -webkit-mask-image:linear-gradient(#000 72%,transparent 98%);mask-image:linear-gradient(#000 72%,transparent 98%);overflow:hidden;border-radius:var(--r-inner) var(--r-inner) 0 0;background:var(--frame);
+    box-shadow:0 0 0 1px var(--rule);transition:transform .8s var(--ease)}
+  .shot img{position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:50% 0;display:block}
+  /* the Fantasy shot is a phone chat: trim the phone's dark edges and its header band */
+  .shot-fantasy img{left:-2.6%;width:105.2%;top:-7%;height:107%}
   .shot img.d{display:none}
   :root[data-theme="dark"] .shot img.l{display:none}
   :root[data-theme="dark"] .shot img.d{display:block}
   @media (hover:hover){
     .shot:hover{transform:translateY(-3px);box-shadow:0 22px 44px -28px color-mix(in srgb,var(--ink) 55%,transparent)}
     :root[data-theme="dark"] .shot:hover{box-shadow:0 22px 44px -28px rgba(0,0,0,.8)}
-    .shot:hover img{transform:scale(1.02)}
+    .shot:hover .shot-in{transform:translateY(-4px)}
   }
   .tags{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;min-height:16px}
   .demo h3{font-size:clamp(26px,2.5vw,36px);line-height:1.04;letter-spacing:-.03em;text-wrap:balance}
@@ -156,9 +163,9 @@
       <div class="demos">
 
         <article class="demo reveal" id="fantasy">
-          <a class="shot" data-demo href="../fantasy/#demo" tabindex="-1" aria-hidden="true">
+          <a class="shot shot-fantasy" data-demo href="../fantasy/#demo" tabindex="-1" aria-hidden="true"><span class="shot-in">
             <img class="l" src="img/fantasy-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/fantasy-dark.webp" alt="" width="1120" height="700" loading="lazy">
+            <img class="d" src="img/fantasy-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
           <div class="tags"><span class="lbl acc">02 / Python &middot; agents</span><span class="stars" data-repo="Iansabia/fantasy-ai"></span></div>
           <h3>Fantasy AI Manager</h3>
@@ -167,9 +174,9 @@
         </article>
 
         <article class="demo reveal" id="paper">
-          <a class="shot" data-demo href="../paper/#ladder" tabindex="-1" aria-hidden="true">
+          <a class="shot shot-paper" data-demo href="../paper/#ladder" tabindex="-1" aria-hidden="true"><span class="shot-in">
             <img class="l" src="img/paper-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/paper-dark.webp" alt="" width="1120" height="700" loading="lazy">
+            <img class="d" src="img/paper-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
           <div class="tags"><span class="lbl acc">03 / Research &middot; DS340</span><span class="stars" data-repo="Iansabia/DS340-Project"></span></div>
           <h3>Complexity is not an edge</h3>
@@ -178,9 +185,9 @@
         </article>
 
         <article class="demo reveal" id="calculator">
-          <a class="shot" data-demo href="../calculator/#demo" tabindex="-1" aria-hidden="true">
+          <a class="shot shot-calculator" data-demo href="../calculator/#demo" tabindex="-1" aria-hidden="true"><span class="shot-in">
             <img class="l" src="img/calc-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/calc-dark.webp" alt="" width="1120" height="700" loading="lazy">
+            <img class="d" src="img/calc-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
           <div class="tags"><span class="lbl acc">04 / C++ &middot; ESP32-S3</span><span class="stars" data-repo="OtterCadGH/nternet-Link"></span></div>
           <h3>An AI graphing calculator</h3>
@@ -189,9 +196,9 @@
         </article>
 
         <article class="demo reveal" id="omi">
-          <a class="shot" data-demo href="../omi/#stack" tabindex="-1" aria-hidden="true">
+          <a class="shot shot-omi" data-demo href="../omi/#stack" tabindex="-1" aria-hidden="true"><span class="shot-in">
             <img class="l" src="img/omi-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/omi-dark.webp" alt="" width="1120" height="700" loading="lazy">
+            <img class="d" src="img/omi-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
           <div class="tags"><span class="lbl acc">05 / TypeScript &middot; open source</span><span class="stars" data-repo="BasedHardware/omi"></span></div>
           <h3>A fix inside Omi</h3>

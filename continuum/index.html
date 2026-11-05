@@ -61,9 +61,10 @@
   .stats.sim{margin-top:28px}
 
   /* the pivot: three tiles, before, the turn, after */
-  .loop{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .loop{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:48px}
   .loop div{position:relative;padding:clamp(18px,1.8vw,24px);border-radius:var(--r-card);background:var(--tile);display:flex;flex-direction:column;min-height:180px}
-  .loop div:not(:last-child)::after{content:"\2192";position:absolute;right:-13px;top:50%;transform:translateY(-50%);z-index:1;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--bg);color:var(--acc);font:500 13px/1 var(--mono)}
+  /* the connector: a ringed arrow chip centred in the 48px gap, clear of both tiles */
+  .loop div:not(:last-child)::after{content:"\2192";position:absolute;right:-40px;top:50%;transform:translateY(-50%);z-index:1;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 1px var(--rule);color:var(--acc);font:500 16px/1 var(--sans)}
   .loop .who{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
   .loop b{display:block;font-weight:500;font-size:clamp(22px,1.9vw,28px);line-height:1.08;letter-spacing:-.025em;margin:0 0 8px;padding-top:32px;color:var(--ink)}
   .loop p{color:var(--body);font-size:14px}
@@ -188,9 +189,9 @@
 
   @media (max-width:760px){
     .split{grid-template-columns:1fr}
-    .loop{grid-template-columns:1fr;gap:10px}
+    .loop{grid-template-columns:1fr;gap:44px}
     .loop div{min-height:0}
-    .loop div:not(:last-child)::after{content:"\2193";right:auto;left:24px;top:auto;bottom:-18px;transform:none}
+    .loop div:not(:last-child)::after{content:"\2193";right:auto;left:50%;top:auto;bottom:-38px;transform:translateX(-50%)}
     .loop b{padding-top:14px}
     .stats{grid-template-columns:1fr 1fr}
     .stats div{padding:18px 14px 20px}
@@ -219,6 +220,13 @@
   @media (max-width:760px){[data-hole="scroll"] .hole-view{height:max(280px,calc(100vh - var(--bar) - 24px - var(--hole-chrome,150px)))}}
   @supports (height:100svh){@media (max-width:760px){[data-hole="scroll"] .hole-view{height:max(280px,calc(100svh - var(--bar) - 24px - var(--hole-chrome,150px)))}}}
   @media (max-width:560px){[data-cc="scrub"] .cc-h .cc-scrub-only{display:none}}
+  /* phones: the frame header stays on one line (short "Full screen", tighter tracking) */
+  @media (max-width:560px){
+    .hole-h>.mono{white-space:nowrap}
+    .hole-h>.mono,.hole-full{letter-spacing:.06em}
+    .hole-full-o{display:none}
+    .hole-full-s{display:inline}
+  }
   /* the smallest phones (320px): the rail sizes each step to its label, and the header keeps to one line */
   @media (max-width:360px){
     [data-hole="scroll"] .hole-rail{grid-template-columns:repeat(5,auto);gap:7px;padding:8px 10px 9px}

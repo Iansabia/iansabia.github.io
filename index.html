@@ -30,35 +30,39 @@
   /* Home only. Tokens, type, the top bar, pills, frames, cards, rows, section headers and the footer
      all come from assets/site.css, so the home page and every other page share one look. */
 
-  /* ---- intro: name, tagline and photo on the page ground ---- */
-  .hero{padding-top:clamp(36px,6vw,92px);cursor:crosshair}
+  /* ---- intro: one block. Name, tagline and links on the left, the range on the right, so the work
+     starts about a screen down. The photo sits in the name line like a portrait stamp. ---- */
+  .hero{padding-top:clamp(28px,4.4vw,72px);cursor:crosshair}
   .hero a,.hero button{cursor:pointer}
-  .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"text photo";gap:48px;align-items:end}
-  .hero-text{grid-area:text;min-width:0}
-  .hero-lbls{display:flex;flex-direction:column;align-items:flex-start;gap:9px;margin-bottom:clamp(22px,2.8vw,36px)}
-  .hero h1{font-weight:500;font-size:clamp(64px,9.4vw,140px);line-height:.9;letter-spacing:-.04em}
+  .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,4vw,56px);align-items:stretch}
+  .hero-text{min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .hero-lbls{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:clamp(22px,2.8vw,36px)}
+  .hero-lbls .lbl{font-size:12px;letter-spacing:.09em;text-wrap:balance}
+  .hero-lbls .lbl.now{font-size:13px;text-wrap:wrap}
+  .hero-lbls .nw{white-space:nowrap}
+  .hero h1{font-weight:500;font-size:clamp(64px,8.6vw,128px);line-height:.9;letter-spacing:-.04em}
   .hero h1 em{color:var(--body)}
   .hero .tag{margin-top:clamp(20px,2.4vw,30px);max-width:34ch;font-size:clamp(18px,1.5vw,22px);line-height:1.32;letter-spacing:-.01em;color:var(--body);text-wrap:pretty}
   .hero .tag b{color:var(--ink);font-weight:500}
   .hero .links{display:flex;flex-wrap:wrap;gap:10px;margin-top:clamp(22px,2.6vw,32px)}
-  .me{grid-area:photo;position:relative;display:block;width:clamp(200px,20vw,280px);aspect-ratio:4/5;border-radius:var(--r-frame);overflow:hidden;background:var(--tile)}
-  .me img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 35%}
+  .me{position:relative;display:inline-block;vertical-align:.06em;width:.78em;height:.78em;margin-left:.16em;border-radius:50%;overflow:hidden;background:var(--tile)}
+  .me img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
   .me::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px var(--rule);pointer-events:none}
 
-  /* ---- the range: the real shot tracer inside a night frame ---- */
-  .range-frame{margin-top:clamp(40px,5vw,64px)}
+  /* ---- the range: the real shot tracer inside a night frame, beside the name ---- */
+  .range-frame{display:flex;flex-direction:column;min-width:0}
   .range-frame .frame-h > :last-child{white-space:nowrap}
   .range-frame .frame-h b{color:var(--nacc);font-weight:500;margin-left:4px}
-  .range-body{position:relative;height:clamp(260px,32vw,420px);touch-action:manipulation}
+  .range-body{position:relative;flex:1;min-height:clamp(260px,26vw,380px);touch-action:manipulation}
   #tracer{position:absolute;inset:0;width:100%;height:100%;display:block}
   .readout{position:absolute;right:clamp(16px,2vw,26px);bottom:clamp(14px,1.8vw,22px);display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;pointer-events:none}
   .shotread{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
   .shotread .big{display:flex;align-items:baseline;gap:7px;color:var(--nink)}
-  .shotread .big b{font-family:var(--mono);font-weight:500;font-size:clamp(36px,3.9vw,56px);line-height:1;letter-spacing:-.03em;font-feature-settings:"zero" 1,"tnum" 1}
+  .shotread .big b{font-family:var(--mono);font-weight:500;font-size:clamp(34px,3.4vw,48px);line-height:1;letter-spacing:-.03em;font-feature-settings:"zero" 1,"tnum" 1}
   .shotread .big i,.shotread .big span{font-size:16px;color:var(--nbody)}
   .shotread small{font-size:13px;line-height:1.3;color:var(--nbody)}
   .range-frame .frame-f dd{color:var(--nink)}
-  .range-frame .frame-f > *{padding:16px 18px 18px}
+  .range-frame .frame-f > *{padding:14px 18px 16px}
 
   /* ---- Currently ---- */
   .rrow .when{white-space:nowrap}
@@ -111,6 +115,8 @@
 
   /* ---- Work and Projects teasers: cards with a real screenshot ---- */
   .card .thumb .d,:root[data-theme="dark"] .card .thumb .l{display:none}
+  /* the Fantasy shot is a phone chat: trim the phone's dark edges and its header band */
+  .card[href$="#fantasy"] .thumb img{transform:scale(1.07);transform-origin:50% 88%}
   :root[data-theme="dark"] .card .thumb .d{display:block}
   .card-txt{display:flex;flex-direction:column;gap:10px}
   .card .stat{line-height:1.45}
@@ -125,9 +131,13 @@
   .card.side .thumb{grid-column:1;grid-row:1/span 2;align-self:start}
   .card.side .card-txt{grid-column:2;grid-row:1}
   .card.side .card-go{grid-column:2;grid-row:2}
-  .card.wide{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);padding:clamp(20px,2.4vw,32px)}
-  .card.wide .thumb{grid-column:2;grid-row:1/span 2}
-  .card.wide .card-txt,.card.wide .card-go{grid-column:1}
+  /* the wide SwapChain tile: the words and "See it" sit together, centred against the film still */
+  .card.wide{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:1fr auto auto 1fr;padding:clamp(20px,2.4vw,32px)}
+  .card.wide .thumb{grid-column:2;grid-row:1/-1;align-self:center}
+  .card.wide .card-txt{grid-column:1;grid-row:2;gap:14px}
+  .card.wide .card-go{grid-column:1;grid-row:3;padding-top:clamp(14px,2vw,26px)}
+  .card.wide .card-top{order:-1;margin-bottom:4px}
+  .card.wide p.stat{font-size:14px}
   .card.wide h3{font-size:clamp(32px,3.6vw,52px);line-height:1.02;letter-spacing:-.03em}
   .card.wide p{font-size:clamp(16px,1.3vw,18px);max-width:36ch}
   .see-all{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin-top:24px}
@@ -156,8 +166,9 @@
 
   /* ---- Milan: the departures board in a night frame, the Duolingo note beside it ---- */
   .duo{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:16px;align-items:stretch}
-  .note{display:flex;flex-direction:column;gap:16px;padding:clamp(20px,2.4vw,32px);border-radius:var(--r-card);background:var(--tile)}
-  .note .big-p{font-size:clamp(20px,2vw,26px);line-height:1.3;letter-spacing:-.02em;color:var(--ink);text-wrap:pretty}
+  /* side tiles: the label up top, the words set big at the foot, like the caddy's quote frames */
+  .note{display:flex;flex-direction:column;justify-content:space-between;gap:24px;padding:clamp(20px,2.4vw,32px);border-radius:var(--r-card);background:var(--tile)}
+  .note .big-p{font-size:clamp(22px,2.3vw,30px);line-height:1.22;letter-spacing:-.025em;color:var(--ink);text-wrap:pretty}
   .trip{display:flex;flex-direction:column;gap:24px;padding:22px 18px 20px;min-height:300px}
   .dep{display:grid;grid-template-columns:auto 1fr auto 1.2fr;gap:14px;align-items:end}
   .dep > div{display:flex;flex-direction:column;gap:4px}
@@ -189,10 +200,11 @@
 
   /* ---- Off the clock: interests as ghost pills (the photo ones open the lightbox) ---- */
   .duo.off{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
-  .likes{display:flex;flex-direction:column;gap:18px;padding:clamp(20px,2.4vw,32px);border-radius:var(--r-card);box-shadow:inset 0 0 0 1px var(--rule)}
+  .likes{display:flex;flex-direction:column;justify-content:space-between;gap:24px;padding:clamp(20px,2.4vw,32px);border-radius:var(--r-card);background:var(--tile)}
+  .likes li{background:var(--bg)}
   .likes ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
   .likes li{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:var(--r-pill);box-shadow:inset 0 0 0 1px var(--rule);font-size:15px;line-height:1;cursor:default;transition:background-color .25s,color .25s,box-shadow .25s,transform .25s var(--ease)}
-  .note p.small{font-size:16px;line-height:1.45}
+  .note p.mid{font-size:clamp(18px,1.6vw,21px);line-height:1.32;letter-spacing:-.015em;color:var(--ink);text-wrap:pretty}
   .aco-slot:empty{display:none}
   @media (max-width:860px){.duo.off{grid-template-columns:minmax(0,1fr)}}
 
@@ -213,12 +225,17 @@
   @media (hover:hover){footer .replay-intro:hover{color:var(--ink);text-decoration-color:var(--line)}}
 
   /* ---- phones ---- */
-  @media (max-width:760px){
-    .hero-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"photo" "text";gap:20px}
-    .me{width:88px;height:88px;aspect-ratio:1;border-radius:50%}
+  @media (max-width:900px){
+    .hero-grid{grid-template-columns:minmax(0,1fr);gap:clamp(28px,5vw,40px)}
+    .range-body{flex:none;height:clamp(220px,40vw,320px);min-height:0}
   }
   @media (max-width:600px){
-    .range-body{height:240px}
+    .hero-lbls{gap:8px;margin-bottom:20px}
+    .hero-lbls .lbl{font-size:11.5px;letter-spacing:.06em}
+    .hero-lbls .lbl.now{font-size:12px}
+    .range-body{height:220px}
+    /* the hero label above already says what's Now, so phones keep only Next */
+    .range-frame .frame-f > :first-child{display:none}
     .range-frame .frame-f{grid-template-columns:minmax(0,1fr)}
     .range-frame .frame-f > *{padding:14px}
     .shotread .big b{font-size:32px}
@@ -278,10 +295,10 @@
     <div class="hero-grid">
       <div class="hero-text">
         <div class="hero-lbls">
-          <span class="lbl now">Looking for a Summer 2027 product management internship</span>
-          <span class="lbl">B.S. Data Science &middot; Boston University &middot; Class of 2028</span>
+          <span class="lbl now"><span>Looking for a <span class="nw">Summer 2027</span> <span class="nw">product management internship</span></span></span>
+          <span class="lbl"><span class="nw">B.S. Data Science &middot;</span> <span class="nw">Boston University &middot;</span> <span class="nw">Class of 2028</span></span>
         </div>
-        <h1>Ian<br><em>Sabia</em></h1>
+        <h1>Ian<span class="me"><img src="ian.jpg" alt="" width="480" height="480"></span><br><em>Sabia</em></h1>
         <p class="tag">Data science at Boston University. <b>I build AI products people actually use, then check that they tell the truth.</b></p>
         <div class="links">
           <a class="pill" href="mailto:iansabia@bu.edu">Email</a>
@@ -289,22 +306,21 @@
           <a class="pill ghost" href="https://github.com/Iansabia" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
       </div>
-      <span class="me"><img src="ian.jpg" alt="Ian Sabia" width="480" height="480"></span>
-    </div>
 
-    <div class="frame night range-frame">
-      <div class="frame-h"><span class="lbl" id="hint" data-touch="Tap anywhere to hit a shot">Click anywhere to hit a shot</span><span class="lbl">Shots hit<b id="shotCount">0</b></span></div>
-      <div class="range-body" id="heroMain">
-        <canvas id="tracer" aria-hidden="true"></canvas>
-        <div class="readout">
-          <span class="lbl">Last shot</span>
-          <div class="shotread" id="shotread" aria-live="polite"><span class="big"><span>About</span><b>269</b><i>yd</i></span><small>mine, for real</small></div>
+      <div class="frame night range-frame">
+        <div class="frame-h"><span class="lbl" id="hint" data-touch="Tap anywhere to hit a shot">Click anywhere to hit a shot</span><span class="lbl">Shots hit<b id="shotCount">0</b></span></div>
+        <div class="range-body" id="heroMain">
+          <canvas id="tracer" aria-hidden="true"></canvas>
+          <div class="readout">
+            <span class="lbl">Last shot</span>
+            <div class="shotread" id="shotread" aria-live="polite"><span class="big"><span>About</span><b>269</b><i>yd</i></span><small>mine, for real</small></div>
+          </div>
         </div>
+        <dl class="frame-f">
+          <div><dt class="lbl">Now</dt><dd>Looking for a Summer 2027 product management internship</dd></div>
+          <div><dt class="lbl">Next</dt><dd>Spring 2027 on exchange at Bocconi, Milan</dd></div>
+        </dl>
       </div>
-      <dl class="frame-f">
-        <div><dt class="lbl">Now</dt><dd>Looking for a Summer 2027 product management internship</dd></div>
-        <div><dt class="lbl">Next</dt><dd>Spring 2027 on exchange at Bocconi, Milan</dd></div>
-      </dl>
     </div>
   </section>
 
@@ -324,7 +340,7 @@
   </section>
 
   <section class="block" id="work">
-    <div class="shead reveal"><div><span class="lbl acc">02 / Work</span><h2>Work</h2></div><p class="sub">Three things real people depend on. Each one has a small toy you can play with.</p></div>
+    <div class="shead reveal"><div><span class="lbl acc">02 / Work</span><h2>Work</h2></div><p class="sub long">Three things real people depend on. Each one has a small toy you can play with.</p></div>
     <div class="cards3 reveal">
       <a class="card" href="work/#medtronic">
         <span class="thumb"><img class="l" src="projects/img/race-light.webp" alt="" width="1120" height="700" loading="lazy"><img class="d" src="projects/img/race-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
@@ -358,7 +374,7 @@
   </section>
 
   <section class="block" id="projects">
-    <div class="shead reveal"><div><span class="lbl acc">03 / Projects</span><h2>Projects</h2></div><p class="sub">Smaller things I built because I wanted them to exist. Each one has a demo you can try.</p></div>
+    <div class="shead reveal"><div><span class="lbl acc">03 / Projects</span><h2>Projects</h2></div><p class="sub long">Smaller things I built because I wanted them to exist. Each one has a demo you can try.</p></div>
     <div class="pgrid reveal">
       <a class="card side wide" href="projects/#swapchain">
         <span class="thumb"><img src="projects/img/film.webp" alt="" width="1120" height="700" loading="lazy"></span>
@@ -366,6 +382,7 @@
           <div class="card-top"><span class="lbl acc">Product &middot; DS229 team project</span><span class="lbl">01</span></div>
           <h3>SwapChain</h3>
           <p>A room-swap marketplace for BU that finds loops of students who can all move at once, not just pairs.</p>
+          <p class="stat">Team of <b>4</b> &middot; <b>3D</b> campus map &middot; <b>2</b>-min film</p>
         </div>
         <span class="card-go"><span>See it</span><span class="arrow-chip" aria-hidden="true"><svg><use href="#i-arr"/></svg></span></span>
       </a>
@@ -394,7 +411,7 @@
   </section>
 
   <section class="block" id="milan">
-    <div class="shead reveal"><div><span class="lbl acc">04 / Milan</span><h2>Where to next</h2></div><p class="sub">Milan. I was selected for BU's exchange program at Bocconi for Spring 2027.</p></div>
+    <div class="shead reveal"><div><span class="lbl acc">04 / Milan</span><h2>Where to next</h2></div><p class="sub long">Milan. I was selected for BU's exchange program at Bocconi for Spring 2027.</p></div>
     <div class="duo reveal">
       <div class="frame night" aria-label="Countdown to Milan">
         <div class="frame-h"><span class="lbl">Departures</span><span class="lbl">Milan<b id="milanTime">--:--</b></span></div>
@@ -439,13 +456,13 @@
       </div>
       <div class="note">
         <span class="lbl acc">KoalaACO</span>
-        <p class="small">Before any of this, I co-founded KoalaACO in high school: a checkout service that ran sneaker bots for our members. It grew to 300+ paying customers.</p>
+        <p class="mid">Before any of this, I co-founded KoalaACO in high school: a checkout service that ran sneaker bots for our members. It grew to 300+ paying customers.</p>
       </div>
     </div>
   </section>
 
   <section class="block" id="contact">
-    <div class="shead reveal"><div><span class="lbl acc">06 / Contact</span><h2>Say hello</h2></div><p class="sub">I'm looking for a product management internship for Summer 2027, available from June 1. Always happy to talk about AI products, data, or golf.</p></div>
+    <div class="shead reveal"><div><span class="lbl acc">06 / Contact</span><h2>Say hello</h2></div><p class="sub long">I'm looking for a product management internship for Summer 2027, available from June 1. Always happy to talk about AI products, data, or golf.</p></div>
     <div class="rrows reveal">
       <a class="rrow crow" href="mailto:iansabia@bu.edu"><span class="lbl">Email</span><b>iansabia@bu.edu</b><span class="arrow-chip" aria-hidden="true"><svg><use href="#i-arr"/></svg></span></a>
       <a class="rrow crow" href="https://linkedin.com/in/iansabia" target="_blank" rel="noopener noreferrer"><span class="lbl">LinkedIn</span><b>/in/iansabia</b><span class="arrow-chip" aria-hidden="true"><svg><use href="#i-ext"/></svg></span></a>
@@ -477,8 +494,9 @@
   });
   /* pinned header: a hairline once you scroll, a menu on phones, and the section you're in underlined */
   const topBar = document.querySelector('.top'), menuBtn = document.getElementById('menuBtn'), menu = document.getElementById('menu');
-  const navLinks = [...document.querySelectorAll('.top nav a[href^="#"], .menu a')];
-  const mark = (id) => navLinks.forEach((a) => (a.getAttribute('href') === '#' + id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+  const navLinks = [...document.querySelectorAll('.top nav .links a, .menu a')];
+  /* Work and Projects teasers link out to their own pages, so their nav links light up for those sections */
+  const mark = (id) => navLinks.forEach((a) => { const h = a.getAttribute('href'); (id && (h === '#' + id || h === id + '/') ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')); });
   const stick = () => { topBar.classList.toggle('stuck', scrollY > 4); if (scrollY < 200) mark(''); };
   addEventListener('scroll', stick, { passive: true }); stick();
   const setMenu = (open) => { menu.classList.toggle('open', open); menuBtn.setAttribute('aria-expanded', open); };
@@ -487,7 +505,7 @@
   document.addEventListener('click', (e) => { if (!menu.contains(e.target)) setMenu(false); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.classList.contains('open')) { setMenu(false); menuBtn.focus(); } });
   const spy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) mark(e.target.id); }), { rootMargin: '-45% 0px -50% 0px' });
-  ['currently', 'milan', 'off', 'contact'].forEach((id) => { const sec = document.getElementById(id); if (sec) spy.observe(sec); });
+  ['currently', 'work', 'projects', 'milan', 'off', 'contact'].forEach((id) => { const sec = document.getElementById(id); if (sec) spy.observe(sec); });
 
   /* phones get "tap", everyone else gets "click" and "hover" */
   const coarse = matchMedia('(pointer: coarse)').matches;
@@ -642,7 +660,7 @@
       '<div class="fband"><span class="lbl">' + t.label + '</span><b>' + t.w + '&ndash;' + t.l + '</b></div>' +
       '<div class="fbody"><span class="fsub">' + t.sub + '</span>' +
       '<div class="fdiff"><strong class="' + (diff >= 0 ? 'up' : 'down') + '">' + (diff >= 0 ? '+' : '&minus;') + Math.abs(diff).toFixed(1) + '</strong><span>point<br>differential</span></div>' +
-      '<div class="weeks">' + t.hist.map((h) => '<button class="wk ' + h[1] + '" data-h=\'' + JSON.stringify(h) + '\' aria-label="Week ' + h[0] + ': ' + (h[1] === 'W' ? 'won' : 'lost') + ' ' + h[2] + ' to ' + h[3] + '">' + h[1] + '</button>').join('') + '</div>' +
+      '<div class="weeks" role="group" aria-label="' + t.label + ' weeks, use the arrow keys">' + t.hist.map((h, i) => '<button class="wk ' + h[1] + '" tabindex="' + (i === t.hist.length - 1 ? 0 : -1) + '" data-h=\'' + JSON.stringify(h) + '\' aria-label="Week ' + h[0] + ': ' + (h[1] === 'W' ? 'won' : 'lost') + ' ' + h[2] + ' to ' + h[3] + '">' + h[1] + '</button>').join('') + '</div>' +
       '<div class="fread">Last: <b>' + last[1] + ' ' + last[2].toFixed(1) + '&ndash;' + last[3].toFixed(1) + '</b>' + (streak > 1 ? ' &middot; ' + (last[1] === 'W' ? 'won ' : 'lost ') + streak + ' straight' : '') + '</div>' +
       '<div class="fline"><span>Rank<b>' + ord(t.rank) + ' of ' + t.n + '</b></span><span>Pts for<b>' + t.pf.toFixed(1) + '</b></span><span>Against<b>' + t.pa.toFixed(1) + '</b></span></div></div>';
     const read = card.querySelector('.fread'), base = read.innerHTML;
@@ -651,6 +669,14 @@
       const show = () => { read.innerHTML = 'Week ' + h[0] + ': <b>' + h[1] + ' ' + h[2].toFixed(1) + '&ndash;' + h[3].toFixed(1) + '</b>'; };
       b.addEventListener('mouseenter', show); b.addEventListener('focus', show);
       b.addEventListener('mouseleave', () => { read.innerHTML = base; }); b.addEventListener('blur', () => { read.innerHTML = base; });
+    });
+    /* one Tab stop per card: the latest week. Arrow keys walk the season, so keyboard users don't tab through 24 chips */
+    const wks = [...card.querySelectorAll('.wk')];
+    card.querySelector('.weeks').addEventListener('keydown', (e) => {
+      const i = wks.indexOf(document.activeElement); if (i < 0) return;
+      const j = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? Math.min(wks.length - 1, i + 1) : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? Math.max(0, i - 1) : e.key === 'Home' ? 0 : e.key === 'End' ? wks.length - 1 : -1;
+      if (j < 0) return;
+      e.preventDefault(); wks[i].tabIndex = -1; wks[j].tabIndex = 0; wks[j].focus();
     });
     fwrap.appendChild(card);
   });

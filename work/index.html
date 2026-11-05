@@ -25,27 +25,41 @@
 <style>
   /* Work page: the three cases, stacked under a sticky segmented jump bar. Each case is prose on the left
      and its toy in a rounded frame on the right (the caddy's hole figure). Shared pieces come from assets/site.css. */
-  html{scroll-padding-top:calc(var(--bar) + 100px)}
+  html{scroll-padding-top:calc(var(--bar) + 76px)}
   .page-hero{padding-bottom:clamp(28px,3.4vw,44px)}
   .ph{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:clamp(20px,4.5vw,68px);align-items:end}
   .page-hero h1{margin:8px 0 0}
   .page-hero h1 em{color:var(--ink)}
-  .ph .lede{justify-self:end;text-align:right;max-width:30ch;padding-bottom:.35em}
+  .ph .lede{justify-self:end;text-align:left;text-wrap:pretty;max-width:30ch;padding-bottom:.35em}
   @media (max-width:860px){.ph{grid-template-columns:minmax(0,1fr);gap:16px}.ph .lede{justify-self:start;text-align:left;padding-bottom:0}}
 
-  /* jump bar: a segmented control that rides under the top bar; the case in view is the filled segment */
+  /* jump bar: a segmented control that rides under the top bar; the case in view is the filled segment.
+     The band is a solid strip flush with the top bar, so nothing on the page shows through or around it.
+     Once it sticks (.stuck, set in work.js) the titles fold away and the control shrinks inside the band's
+     fixed height, so the page under it never jumps. */
   #cases{padding-top:clamp(24px,3vw,36px)}
-  .cases{position:sticky;top:calc(var(--bar) + 8px);z-index:30;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;margin-bottom:clamp(48px,6vw,84px);
-    border-radius:var(--r-pill);background:color-mix(in srgb,var(--tile) 96%,transparent);box-shadow:0 0 0 .5px var(--rule);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-  .case-tab{display:flex;flex-direction:column;justify-content:center;gap:5px;min-width:0;min-height:56px;padding:9px 22px 10px;border-radius:var(--r-pill);color:var(--body);text-decoration:none;transition:background-color .3s,color .3s}
+  .cases-band{--seg:56px;position:sticky;top:var(--bar);z-index:30;height:calc(var(--seg) + 16px);margin-bottom:clamp(40px,5vw,76px);pointer-events:none}
+  .cases-band::before{content:"";position:absolute;top:0;left:calc(50% - 50vw);right:calc(50% - 50vw);height:calc(var(--seg) + 16px);background:var(--bg);
+    border-bottom:1px solid transparent;opacity:0;transition:opacity .25s,height .3s var(--ease),border-color .25s}
+  .cases-band.stuck::before{opacity:1;height:calc(var(--segs) + 12px);border-bottom-color:var(--rule)}
+  .cases{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;margin-top:8px;pointer-events:auto;
+    border-radius:var(--r-pill);background:var(--tile);transition:margin-top .3s var(--ease)}
+  .cases-band.stuck .cases{margin-top:6px}
+  .case-tab{display:flex;flex-direction:column;justify-content:center;gap:5px;min-width:0;min-height:calc(var(--seg) - 8px);padding:7px 22px 8px;border-radius:var(--r-pill);color:var(--body);text-decoration:none;transition:background-color .3s,color .3s,min-height .3s var(--ease)}
   .case-tab .lbl{flex:none;color:var(--acc);transition:color .3s}
   .case-tab .lbl i{font-style:normal;margin-right:8px;opacity:.7}
   .case-tab b{min-width:0;font-weight:500;font-size:15px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cases-band{--segs:44px}
+  .cases-band.stuck .case-tab{min-height:calc(var(--segs) - 8px);align-items:center;padding-top:4px;padding-bottom:4px}
+  .cases-band.stuck .case-tab b{display:none}
   @media (hover:hover){.case-tab:not([aria-current]):hover{background:var(--bg);color:var(--ink)}}
   .case-tab[aria-current="true"]{background:var(--ink);color:var(--bg)}
   .case-tab[aria-current="true"] .lbl{color:color-mix(in srgb,var(--bg) 72%,transparent)}
-  @media (max-width:1180px){.case-tab b{display:none}.case-tab{align-items:center;min-height:48px;padding:6px 12px}}
-  @media (max-width:600px){.cases{top:calc(var(--bar) + 6px);gap:2px;padding:3px}.case-tab{min-height:44px;padding:4px 6px}.case-tab .lbl i{display:none}}
+  /* the top bar goes solid too while the band is stuck, so the two read as one strip with one hairline */
+  body.cases-stuck header.top::before{background:var(--bg);border-bottom-color:transparent}
+  @media (max-width:1180px){.cases-band{--seg:48px}.case-tab b{display:none}.case-tab{align-items:center;padding:6px 12px}}
+  @media (max-width:600px){.cases-band,.cases-band.stuck{--seg:44px;--segs:44px}.cases{gap:2px;padding:3px}.cases-band.stuck .cases{margin-top:6px}.case-tab{padding:4px 6px}.case-tab .lbl i{display:none}}
+  @media (prefers-reduced-motion:reduce){.cases-band::before,.cases,.case-tab{transition:none}}
 
   /* a case: prose 5, toy 7 */
   .entry{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(28px,3vw,40px) clamp(28px,4.5vw,72px);align-items:stretch;padding:clamp(72px,9vw,128px) 0;border-top:1px solid var(--rule)}
@@ -264,11 +278,11 @@
     </header>
 
     <section class="block" id="cases">
-    <nav class="cases reveal" aria-label="Jump to a case">
+    <div class="cases-band reveal"><nav class="cases" aria-label="Jump to a case">
       <a class="case-tab" href="#medtronic"><span class="lbl"><i>01</i>Medtronic</span><b>An AI agent for a plant's quality team</b></a>
       <a class="case-tab" href="#continuum"><span class="lbl"><i>02</i>Continuum</span><b>An AI golf caddy on your phone</b></a>
       <a class="case-tab" href="#nvidia"><span class="lbl"><i>03</i>NVIDIA</span><b>A self-driving model that explains itself</b></a>
-    </nav>
+    </nav></div>
 
     <div class="work">
       <article class="entry" id="medtronic" aria-label="Medtronic">

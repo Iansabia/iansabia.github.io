@@ -157,8 +157,22 @@
   const jumps = [...document.querySelectorAll('.case-tab')];
   const markCase = (id) => jumps.forEach((j) => (j.getAttribute('href') === '#' + id ? j.setAttribute('aria-current', 'true') : j.removeAttribute('aria-current')));
   markCase('medtronic');
-  const caseSpy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) markCase(e.target.id); }), { rootMargin: '-40% 0px -55% 0px' });
-  document.querySelectorAll('.entry').forEach((el) => caseSpy.observe(el));
+  /* the band goes solid once it sticks under the top bar, and the case that fills most of the screen
+     below the two bars is the one marked (so the Medtronic stats still count as Medtronic) */
+  const band = document.querySelector('.cases-band'), entries = [...document.querySelectorAll('.entry')];
+  let spyQueued = false;
+  const spyCases = () => {
+    spyQueued = false;
+    const barH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bar')) || 64;
+    const stuck = band.getBoundingClientRect().top <= barH + 0.5 && scrollY > 0;
+    band.classList.toggle('stuck', stuck); document.body.classList.toggle('cases-stuck', stuck);
+    const top = barH + 56, bottom = innerHeight;
+    let best = null, bestH = 0;
+    entries.forEach((el) => { const r = el.getBoundingClientRect(), t0 = el.firstElementChild.getBoundingClientRect().top, h = Math.min(bottom, r.bottom) - Math.max(top, t0); if (h > bestH) { bestH = h; best = el; } });
+    if (best) markCase(best.id);
+  };
+  const queueSpy = () => { if (!spyQueued) { spyQueued = true; requestAnimationFrame(spyCases); } };
+  addEventListener('scroll', queueSpy, { passive: true }); addEventListener('resize', queueSpy); spyCases();
 
   /* car game: real answers from my fine-tuned Alpamayo 1.5 on four public dashcam clips (rt/public_clip.py) */
   const OPTS = ['Keep going', 'Slow down', 'Stop', 'Steer around'];
