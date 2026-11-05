@@ -67,6 +67,8 @@ header.top nav .links a[aria-current="true"]{color:var(--ink);background:var(--t
 @media (hover:hover){header.top nav .links a:hover{color:var(--ink);background:var(--tile)}}
 .brand{display:flex;align-items:center;gap:9px;font-size:17px;letter-spacing:-.01em;color:var(--ink);flex:none}
 .brand svg{width:24px;height:24px;border-radius:var(--r-chip);flex:none}
+.brand svg{border-radius:50%;background:url(/assets/ian-mark.jpg) center/cover}
+.brand svg>*{display:none}
 /* at night the tile is the same purple-black as the page, so lift it a step and ring it so the mark keeps its square */
 :root[data-theme="dark"] .brand svg rect{fill:#1B1533}
 :root[data-theme="dark"] .brand svg{box-shadow:0 0 0 1px var(--rule)}

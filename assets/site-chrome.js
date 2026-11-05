@@ -57,7 +57,7 @@ html[data-theme="dark"] .sc-chrome{--b:#0B0817;--t:#15102A;--i:#EFEAF8;--y:#A79F
 .sc-top{position:relative;height:var(--sc-bar);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 clamp(16px,4vw,52px);max-width:1304px;margin:0 auto}
 .sc-left{display:flex;align-items:center;gap:12px;min-width:0}
 .sc-brand{display:flex;align-items:center;gap:9px;white-space:nowrap;font-size:17px;letter-spacing:-.01em}
-.sc-brand svg{width:24px;height:24px;flex:none;border-radius:8px}
+.sc-brand svg{width:24px;height:24px;flex:none;border-radius:50%;background:url(/assets/ian-mark.jpg) center/cover}.sc-brand svg>*{display:none}
 html[data-theme="dark"] .sc-brand svg rect{fill:#1B1533}
 html[data-theme="dark"] .sc-brand svg{box-shadow:0 0 0 1px var(--r)}
 .sc-nav{display:flex;align-items:center;gap:4px}
