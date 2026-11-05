@@ -1,10 +1,8 @@
-/* Work page toys (moved from the home page as they were): the counters and bars, the lookup race,
-   the range, the jump bar, the car game and the live leaderboard rank. Theme, menu and reveals come from assets/site.js. */
+/* Work page toys: the counters and bars, the lookup race, the 3D example hole, the jump bar, the car game
+   and the live leaderboard rank. Theme, menu and reveals come from assets/site.js. */
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const root = document.documentElement;
-  const css = (n) => getComputedStyle(document.getElementById('range') || root).getPropertyValue(n).trim(); // the range frame sets its own night colors
-  const coarse = matchMedia('(pointer: coarse)').matches;
 
   /* blocks that animate once they come on screen */
   const handlers = {};
@@ -35,8 +33,6 @@
     const step = (t) => { const p = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - p, 3); cb(a + (b - a) * e); if (p < 1) requestAnimationFrame(step); };
     requestAnimationFrame(step);
   }
-  /* the range is drawn in the theme's colors */
-  document.addEventListener('themechange', () => drawRange());
 
   /* lookup race: 15 min in each of 5 systems by hand vs about 60 s for the agent, both at 300x */
   const raceBtn = document.getElementById('raceBtn');
@@ -65,92 +61,63 @@
     requestAnimationFrame(step);
   });
 
-  /* range: the caddy learns your miss */
-  const svg = document.getElementById('rangeSvg'), rangeEl = document.getElementById('range'), caddy = document.getElementById('caddyTxt');
-  const NS = 'http://www.w3.org/2000/svg', FLAG = { x: 200, y: 70 }, TEE = { x: 200, y: 318 }, YD = 248 / 150; // px per yard along the line
-  let bias, balls, advised;
-  function newGolfer() {
-    const side = Math.random() < 0.5 ? -1 : 1;
-    bias = { x: side * (9 + Math.random() * 8), y: -(3 + Math.random() * 8) }; // yards: + right, - short
-    balls = []; advised = false;
-    caddy.innerHTML = (coarse ? 'Tap' : 'Click') + " where you want to aim. Hit three and I'll tell you what you're doing.<small>150 yards to the flag.</small>";
-    drawRange();
-  }
-  const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); (parent || svg).appendChild(n); return n; };
-  function drawRange() {
-    if (!svg) return;
-    svg.innerHTML = '';
-    const tile = css('--tile'), ghost = css('--ghost'), rule = css('--rule'), body = css('--body'), acc = css('--acc'), warm = css('--warm'), ink = css('--ink');
-    for (let i = 0; i < 9; i++) el('rect', { x: 0, y: i * 38, width: 400, height: 38, fill: i % 2 ? tile : ghost, opacity: .9 });
-    [50, 100, 150].forEach((yd) => {
-      const y = TEE.y - yd * YD;
-      el('line', { x1: 0, x2: 400, y1: y, y2: y, stroke: rule, 'stroke-dasharray': '3 6' });
-      const t = el('text', { x: 8, y: y - 5, fill: body, 'font-family': 'JetBrains Mono, monospace', 'font-size': 10 }); t.textContent = yd + ' YD';
+  /* the 3D example hole (continuum/hole/, the same one /continuum/ shows). It loads when it comes near, plays by itself
+     once most of it is on screen, pauses when it leaves and picks up again when it comes back (unless the reader paused
+     it). Its own control bar has play, pause and the steps. It follows this page's theme. */
+  (() => {
+    const view = document.querySelector('#ccHole .hole-view'), frame = document.getElementById('ccHoleFrame');
+    if (!view || !frame) return;
+    const theme = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');
+    const send = (msg) => { try { frame.contentWindow.postMessage(msg, location.origin); } catch (e) {} };
+    const doc = () => { try { return frame.contentDocument; } catch (e) { return null; } };
+    const isPlaying = () => { const d = doc(); return !!(d && d.documentElement.classList.contains('playing')); };
+    let loaded = false, ready = false, inView = false, started = false, resume = false;
+    const show = () => view.classList.add('is-on');
+    const play = () => { // same origin: press the hole's own play button, so its controls stay in step
+      const d = doc(); if (!d || reduce) return;
+      const btn = d.documentElement.classList.contains('started') ? d.getElementById('play-btn') : d.getElementById('start-btn');
+      if (btn && !isPlaying()) { btn.click(); started = true; }
+    };
+    addEventListener('message', (e) => {
+      if (e.origin !== location.origin || e.source !== frame.contentWindow || !e.data || e.data.type !== 'cc-hole-ready') return;
+      ready = true; show();
+      if (inView && !started) play();
     });
-    el('circle', { cx: FLAG.x, cy: FLAG.y, r: 26, fill: 'none', stroke: rule, 'stroke-width': 1.5 });
-    el('circle', { cx: FLAG.x, cy: FLAG.y, r: 12, fill: 'none', stroke: rule, 'stroke-width': 1.5 });
-    el('line', { x1: FLAG.x, y1: FLAG.y, x2: FLAG.x, y2: FLAG.y - 30, stroke: ink, 'stroke-width': 2 });
-    el('path', { d: `M${FLAG.x} ${FLAG.y - 30} l18 6 l-18 6 z`, fill: warm });
-    el('rect', { x: TEE.x - 14, y: TEE.y - 4, width: 28, height: 8, fill: body, rx: 2 });
-    (balls || []).forEach((b, i) => {
-      const last = i === balls.length - 1;
-      if (last) el('path', { d: `M${TEE.x} ${TEE.y} Q ${(TEE.x + b.x) / 2} ${b.y - 60} ${b.x} ${b.y}`, fill: 'none', stroke: css('--line'), 'stroke-width': 2, opacity: .9, class: 'arc' });
-      el('line', { x1: b.ax - 4, y1: b.ay - 4, x2: b.ax + 4, y2: b.ay + 4, stroke: body, 'stroke-width': 1.2, opacity: last ? .9 : .35 });
-      el('line', { x1: b.ax - 4, y1: b.ay + 4, x2: b.ax + 4, y2: b.ay - 4, stroke: body, 'stroke-width': 1.2, opacity: last ? .9 : .35 });
-      el('circle', { cx: b.x, cy: b.y, r: last ? 6 : 4.5, fill: b.good ? acc : warm, stroke: css('--bg'), 'stroke-width': 1.5, opacity: last ? 1 : .75 });
-    });
-    hoverG = el('g', { 'pointer-events': 'none' }); drawHover();
-  }
-  /* a faint dotted line from your pointer to the pin, with the yardage */
-  let hoverG = null, hoverAt = null;
-  function drawHover() {
-    if (!hoverG) return;
-    hoverG.innerHTML = '';
-    if (!hoverAt) return;
-    const a = hoverAt, yd = Math.hypot(a.x - FLAG.x, a.y - FLAG.y) / YD, body = css('--body'), ink = css('--ink');
-    el('line', { x1: a.x, y1: a.y, x2: FLAG.x, y2: FLAG.y, stroke: body, 'stroke-width': 1.2, 'stroke-dasharray': '1.5 4', 'stroke-linecap': 'round', opacity: .8 }, hoverG);
-    el('circle', { cx: a.x, cy: a.y, r: 3, fill: 'none', stroke: ink, 'stroke-width': 1.2 }, hoverG);
-    const label = yd < 1.5 ? 'On the pin' : Math.round(yd) + ' yd from the pin';
-    const lx = Math.max(6, Math.min(394, a.x + (a.x > 300 ? -10 : 10))), ly = Math.max(14, a.y - 10);
-    const bg = el('rect', { y: ly - 11, height: 15, rx: 2, fill: css('--bg'), opacity: .92 }, hoverG);
-    const t = el('text', { x: lx, y: ly, fill: ink, 'font-family': 'JetBrains Mono, monospace', 'font-size': 10.5, 'text-anchor': a.x > 300 ? 'end' : 'start' }, hoverG);
-    t.textContent = label;
-    const tw = t.getComputedTextLength();
-    bg.setAttribute('x', (a.x > 300 ? lx - tw : lx) - 4); bg.setAttribute('width', tw + 8);
-  }
-  rangeEl.addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse') return;
-    const a = toSvg(e);
-    hoverAt = a.y > TEE.y - 20 || a.x < 0 || a.x > 400 ? null : a; drawHover();
-  });
-  rangeEl.addEventListener('pointerleave', () => { hoverAt = null; drawHover(); });
-  function toSvg(e) {
-    const r = svg.getBoundingClientRect(), s = Math.min(r.width / 400, r.height / 340);
-    const ox = (r.width - 400 * s) / 2, oy = (r.height - 340 * s) / 2;
-    return { x: (e.clientX - r.left - ox) / s, y: (e.clientY - r.top - oy) / s };
-  }
-  rangeEl.addEventListener('click', (e) => {
-    const a = toSvg(e); if (a.y > TEE.y - 20 || a.x < 0 || a.x > 400) return;
-    const g = () => (Math.random() + Math.random() + Math.random() - 1.5) * 4.5; // yards of scatter
-    const lx = a.x + (bias.x + g()) * YD, ly = a.y - (bias.y + g()) * YD;
-    const missX = (lx - FLAG.x) / YD, missY = (FLAG.y - ly) / YD; // + right, + long
-    const good = Math.hypot(missX, missY) < 7;
-    balls.push({ x: lx, y: ly, ax: a.x, ay: a.y, good, mx: (lx - a.x) / YD, my: (a.y - ly) / YD });
-    drawRange();
-    const arc = svg.querySelector('.arc');
-    if (arc && !reduce) { const L = arc.getTotalLength(); arc.style.strokeDasharray = L; arc.style.strokeDashoffset = L; arc.getBoundingClientRect(); arc.style.transition = 'stroke-dashoffset .7s cubic-bezier(.22,1,.36,1)'; arc.style.strokeDashoffset = 0; }
-    const side = (v) => Math.abs(v) < 1.5 ? 'on line' : Math.round(Math.abs(v)) + ' yd ' + (v > 0 ? 'right' : 'left');
-    const depth = (v) => Math.abs(v) < 1.5 ? 'pin high' : Math.round(Math.abs(v)) + ' yd ' + (v > 0 ? 'long' : 'short');
-    const n = balls.length;
-    if (n < 3) { caddy.innerHTML = 'That one finished ' + side(missX) + ', ' + depth(missY) + '.<small>' + (3 - n) + ' more and I\'ll read your miss.</small>'; return; }
-    const avg = balls.reduce((s, b) => ({ x: s.x + b.mx / n, y: s.y + b.my / n }), { x: 0, y: 0 });
-    if (good) { caddy.innerHTML = 'Flag hunting. That finished ' + Math.round(Math.hypot(missX, missY)) + ' yd from the pin.<small>' + (advised ? 'Aiming off your miss works.' : 'Nice.') + ' Reset to get a new golfer.</small>'; return; }
-    advised = true;
-    const aimX = Math.round(Math.abs(avg.x)), clubs = avg.y < -4 ? ' Take one more club.' : avg.y > 4 ? ' Take one less club.' : '';
-    caddy.innerHTML = 'You\'re missing ' + aimX + ' yd ' + (avg.x > 0 ? 'right' : 'left') + ' on average. Aim ' + aimX + ' yd ' + (avg.x > 0 ? 'left' : 'right') + ' of the flag.' + clubs + '<small>Based on your last ' + n + ' shots. That\'s the whole idea behind Continuum.</small>';
-  });
-  document.getElementById('rangeReset').addEventListener('click', newGolfer);
-  newGolfer();
+    frame.addEventListener('load', () => { if (!loaded) return; send({ type: 'cc-hole', theme: theme() }); setTimeout(show, 40000); });
+    const load = () => { if (loaded) return; loaded = true; frame.src = '../continuum/hole/?embed=1&theme=' + theme(); };
+    if (!('IntersectionObserver' in window)) { load(); return; }
+    /* load only once scrolling has settled near the hole: starting it mid-scroll (say on the smooth jump to a #nvidia
+       link) can stall the page's own scroll while the 3D scene starts up */
+    let near = false, settle = 0;
+    const later = () => { clearTimeout(settle); if (near && !loaded) settle = setTimeout(() => { if (near) load(); }, 300); };
+    addEventListener('scroll', later, { passive: true });
+    new IntersectionObserver((es, o) => {
+      near = es[es.length - 1].isIntersecting;
+      if (loaded) { o.disconnect(); removeEventListener('scroll', later); } else later();
+    }, { rootMargin: '100% 0px' }).observe(view);
+    /* Full screen opens a second copy of the hole in the demo window: pause this one meanwhile, and play it again
+       when the window closes if it was playing and is still on screen */
+    let held = false;
+    const full = document.querySelector('#ccHole .hole-full');
+    if (full) full.addEventListener('click', () => { held = loaded && isPlaying(); if (held) send({ type: 'cc-hole', pause: true }); });
+    document.addEventListener('close', (e) => {
+      if (!held || !(e.target instanceof HTMLDialogElement)) return;
+      held = false;
+      if (inView) setTimeout(play, 60); else resume = true;
+    }, true);
+    new IntersectionObserver((es) => {
+      const r = es[es.length - 1].intersectionRatio;
+      if (r >= .5 && !inView) {
+        inView = true;
+        if (ready && (!started || resume)) play();
+        resume = false;
+      } else if (r < .5 && inView) {
+        inView = false;
+        if (loaded && isPlaying()) { resume = true; send({ type: 'cc-hole', pause: true }); }
+      }
+    }, { threshold: [0, .5, 1] }).observe(view);
+    document.addEventListener('themechange', () => { if (loaded) send({ type: 'cc-hole', theme: theme() }); });
+  })();
 
   /* jump bar: underline the case in view. #hash links (from home, the old /demos/ links or the bar
      itself) are plain anchors now that all three cases are on the page; the browser lands them. */
