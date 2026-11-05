@@ -57,9 +57,32 @@ function land(top) {
   const el = !top && hashTarget();
   const html = document.documentElement, sb = html.style.scrollBehavior;
   html.style.scrollBehavior = 'auto';
-  try { if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' }); else window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); }
-  catch (e) { if (el) el.scrollIntoView(); else window.scrollTo(0, 0); }
+  // a #hash section lands under the top bar with a little room above it, so its heading and context show
+  const topOf = () => {
+    const bar = document.querySelector('header.top, .top');
+    const h = bar ? bar.getBoundingClientRect().height : 60;
+    return Math.max(0, el.getBoundingClientRect().top + window.scrollY - h - 24);
+  };
+  try { window.scrollTo({ top: el ? topOf() : 0, left: 0, behavior: 'instant' }); }
+  catch (e) { window.scrollTo(0, el ? topOf() : 0); }
   html.style.scrollBehavior = sb;
+}
+
+// A deep link on a project page lands mid-page: name the page for a moment so the visitor knows where they are.
+function showWhere() {
+  try {
+    const home = new URL('../', import.meta.url).pathname;
+    if (location.pathname === home || location.pathname === home + 'index.html') return;
+    const name = (document.title || '').split(' · ')[0].trim();
+    if (!name || name === 'Ian Sabia') return;
+    const tag = document.createElement('div');
+    tag.className = 'ian-intro-where';
+    tag.setAttribute('role', 'status');
+    tag.textContent = name;
+    document.body.appendChild(tag);
+    requestAnimationFrame(() => requestAnimationFrame(() => tag.classList.add('on')));
+    setTimeout(() => { tag.classList.remove('on'); setTimeout(() => tag.remove(), 500); }, 3200);
+  } catch (e) { /* fine */ }
 }
 
 // ---------------------------------------------------------------- palette
@@ -136,7 +159,8 @@ let active = null;
 export function playIntro(opts = {}) {
   if (active) return active.promise;
   const html = document.documentElement;
-  if (!opts.force && !shouldPlay()) { html.classList.remove('intro-on'); return Promise.resolve(false); }
+  if (window.__introEarly) { window.__introEarly.remove(); window.__introEarly = null; }   // the head gate's early Skip pill
+  if (!opts.force && (window.__introSkipped || !shouldPlay())) { html.classList.remove('intro-on'); return Promise.resolve(false); }
   if (!opts.force) { try { sessionStorage.setItem(KEY, '1'); } catch (e) { /* gate already checked */ } }
   let resolve; const promise = new Promise(r => { resolve = r; });
   active = { promise };
@@ -169,9 +193,11 @@ function run(opts, done) {
   const onInput = (e) => {
     if (TEST && TEST.hold) return;
     if (e.type === 'keydown' && (e.metaKey || e.ctrlKey) && e.key !== 'Escape') return;
+    // a key that skips should not also scroll the page away from where the intro lands
+    if (e.type === 'keydown' && /^( |Spacebar|PageDown|PageUp|ArrowDown|ArrowUp|Home|End)$/.test(e.key)) e.preventDefault();
     finish(true);
   };
-  stopEvents.forEach(ev => addEventListener(ev, onInput, { capture: true, passive: true }));
+  stopEvents.forEach(ev => addEventListener(ev, onInput, { capture: true, passive: ev !== 'keydown' }));
   btn.addEventListener('click', () => finish(true));
 
   function finish(skipped) {
@@ -184,7 +210,10 @@ function run(opts, done) {
     mq.removeEventListener && mq.removeEventListener('change', checkTheme);
     target.style.transform = ''; target.style.transformOrigin = ''; target.style.willChange = '';
     html.classList.remove('intro-on', 'intro-lock');
-    if (toHash) land(false);                        // images may have moved the section while the intro played
+    if (toHash) {                                   // images may have moved the section while the intro played
+      land(false); showWhere();
+      requestAnimationFrame(() => requestAnimationFrame(() => land(false)));
+    }
     ov.classList.add('is-out');
     if (skipped) ov.classList.add('is-fast');
     setTimeout(() => {
@@ -195,7 +224,7 @@ function run(opts, done) {
   }
 
   // ---------------------------------------------------------------- load three, lazily
-  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('three.js took too long')), TEST ? 30000 : 4000));
+  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('three.js took too long')), TEST ? 30000 : (window.__introSlow ? 2500 : 4000)));
   Promise.race([T ? Promise.resolve(T) : import(THREE_URL), timeout]).then(mod => {
     T = mod;
     if (ended) return;

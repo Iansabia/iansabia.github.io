@@ -63,9 +63,15 @@
   .demo.lead .ctas{margin-top:10px}
 
   /* short hero so the first demo shows on the first screen */
-  .page-hero{padding-bottom:32px}
-  .page-hero h1{margin-bottom:12px}
-  #play{padding-top:clamp(32px,4vw,48px)}
+  .page-hero{padding:clamp(20px,3vw,36px) 0 clamp(18px,2vw,24px)}
+  .page-hero h1{margin:8px 0 0;font-size:clamp(36px,5vw,60px)}
+  #play{padding-top:clamp(20px,2.5vw,32px)}
+  #play .head h2{font-size:clamp(26px,3vw,38px)}
+  #play .rule{margin-bottom:16px}
+  @media (max-width:520px){
+    /* phones: the film runs edge to edge */
+    .demo.lead{margin:0 calc(var(--gut) * -1);border-left:0;border-right:0}
+  }
   .page-hero .kicker a,.back .more{display:inline-flex;align-items:center;min-height:44px}
 
   @media (max-width:960px){
@@ -146,11 +152,10 @@
     <header class="page-hero">
       <div class="kicker mono"><a href="../">Home</a><span aria-hidden="true">/</span><span>Demos</span></div>
       <h1 id="main-h1">Every <em>demo</em></h1>
-      <p class="lede">Everything you can click, play or watch on this site.</p>
     </header>
 
     <section class="block" id="play">
-      <div class="head reveal"><h2>Play with it</h2><span class="num mono">01</span></div>
+      <div class="head reveal"><h2>Watch and play</h2><span class="num mono">01</span></div>
       <div class="rule"></div>
       <div class="demos">
 
@@ -163,7 +168,7 @@
             <div class="tags"><span class="mono type">Video &middot; 2 min</span><span class="mono where">SwapChain</span></div>
             <h3>SwapChain</h3>
             <p>A room-swap marketplace for BU that finds loops of students who can all move at once, not just pairs. The film follows a swap list of 350 students, all made up. No sound.</p>
-            <div class="ctas"><a class="cta ghost" data-demo data-demo-title="SwapChain live demo" href="../swapchain/app/">Try the live demo yourself <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../swapchain/">Project page</a></div>
+            <div class="ctas"><a class="cta ghost" data-demo data-demo-title="SwapChain live demo" data-demo-caption="40 students who want to move, all made up" href="../swapchain/app/">Try the live demo yourself <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../swapchain/">Project page</a></div>
           </div>
         </article>
 
@@ -194,7 +199,7 @@
         </article>
 
         <article class="demo reveal">
-          <a class="shot" data-demo href="../#nvidia" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo="off" href="../#nvidia" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/drive-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/drive-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -202,7 +207,7 @@
             <div class="tags"><span class="mono type">Video</span><span class="mono where">Home &middot; NVIDIA</span></div>
             <h3>Your call vs. my model</h3>
             <p>Make the call on four real dashcam clips, then see what my model said.</p>
-            <div class="ctas"><a class="cta" data-demo href="../#nvidia">Make the call <span aria-hidden="true">&rarr;</span></a><a class="cta2 ext" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026">See the challenge <span aria-hidden="true">&nearr;</span></a></div>
+            <div class="ctas"><a class="cta" data-demo="off" href="../#nvidia">Make the call <span aria-hidden="true">&rarr;</span></a><a class="cta2 ext" href="https://huggingface.co/spaces/nvidia/PhysicalAI-AV-OOD-Reasoning-Challenge-2026">See the challenge <span aria-hidden="true">&nearr;</span></a></div>
           </div>
         </article>
 
@@ -277,7 +282,7 @@
       <div class="demos three">
 
         <article class="demo reveal">
-          <a class="shot" data-demo href="../#continuum" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo="off" href="../#continuum" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/range-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/range-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -285,12 +290,12 @@
             <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home &middot; Continuum</span></div>
             <h3>The range</h3>
             <p>Click where you want to aim. Hit three and I'll tell you what you're doing. A toy, not the real model.</p>
-            <div class="ctas"><a class="cta" data-demo href="../#continuum">Hit a few <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
+            <div class="ctas"><a class="cta" data-demo="off" href="../#continuum">Hit a few <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../continuum/">Project page</a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" data-demo href="../#medtronic" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo="off" href="../#medtronic" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/race-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/race-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -298,7 +303,7 @@
             <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home &middot; Medtronic</span></div>
             <h3>Lookup race</h3>
             <p>Five lookups by hand, 10 to 15 minutes each, against about a minute with the agent. Sped up 300&times;.</p>
-            <div class="ctas"><a class="cta" data-demo href="../#medtronic">Run a lookup <span aria-hidden="true">&rarr;</span></a></div>
+            <div class="ctas"><a class="cta" data-demo="off" href="../#medtronic">Run a lookup <span aria-hidden="true">&rarr;</span></a></div>
           </div>
         </article>
 
@@ -316,7 +321,7 @@
         </article>
 
         <article class="demo reveal">
-          <a class="shot" data-demo href="../#currently" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo="off" href="../#currently" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/rooting-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/rooting-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -324,12 +329,12 @@
             <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home &middot; Currently</span></div>
             <h3>Rooting for</h3>
             <p>My Fantasy AI sets all three lineups. Hover a week to see the score.</p>
-            <div class="ctas"><a class="cta" data-demo href="../#currently">See the weeks <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
+            <div class="ctas"><a class="cta" data-demo="off" href="../#currently">See the weeks <span aria-hidden="true">&rarr;</span></a><a class="cta2" href="../fantasy/">Project page</a></div>
           </div>
         </article>
 
         <article class="demo reveal">
-          <a class="shot" data-demo href="../#main" tabindex="-1" aria-hidden="true">
+          <a class="shot" data-demo="off" href="../#main" tabindex="-1" aria-hidden="true">
             <img class="l" src="img/hero-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/hero-dark.webp" alt="" width="1120" height="700" loading="lazy">
           </a>
@@ -337,7 +342,7 @@
             <div class="tags"><span class="mono type">Toy</span><span class="mono where">Home</span></div>
             <h3>Hit a shot</h3>
             <p>Click anywhere at the top of the home page to hit a shot.</p>
-            <div class="ctas"><a class="cta" data-demo href="../#main">Hit a shot <span aria-hidden="true">&rarr;</span></a></div>
+            <div class="ctas"><a class="cta" data-demo="off" href="../#main">Hit a shot <span aria-hidden="true">&rarr;</span></a></div>
           </div>
         </article>
 

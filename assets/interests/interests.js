@@ -151,6 +151,9 @@
     var m = stage.querySelector('img,video'); if (m) m.remove();
     document.documentElement.classList.remove('ilb-lock');
     if (opener) opener.focus({ preventScroll: true });
+    // with a #hash in the URL, Chrome can clear focus on the history step back: put it on the button again
+    var op = opener;
+    setTimeout(function () { if (op && document.contains(op) && document.activeElement !== op) op.focus({ preventScroll: true }); }, 0);
     cur = null;
   }
 
@@ -175,14 +178,19 @@
       document.documentElement.style.scrollBehavior = 'auto';
       scrollTo(0, Math.max(0, y - 84));
       document.documentElement.style.scrollBehavior = '';
+      try { if (location.hash !== '#currently') history.pushState(history.state, '', '#currently'); } catch (err) { /* fine */ }
     };
     if (!reduce.matches && document.startViewTransition) {
+      var root = document.documentElement;
+      // the card is above: the desk slides back, the way it does for any link up the page
+      if (card.getBoundingClientRect().top < 0) root.setAttribute('data-dt-back', '');
+      var done = function () { root.removeAttribute('data-dt-back'); };
       try {
         var vt = document.startViewTransition(put);
         var no = function () {};
-        vt.ready.catch(no); vt.finished.catch(no);
+        vt.ready.catch(no); vt.finished.then(done, done);
         return;
-      } catch (err) { /* fall through */ }
+      } catch (err) { done(); }
     }
     put();
   }
