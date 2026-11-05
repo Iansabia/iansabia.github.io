@@ -10,12 +10,16 @@
    The window: a modal <dialog> (focus is trapped, the page behind is inert, Esc closes, focus goes
    back to the link) with a Back bar, a close button and an "Open full screen" link. Opening pushes a
    history entry, so the browser Back button closes the window. The page behind does not scroll.
-   Never runs inside a frame: a page shown in the window just navigates normally. */
+   Never runs inside a frame: a page shown in the window just navigates normally.
+
+   The same window can also hold a piece of this page instead of a frame: window.__dwOpenNode({...})
+   (set by init()) moves a node in with mount(host), and on close calls unmount() to put it back.
+   The SwapChain film (assets/swapfilm.js) plays this way, so there is only ever one video. */
 
 const APPS = [/\/swapchain\/app\/?(index\.html)?$/, /\/continuum\/hole\/?(index\.html)?$/, /\/room\/?(index\.html)?$/];
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-let dlg, box, frameWrap, titleEl, subEl, fullLink, backBtn, closeBtn, lastFocus, pendingNav, openUrl, savedScroll, savedTop, readyTimers = [];
+let dlg, box, frameWrap, titleEl, subEl, fullLink, backBtn, closeBtn, lastFocus, pendingNav, openUrl, savedScroll, savedTop, readyTimers = [], nodeOpts = null, openedAt = 0, savedRestore = null;
 
 function css() {
   if (document.querySelector('link[data-demo-window]')) return;
@@ -52,8 +56,9 @@ function build() {
 
   backBtn.addEventListener('click', requestClose);
   closeBtn.addEventListener('click', requestClose);
-  // a press on the dimmed page around the window closes it
-  dlg.addEventListener('click', (e) => { if (e.target === dlg) requestClose(); });
+  // a press on the dimmed page around the window closes it, but not the second click of the double click
+  // that opened it (it lands wherever the pointer now is)
+  dlg.addEventListener('click', (e) => { if (e.target === dlg && !justOpened()) requestClose(); });
   dlg.addEventListener('cancel', (e) => { e.preventDefault(); requestClose(); });
   fullLink.addEventListener('click', (e) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
@@ -79,6 +84,15 @@ function frameSrc(url) {
   return u.href;
 }
 
+// the history step back that closes the window must not restore the old scroll position on top of the one
+// lockScroll(false) sets. The mode belongs to each history entry, so this runs before the window's pushState.
+function manualRestore() {
+  try { if (savedRestore == null) { savedRestore = history.scrollRestoration; history.scrollRestoration = 'manual'; } } catch (e) { /* fine */ }
+}
+
+// true for the first moments after the window opens: clicks then are the tail of the press that opened it
+function justOpened() { return performance.now() - openedAt < 500; }
+
 function lockScroll(on) {
   const r = document.documentElement;
   if (on) {
@@ -97,7 +111,15 @@ function lockScroll(on) {
       const d = anchor.getBoundingClientRect().top - savedTop;
       if (Math.abs(d) > 2) scrollTo({ top: scrollY + d, left: 0, behavior: 'instant' });
     } else if (Math.abs(scrollY - savedScroll) > 2) scrollTo({ top: savedScroll, left: 0, behavior: 'instant' });
+    // back to the browser's own restoring once this history step is over
+    const was = savedRestore; savedRestore = null;
+    if (was) setTimeout(() => { try { if (!(dlg && dlg.open)) history.scrollRestoration = was; } catch (e) { /* fine */ } }, 300);
   }
+}
+
+// lets the page quiet things behind the window (the live map on /swapchain/ pauses its 3D loop)
+function announce(isOpen) {
+  try { document.dispatchEvent(new CustomEvent('demowindow', { detail: { open: isOpen } })); } catch (e) { /* fine */ }
 }
 
 function tuneFrame(ifr) {
@@ -174,6 +196,8 @@ function open(a) {
   subEl.textContent = a.dataset.demoCaption || '';
   subEl.hidden = !a.dataset.demoCaption;
   fullLink.href = url.href;
+  fullLink.hidden = false;
+  dlg.classList.remove('dw-node');
 
   frameWrap.classList.remove('ready');
   frameWrap.querySelectorAll('iframe').forEach((f) => f.remove());
@@ -186,21 +210,60 @@ function open(a) {
   frameWrap.appendChild(ifr);
   watchReady(ifr, app);
 
+  manualRestore();
   try { history.pushState(Object.assign({}, history.state, { dw: url.href }), ''); } catch (e) { /* closes by button only */ }
   lockScroll(true);
   dlg.classList.toggle('dw-anim', !reduced());
   dlg.showModal();
+  openedAt = performance.now();
   backBtn.focus();
+  announce(true);
+}
+
+// a piece of this page in the window (the SwapChain film): same frame, bar, Back, Esc and history step
+// opts: { key, opener, title, caption, mount(host), unmount() }
+function openNode(opts) {
+  if (!opts || typeof opts.mount !== 'function') return false;
+  build();
+  if (dlg.open) return false;
+  openUrl = 'node:' + (opts.key || 'page');
+  lastFocus = opts.opener || document.activeElement;
+  titleEl.textContent = opts.title || 'Demo';
+  subEl.textContent = opts.caption || '';
+  subEl.hidden = !opts.caption;
+  fullLink.hidden = true;
+  readyTimers.forEach(clearTimeout);
+  readyTimers = [];
+  frameWrap.querySelectorAll('iframe').forEach((f) => f.remove());
+  frameWrap.classList.add('ready');
+  dlg.classList.add('dw-node');
+  manualRestore();
+  try { history.pushState(Object.assign({}, history.state, { dw: openUrl }), ''); } catch (e) { /* closes by button only */ }
+  lockScroll(true); // measured while the opener is still on the page
+  nodeOpts = opts;
+  opts.mount(frameWrap);
+  dlg.classList.toggle('dw-anim', !reduced());
+  dlg.showModal();
+  openedAt = performance.now();
+  backBtn.focus();
+  announce(true);
+  return true;
 }
 
 function close() {
   if (!dlg || !dlg.open) return;
   dlg.close();
   frameWrap.querySelectorAll('iframe').forEach((f) => f.remove()); // stops sound, video and WebGL
+  if (nodeOpts) {
+    const o = nodeOpts; nodeOpts = null;
+    try { if (typeof o.unmount === 'function') o.unmount(); } catch (e) { /* the page part stays where it is */ }
+    dlg.classList.remove('dw-node');
+  }
   lockScroll(false);
   openUrl = null;
   readyTimers.forEach(clearTimeout);
   readyTimers = [];
+  announce(false);
   if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
   // with a #hash in the URL, Chrome can clear focus on the history step back: put it on the link again
   const lf = lastFocus;
@@ -238,6 +301,7 @@ export function init() {
   window.__demoWindow = true;
   if (window.top !== window) return; // pages shown inside the window navigate normally
   css();
+  window.__dwOpenNode = openNode;
   document.addEventListener('click', onClick);
   addEventListener('popstate', () => {
     if (dlg && dlg.open && !(history.state && history.state.dw === openUrl)) close();
