@@ -218,7 +218,7 @@ function run(opts, done) {
 
   // overlay: lives on <html>, outside <body>, so warping the body never moves it
   const ov = document.createElement('div');
-  ov.className = 'ian-intro' + (dark ? ' is-dark' : '');
+  ov.className = 'ian-intro is-staged' + (dark ? ' is-dark' : '');
   const canvasHost = document.createElement('div'); canvasHost.className = 'ian-intro-stage'; canvasHost.setAttribute('aria-hidden', 'true');
   const btn = document.createElement('button');
   btn.type = 'button'; btn.className = 'ian-intro-skip'; btn.textContent = 'Skip intro';

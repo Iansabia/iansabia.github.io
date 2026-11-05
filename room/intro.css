@@ -34,8 +34,11 @@ html.intro-lock { scroll-behavior: auto !important; }
 }
 .ian-intro.is-out { opacity: 0; pointer-events: none; }
 .ian-intro.is-fast { transition-duration: .16s; }
-.ian-intro-stage { position: absolute; inset: 0; touch-action: none; opacity: 0; transition: opacity .1s linear; }
-.ian-intro.is-live .ian-intro-stage { opacity: 1; }
+.ian-intro-stage { position: absolute; inset: 0; touch-action: none; transition: opacity .1s linear; }
+/* hidden until the first frame only when this intro.js staged it: a tab still running an older intro.js
+   (modules stay cached for the life of a tab) never adds is-live, and must not be left with a hidden canvas */
+.ian-intro.is-staged .ian-intro-stage { opacity: 0; }
+.ian-intro.is-staged.is-live .ian-intro-stage { opacity: 1; }
 .ian-intro-stage canvas { display: block; width: 100%; height: 100%; }
 
 /* Apple-style glass pill */
