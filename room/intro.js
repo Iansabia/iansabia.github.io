@@ -23,7 +23,7 @@ const KEY = 'ian-intro-played';
 const TEST = window.__INTRO_TEST || null;   // local screenshot scripts only; nothing reads the URL
 let T = null;                                // the three.js namespace once loaded
 
-// Timing. The whole first visit, from the page's first paint to a usable page, fits in about 1.5 s.
+// Timing. A first visit runs about 3.5 s: a quick street and door, then the house at its original pace.
 // The flight keeps its shots (street, door, hall, room, monitor) and runs them faster: STORY is the
 // length of the camera path in its own seconds, FLIGHT the wall-clock time it gets to play.
 // On a first visit the flight ends at about BUDGET after the head gate (window.__introT0), shrinking
@@ -31,6 +31,10 @@ let T = null;                                // the three.js namespace once load
 // shows without the 3D (the poster frame just fades).
 const STORY = 5.6;
 const FLIGHT = 1.1, FLIGHT_MIN = .7, BUDGET = 1.5, READY_BY = .8;
+// The street and the walk to the door play a little slower than the fast cut (OUT_FLIGHT of wall
+// clock for story 0 to ENTER); from the door in, the house plays at the original pace (the old
+// shots took IN_WALL seconds from the doorway to the monitor).
+const ENTER = 2.45, OUT_FLIGHT = .75, OUT_MIN = .45, IN_WALL = 2.65;
 const LATE = 1.3;   // the head gate's cover starts fading at 1.4 s; a first visit that starts later does not play
 const FADE = .2, FADE_SKIP = .16, LIVE_FADE = .1;   // LIVE_FADE: canvas over the poster, camera held still
 
@@ -1181,7 +1185,7 @@ function run(opts, done) {
       target.style.transform = m ? `matrix3d(${m.join(',')})` : 'scale(0.0001)';
     };
 
-    let t = 0, last = 0, wall = 0, t0wall = 0, firstFrame = true, liveIn = false, speed = 1, flight = FLIGHT;
+    let t = 0, last = 0, wall = 0, t0wall = 0, firstFrame = true, liveIn = false, speed = 1, speedIn = 1, flight = FLIGHT;
     const update = (tt) => {
       applyCamera(tt);
       const b = smooth(clamp((tt - BEND[0]) / (BEND[1] - BEND[0]), 0, 1));
@@ -1201,9 +1205,10 @@ function run(opts, done) {
       if (ended) return;
       if (firstFrame) {
         firstFrame = false;
-        // the flight gets what is left of the budget (a replay gets the full FLIGHT)
-        flight = opts.force ? FLIGHT : clamp(BUDGET - since() - LIVE_FADE, FLIGHT_MIN, FLIGHT);
-        speed = END / flight;
+        // the street gets less if three.js came late (a replay gets the full OUT_FLIGHT); the house never shrinks
+        const out = opts.force ? OUT_FLIGHT : clamp(OUT_FLIGHT - Math.max(0, since() - .6), OUT_MIN, OUT_FLIGHT);
+        speed = ENTER / out; speedIn = (END - ENTER) / IN_WALL;
+        flight = out + IN_WALL;
         update(Math.min(t, END)); render();
         // the poster goes under the canvas, which fades in over it; once the canvas is fully in the
         // poster goes (the monitor's screen is see-through to the page)
@@ -1221,7 +1226,7 @@ function run(opts, done) {
       const real = Math.max(0, (now - last) / 1000); last = now;
       if (!(TEST && TEST.hold)) {
         const step = Math.min(real, flight / 7);
-        t += step * speed; wall += step;
+        t += step * (t < ENTER ? speed : speedIn); wall += step;
         // a very slow device still lands: never more than about 1.5 s past the planned flight
         if ((performance.now() - t0wall) / 1000 > flight + LIVE_FADE + 1.5) t = END;
       }
