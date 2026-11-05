@@ -9,7 +9,7 @@ html.pi-on .page-hero h1,
 html.pi-on .page-hero .kicker {
   opacity: 0;
   /* failsafe: if the script dies, the heading shows anyway */
-  animation: pi-unhide 0s linear 6s forwards;
+  animation: pi-unhide 0s linear 3s forwards;
 }
 @keyframes pi-unhide { to { opacity: 1; } }
 
@@ -21,7 +21,7 @@ html.pi-cover.pi-3d::after {
   z-index: 2147483000;
   background: #EFEAE3;
   pointer-events: none;
-  animation: pi-cover 0s linear 6s forwards;
+  animation: pi-cover 0s linear 3s forwards;
 }
 html.pi-cover.pi-3d[data-theme="dark"]::after { background: #120E24; }
 @keyframes pi-cover { to { visibility: hidden; } }

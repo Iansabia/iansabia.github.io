@@ -1,4 +1,4 @@
-/* Short first-visit intro for the project pages (about 2 seconds).
+/* Short first-visit intro for the project pages (under a second for the title, about 1.5 s for 3D).
  *
  *   <link rel="stylesheet" href="../assets/page-intro.css">
  *   <script src="../assets/page-intro.js" data-intro="title"></script>     (classic script in <head>, not defer)
@@ -116,11 +116,11 @@
 
   // timeline (seconds)
   var TL = {
-    title: { end: 1.1, kick: [0, 0.35], head: [0.05, 0.5], out: [0.6, 1.1] },
+    title: { end: 0.8, kick: [0, 0.26], head: [0.04, 0.38], out: [0.45, 0.8] },
     // 3D, from the moment the scene is ready (the title has been revealing over the ground meanwhile):
     // the map fades back to the ground, the ground blends to the page color, then the overlay fades,
     // so the map and the page never show through each other and no color jumps
-    '3d': { end: 1.8, stage: [0, 0.18], sweep: 1.5, scrim: [0, 0.18], fade3d: [1.15, 1.45], out: [1.4, 1.8] },
+    '3d': { end: 1.35, stage: [0, 0.14], sweep: 1.1, scrim: [0, 0.14], fade3d: [0.85, 1.08], out: [1.05, 1.35] },
   };
   var run = null; // the active timeline
 
@@ -207,9 +207,9 @@
 
     if (mode === 'title') return begin(TL.title);
     // 3D: the title reveals over the ground right away; the map joins as soon as it is ready. It gets
-    // 600ms, or until the desk transition ends if that is later, else the title reveal finishes alone.
+    // 450ms, or until the desk transition ends if that is later, else the title reveal finishes alone.
     begin(null);
-    var cap = TEST ? 60000 : 600;
+    var cap = TEST ? 60000 : 450;
     var timer = new Promise(function (r) { setTimeout(r, cap); });
     var deadline = Promise.all([timer, vtFinished || null]).then(function () { return null; });
     var made = modP.then(function (m) {
@@ -221,7 +221,7 @@
         made.then(function (late) { if (late && late !== scene) late.dispose(); }, function () {});
         // finish as the title reveal: the ground blends to the page color, then the overlay fades
         var tf = Math.max(TL.title.out[0], now());
-        run = { end: tf + 0.45, kick: TL.title.kick, head: TL.title.head, fade3d: [tf, tf + 0.3], out: [tf + 0.15, tf + 0.45] };
+        run = { end: tf + 0.35, kick: TL.title.kick, head: TL.title.head, fade3d: [tf, tf + 0.22], out: [tf + 0.1, tf + 0.35] };
         readyResolve('title');
         return;
       }
