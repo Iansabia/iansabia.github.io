@@ -82,7 +82,7 @@
       var b = el('button', null, '<span>' + c.label + '</span><i></i>');
       b.type = 'button';
       b.setAttribute('aria-label', (i + 1) + ' of ' + n + ', ' + c.label + ': ' + c.title + '. Starts at ' + fmt(c.t) + '.');
-      b.addEventListener('click', function () { pop(b); jump(i); });
+      b.addEventListener('click', function () { if (fresh()) return; pop(b); jump(i); });
       steps.appendChild(b);
       c.end = end;
       return b;
@@ -93,14 +93,14 @@
     if (fsOk) {
       var fs = el('button', 'sf-btn sf-fs', '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg>');
       fs.type = 'button'; fs.setAttribute('aria-label', 'Watch full screen');
-      fs.addEventListener('click', function () { pop(fs); full(); });
+      fs.addEventListener('click', function () { if (fresh()) return; pop(fs); full(); });
       rail.appendChild(fs);
     }
     view.after(rail);
     var say = el('p', 'sf-say'); say.setAttribute('aria-live', 'polite');
     rail.after(say);
 
-    var cur = -1, said = -1, started = false, autoPaused = false, raf = 0, popped = false, ph = null;
+    var cur = -1, said = -1, started = false, autoPaused = false, raf = 0, popped = false, ph = null, poppedAt = 0;
 
     function state(s) { root.dataset.state = s; stage.dataset.state = s; label(); }
     function label() {
@@ -170,7 +170,7 @@
           stage.before(ph);
           host.appendChild(stage);
           stage.classList.add('sf-popped');
-          popped = true;
+          popped = true; poppedAt = performance.now();
         },
         unmount: function () {
           autoPaused = false;
@@ -183,10 +183,20 @@
       }) !== false;
     }
     function playOrAgain() { if (root.dataset.state === 'ended') jump(0); else begin(); }
+    // the window just opened: a click now is the second half of a double click on the page, landing on
+    // whatever the window put under the pointer. Ignore it, so the film keeps playing.
+    function fresh() { return popped && performance.now() - poppedAt < 500; }
+    // play/pause and the picture: already playing on the page (it started before the window could load),
+    // the press pauses it there; otherwise it opens the window and plays
+    function press() {
+      if (fresh()) return;
+      if (!popped && !v.paused) { v.pause(); return; }
+      if (pop(play)) playOrAgain(); else toggle();
+    }
 
-    play.addEventListener('click', function () { if (pop(play)) playOrAgain(); else toggle(); });
-    hit.addEventListener('click', function () { if (pop(play)) playOrAgain(); else toggle(); });
-    go.addEventListener('click', function () { pop(play); playOrAgain(); });
+    play.addEventListener('click', press);
+    hit.addEventListener('click', press);
+    go.addEventListener('click', function () { if (fresh()) return; pop(play); playOrAgain(); });
     // arrow keys move between the chapters in the rail
     steps.addEventListener('keydown', function (e) {
       var i = bars.indexOf(document.activeElement); if (i < 0) return;

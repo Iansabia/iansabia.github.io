@@ -340,7 +340,7 @@
       (function ready() {
         var ok = false;
         try { var l = frame.contentDocument.getElementById('loading'); ok = !l || l.hidden || getComputedStyle(l).display === 'none' || getComputedStyle(l).opacity === '0' || l.classList.contains('done') || l.classList.contains('hide'); } catch (e) { ok = true; }
-        if (ok || ++tries > 60) { fig.classList.add('is-ready'); wait.hidden = true; }
+        if (ok || ++tries > 60) { fig.classList.add('is-ready'); wait.hidden = true; if (dwOpen) hold(true); }
         else setTimeout(ready, 150);
       })();
     });
@@ -361,6 +361,18 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOn(false); });
   document.addEventListener('themechange', function () { if (frame) syncTheme(); });
   if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { es.forEach(function (x) { if (!x.isIntersecting) setOn(false); }); }).observe(fig);
+  // a demo window over the page (the film, or the live demo itself): stop the map's 3D loop behind it, so
+  // the window gets the whole machine, and pick up again on close. The app's own pause, as its phone preview uses.
+  var dwOpen = false, held = false;
+  function hold(p) {
+    try {
+      var m = frame && frame.contentWindow.__swapchain && frame.contentWindow.__swapchain.map;
+      if (!m) return;
+      if (p && !m.paused) { m.pause(true); held = true; }
+      else if (!p && held) { held = false; m.pause(false); }
+    } catch (e) {}
+  }
+  document.addEventListener('demowindow', function (e) { dwOpen = !!(e.detail && e.detail.open); if (dwOpen) setOn(false); hold(dwOpen); });
 
   if (!auto) return;
   // desktop: start after the page has loaded and any first-visit intro has finished, so they do not fight
