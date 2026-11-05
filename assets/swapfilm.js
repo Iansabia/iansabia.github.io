@@ -9,13 +9,13 @@
       text: "Zoe and Lucia each want the other's room, so they trade. That's the only kind of swap BU allows." },
     { t: 14, label: 'Loops', icon: 'loop', title: 'SwapChain finds the loop',
       text: "No two of Ava, Bea and Cleo want each other's room, yet all three move at once." },
-    { t: 30, label: 'Explore', icon: 'cube', title: 'Sam explores the 3D campus',
+    { t: 32, label: 'Explore', icon: 'cube', title: 'Sam explores the 3D campus',
       text: 'A freshman in Warren C who wants out. He taps a dorm, then a floor, then room 822.' },
-    { t: 59.5, label: 'Catch', icon: 'x', title: "A pair swap can't work",
+    { t: 62.5, label: 'Catch', icon: 'x', title: "A pair swap can't work",
       text: "Nate is leaving room 822, but he wants Danielsen, not Sam's room." },
-    { t: 71.5, label: 'Match', icon: 'check', title: 'A loop of three, confirmed first',
+    { t: 72, label: 'Match', icon: 'check', title: 'A loop of three, confirmed first',
       text: 'Sam to Rich 822, Nate to Danielsen 532, Omar to Warren C 708. Nothing is filed until all three confirm.' },
-    { t: 86, label: 'Results', icon: 'bars', title: 'Almost twice as many move',
+    { t: 87, label: 'Results', icon: 'bars', title: 'Almost twice as many move',
       text: 'Ask for the big picture. Simulated with 350 made-up students, pairs move 94 and loops move 182.' }
   ];
   var DUR = 117.5;
