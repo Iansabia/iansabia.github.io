@@ -22,6 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/swapfilm.css">
 <style>
   /* SwapChain page. The film comes first in a night frame, then the live demo, then the product work behind it. */
   .film{margin-top:clamp(28px,3.4vw,40px);border-radius:var(--r-frame);overflow:hidden;background:var(--nbg);box-shadow:inset 0 0 0 1px var(--nrule);color:var(--nink)}
@@ -33,13 +34,8 @@
   /* the film leads; the live app is the secondary way in, so a ghost pill on the night ground */
   .go-live{display:inline-flex;align-items:center;gap:8px;min-height:40px;border-radius:var(--r-pill);background:transparent;color:var(--nink);box-shadow:inset 0 0 0 1px var(--nrule);font-size:14px;line-height:1;text-decoration:none;padding:0 16px;white-space:nowrap;transition:background-color .3s,box-shadow .3s,transform .25s var(--ease)}
   @media (hover:hover){.go-live:hover{background:var(--ntile);box-shadow:inset 0 0 0 1px var(--nink);transform:translateY(-1px)}}
-  /* phones get a play button instead of autoplay (see the script at the bottom); it stays hidden on desktop */
   .film{scroll-margin-top:calc(var(--bar) + 12px)}
   .film-v{position:relative}
-  .film-play{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;align-items:flex-end;justify-content:center;padding:0 12px 14px;background:none;border:0;cursor:pointer;color:#0B0817;font:500 15px/1.2 var(--sans);-webkit-tap-highlight-color:transparent}
-  .film-play[hidden]{display:none}
-  .film-play span{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 20px;border-radius:var(--r-pill);background:var(--nink)}
-  .film-play svg{width:10px;height:12px;flex:none}
   .film-tip{display:none}
 
   .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:28px clamp(28px,4vw,56px);align-items:center}
@@ -90,11 +86,6 @@
     .film-tip{display:block}
     .film-h,.film-f{padding-inline:14px}
   }
-  @media (max-width:350px){
-    /* the whole frame is the tap target, so the label can shrink to clear the poster's subtitle */
-    .film-play{padding-bottom:10px}
-    .film-play span{min-height:40px;padding:0 14px}
-  }
   @media (orientation:landscape) and (max-height:540px){
     /* short landscape screens: the whole frame fits under the sticky bar */
     .film-v{width:min(100%,calc((100vh - var(--bar) - 16px) * 16 / 9));margin:0 auto}
@@ -140,14 +131,13 @@
       <h1 id="main-h1">Swap<em>Chain</em></h1>
       <p class="lede">A room-swap marketplace for BU that finds loops of students who can all move at once, not just pairs. A team project from my product management class. I built the demo.</p>
 
-      <figure class="film" id="watch">
+      <figure class="film" id="watch" data-swapfilm>
         <figcaption class="film-h"><span class="mono">The demo &middot; 2 min</span><span class="mono">No sound</span></figcaption>
-        <div class="film-v">
-          <video id="film" src="media/swapchain-demo.mp4" poster="media/poster.jpg" controls muted playsinline loop preload="none" aria-label="Two-minute demo of SwapChain"></video>
-          <button class="film-play" id="filmPlay" type="button" hidden><span><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z" fill="currentColor"/></svg>Play the demo</span></button>
+        <div class="film-v sf-view">
+          <video id="film" src="media/swapchain-demo.mp4" data-phone="media/swapchain-demo-phone.mp4" poster="media/poster.jpg" width="1920" height="1080" controls muted playsinline preload="none" aria-label="Two-minute demo of SwapChain"></video>
         </div>
         <div class="film-f">
-          <p class="film-tip">For bigger captions, use full screen in the player.</p>
+          <p class="film-tip">For bigger captions, use the full screen button.</p>
           <p>Every student in the demo is made up. Not affiliated with Boston University.</p>
           <a class="go-live" data-demo data-demo-title="SwapChain live demo" data-demo-caption="40 students who want to move, all made up" href="app/">Try the live demo yourself <span aria-hidden="true">&rarr;</span></a>
         </div>
@@ -207,35 +197,6 @@
   </footer>
 </div>
 <script src="../assets/site.js"></script>
-<script>
-  // Desktop: start the film on load, unless the visitor prefers less motion or saves data.
-  // Phones: download nothing until a tap, then play a smaller copy of the same film right here in the page.
-  (() => {
-    const film = document.getElementById('film'), play = document.getElementById('filmPlay');
-    if (!film) return;
-    const phone = play && matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
-    if (phone) {
-      film.src = 'media/swapchain-demo-phone.mp4';   // same film at 960px and 30fps: 6MB instead of 28MB
-      film.loop = false;
-      film.controls = false;
-      play.hidden = false;
-      play.addEventListener('click', () => {
-        play.hidden = true;
-        film.controls = true;
-        film.play().catch(() => {});
-        film.focus({ preventScroll: true });
-      });
-      // at the end, the play button comes back
-      film.addEventListener('ended', () => { film.controls = false; play.hidden = false; });
-      return;
-    }
-    film.preload = 'metadata';
-    const saveData = navigator.connection && navigator.connection.saveData;
-    if (!saveData && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      film.autoplay = true;
-      film.play().catch(() => {});
-    }
-  })();
-</script>
+<script src="../assets/swapfilm.js"></script>
 </body>
 </html>
