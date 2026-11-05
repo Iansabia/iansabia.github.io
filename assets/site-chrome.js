@@ -8,7 +8,10 @@
       (assets/desk-transition.css). Plain scrolling never animates; reduced motion just jumps.
    4. Full-screen demos (swapchain/app/, continuum/hole/) opened on their own: the site's top bar
       (name, Demos, menu, theme switch) and a Back pill under it. The demo fills the rest of the screen.
-      Nothing inside the apps changes: the layout is moved down with injected CSS only. */
+      Nothing inside the apps changes: the layout is moved down with injected CSS only.
+   5. External links: every link to another site (and to the Continuum product site at /continuum-caddy/) opens in
+      a new tab with rel="noopener noreferrer" and a visually hidden "(opens in a new tab)" for screen readers.
+      Set at load, on links added later, and once more at click time. mailto: and tel: links are left alone. */
 
 const html = document.documentElement;
 const ROOT = new URL('../', import.meta.url);          // the site root
@@ -219,3 +222,52 @@ function onClick(e) {
 
 // after demo-window.js, so its own same-page demo links (#demo and friends) are handled there first
 demoWindow.finally(() => document.addEventListener('click', onClick));
+
+// ---------------------------------------------------------------- 5. external links open in a new tab
+const PRODUCT = /^\/continuum-caddy(\/|$)/;   // the product site lives on this origin but is not this site
+function isExternal(a) {
+  if (!/^https?:$/.test(a.protocol)) return false;   // mailto:, tel:, javascript: stay as they are
+  return a.origin !== location.origin || PRODUCT.test(a.pathname);
+}
+function markExternal(a) {
+  if (a.__xl || !isExternal(a)) return;
+  a.__xl = true;
+  a.target = '_blank';
+  const rel = new Set((a.getAttribute('rel') || '').split(/\s+/).filter(Boolean));
+  rel.add('noopener'); rel.add('noreferrer');
+  a.setAttribute('rel', [...rel].join(' '));
+  if (!a.querySelector('.xl-sr')) {
+    // a plain text link with no arrow of its own gets a small one, in the link's own color
+    const text = a.textContent || '';
+    if (!a.children.length && !/[\u2197\u2192\u2190\u2193]/.test(text) && text.trim()) {
+      const ic = document.createElement('span');
+      ic.className = 'xl-ic'; ic.setAttribute('aria-hidden', 'true'); ic.textContent = '\u2197';
+      a.appendChild(ic);
+    }
+    const sr = document.createElement('span');
+    sr.className = 'xl-sr'; sr.textContent = ' (opens in a new tab)';
+    a.appendChild(sr);
+  }
+}
+function markAll(node) {
+  if (!node || !node.querySelectorAll) return;
+  if (node.matches && node.matches('a[href]')) markExternal(node);
+  node.querySelectorAll('a[href]').forEach(markExternal);
+}
+(function externalLinks() {
+  const st = document.createElement('style');
+  st.textContent = '.xl-sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}' +
+    '.xl-ic{display:inline-block;margin-left:.2em;font-size:.8em;line-height:1;text-decoration:none;vertical-align:.05em}';
+  document.head.appendChild(st);
+  const run = () => {
+    markAll(document.body);
+    new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => { if (n.nodeType === 1 && !n.classList.contains('xl-ic') && !n.classList.contains('xl-sr')) markAll(n); })))
+      .observe(document.body, { childList: true, subtree: true });
+  };
+  if (document.body && document.readyState !== 'loading') run(); else document.addEventListener('DOMContentLoaded', run, { once: true });
+  // last line of defense: a link that slipped past still opens in a new tab (runs before the demo window and the desk swap look at it)
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (a && isExternal(a) && a.target !== '_blank') markExternal(a), (a.target = '_blank');
+  }, true);
+})();

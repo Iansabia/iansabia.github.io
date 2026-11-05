@@ -12,7 +12,7 @@
     });
   }
   // links to other sites open in a new tab (Ian, 10/23)
-  document.querySelectorAll('a[href^="http"]').forEach((l) => { if (l.host !== location.host) { l.target = '_blank'; l.rel = 'noopener'; } });
+  document.querySelectorAll('a[href^="http"]').forEach((l) => { if (l.host !== location.host) { l.target = '_blank'; l.rel = 'noopener noreferrer'; } });
   const top = document.querySelector('header.top');
   const onScroll = () => top && top.classList.toggle('stuck', scrollY > 4);
   addEventListener('scroll', onScroll, { passive: true }); onScroll();

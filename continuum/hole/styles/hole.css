@@ -111,6 +111,8 @@ html.embed .hole-pill, html.embed .example-pill, html.embed .attr { display: non
 /* embedded: one play button before the start (the card's), then the control bar fades in */
 html.embed .controls { transition: opacity 0.3s var(--ease), transform 0.3s var(--ease); }
 html.embed:not(.started) .controls { opacity: 0; pointer-events: none; transform: translate(-50%, 8px); }
+/* driven by the page's scroll: no play button, no control bar, and the page shows its own progress rail */
+html.driven .controls, html.driven .start, html.driven .hint, html.driven .cap-steps { display: none !important; }
 #map { position: absolute; inset: 0; }
 #map canvas { outline: none; }
 /* a soft fade under the top bar, like the SwapChain map */

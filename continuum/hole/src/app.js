@@ -12,6 +12,12 @@ const $ = (id) => document.getElementById(id);
 const root = document.documentElement;
 const phone = root.dataset.layout === "phone";
 const embed = root.classList.contains("embed");
+// embedded with scroll=1: the page around the frame sends scroll progress (0..1) and the play-through follows it
+const driven = embed && root.classList.contains("driven");
+// who may drive the frame: this site, the live site (the Continuum page and the caddy page share it) and local previews
+const okOrigin = (o) => o === location.origin || o === "https://iansabia.github.io" || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(o);
+let parentOrigin = location.origin;
+try { const r = document.referrer && new URL(document.referrer).origin; if (r && okOrigin(r)) parentOrigin = r; } catch (e) { /* no referrer */ }
 const RM = () => reducedMotion();
 
 // ---------- static text ----------
@@ -130,13 +136,31 @@ $("theme-btn").addEventListener("click", () => toggleTheme());
 // phones: the caption shows two lines of text; tap it to read the rest
 $("cap-body").addEventListener("click", () => { if (phone) { capEl.classList.toggle("open"); measureCaption(); needDraw = true; kick(); } });
 document.addEventListener("keydown", (e) => {
-  if (e.target.closest && e.target.closest("button, a, input")) return;
+  if (driven || (e.target.closest && e.target.closest("button, a, input"))) return;
   if (e.key === " " || e.key === "k") { e.preventDefault(); $("play-btn").click(); }
 });
-// Embedded in the Continuum page: it sends the theme it shows, and a pause when the frame scrolls out of view.
+// Seekable timeline: progress 0..1 from the page around the frame. Native scroll there, an eased follow here, so a
+// fast flick plays through quickly instead of cutting. Reduced motion: the still frame of the step it lands in.
+let extP = null;
+function setProgress(p) {
+  p = clamp(Number(p) || 0, 0, 1);
+  extP = p;
+  const tt = p * TOTAL;
+  playing = false; seek = null; clearInterval(rmTimer);
+  if (tt > 0.2) markStarted();
+  if (RM() || !scene) { t = RM() ? STAGES[stageAt(tt)].still : tt; scrollT = null; needDraw = true; kick(); return; }
+  scrollT = tt;
+  kick();
+}
+// Embedded: the page sends the theme it shows, a pause when the frame scrolls out of view and, when driven, the
+// scroll progress. A same-origin page can also call window.holeSetProgress(p) directly.
 if (embed) {
+  window.holeSetProgress = setProgress;
   window.addEventListener("message", (e) => {
-    if (e.origin !== location.origin || !e.data || e.data.type !== "cc-hole") return;
+    if (!okOrigin(e.origin) || e.source !== window.parent || !e.data) return;
+    parentOrigin = e.origin;
+    if (e.data.type === "hole-progress") { setProgress(e.data.t); return; }
+    if (e.data.type !== "cc-hole") return;
     if (e.data.theme) forceTheme(e.data.theme);
     if (e.data.pause && (playing || seek)) { pause(); clearInterval(rmTimer); updateButtons(); }
   });
@@ -393,7 +417,12 @@ function tick(now) {
   } else if (scrollT != null) {
     const d = scrollT - t;
     if (Math.abs(d) < 0.004) { t = scrollT; scrollT = null; }
-    else t += d * Math.min(1, dt * 7);
+    else {
+      let step = d * Math.min(1, dt * 7);
+      // driven by a page: a big jump plays through at up to 40 story seconds a second, never a cut
+      if (driven) step = Math.sign(step) * Math.min(Math.abs(step), 40 * dt);
+      t += step;
+    }
     moving = true;
   }
   updateButtons();
@@ -413,7 +442,12 @@ function webgl2() {
   try { const c = document.createElement("canvas"); return !!c.getContext("webgl2"); } catch (e) { return false; }
 }
 // embedded: tell the page the hole is drawn, so it swaps its poster for the live frame
-function ready() { if (embed && parent !== window) { try { parent.postMessage({ type: "cc-hole-ready" }, location.origin); } catch (e) {} } }
+function ready() {
+  if (!embed || parent === window) return;
+  // the step starts as fractions of the play-through, so a page can draw its progress rail and jump to a step
+  const steps = STAGES.slice(1).map((s, i) => ({ name: STEP_NAMES[i + 1], from: +(s.t0 / TOTAL).toFixed(4), key: +(s.key / TOTAL).toFixed(4) }));
+  try { parent.postMessage({ type: "cc-hole-ready", driven, steps }, parentOrigin); } catch (e) { /* the page lifts its poster on a timer */ }
+}
 function fallback() {
   root.classList.add("nogl-mode");
   $("loading").classList.add("done");
@@ -445,14 +479,15 @@ async function boot() {
   }
   const q = new URLSearchParams(location.search);
   if (q.has("t")) t = clamp(parseFloat(q.get("t")) || 0, 0, TOTAL);
+  else if (driven && extP != null) t = RM() ? STAGES[stageAt(extP * TOTAL)].still : extP * TOTAL;
   else if (!embed) t = RM() ? STAGES[stageAt(timeFromScroll())].still : timeFromScroll();
-  if (t > 0.2) markStarted();
+  if (t > 0.2 || driven) markStarted();
   if (q.has("t") && !embed) scrollToTime(t);
   needDraw = true;
   draw();
   kick();
-  if (embed && q.get("autoplay") === "1" && !RM()) play();
+  if (embed && !driven && q.get("autoplay") === "1" && !RM()) play();
   // for screenshots and tests
-  window.__hole = { probe, get scene() { return scene; }, seekNow: (x) => { t = clamp(x, 0, TOTAL); if (t > 0.2) markStarted(); playing = false; seek = null; scrollT = null; needDraw = true; draw(); }, get t() { return t; }, TOTAL, STAGES };
+  window.__hole = { probe, get scene() { return scene; }, seekNow: (x) => { t = clamp(x, 0, TOTAL); if (t > 0.2) markStarted(); playing = false; seek = null; scrollT = null; needDraw = true; draw(); }, get t() { return t; }, TOTAL, STAGES, setProgress };
 }
 boot();

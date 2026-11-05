@@ -18,6 +18,8 @@
       var phone = !matchMedia("(min-width: 900px)").matches || matchMedia("(max-height: 520px) and (pointer: coarse)").matches;
       root.setAttribute("data-layout", phone ? "phone" : "desktop");
       if (q.get("embed") === "1") root.classList.add("embed");
+      // embedded with scroll=1: the page around it drives the play-through from its own scroll (no play button)
+      if (q.get("embed") === "1" && q.get("scroll") === "1") root.classList.add("driven");
       var t = q.get("theme");
       if (t !== "light" && t !== "dark") { try { t = localStorage.getItem("theme"); } catch (e) { t = null; } }
       if (t === "light" || t === "dark") root.setAttribute("data-theme", t);
@@ -130,7 +132,7 @@
         <h2>About this demo</h2>
         <p>The course is real: hole 10 at Miacomet Golf Club, a public course on Nantucket. Its tees, fairway, bunkers, green and cart paths are OpenStreetMap outlines, and the ground uses real elevation from AWS Terrain Tiles, drawn twice as steep so the gentle slopes show. Par and the hole number come from the OpenStreetMap hole line.</p>
         <p>The play is an illustration. The golfer, the three shots, the yardages and the miss pattern are made up to show what the app does: the phone on the cart films the swing, follows the ball, and the caddy suggests where to aim based on how you usually miss. None of it is real tracked data, and it says nothing about accuracy.</p>
-        <p class="links"><a href="../">&larr; Back to Continuum</a><span aria-hidden="true">·</span><a href="data/SOURCES.md">Data sources</a><span aria-hidden="true">·</span><span>Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, ODbL</span></p>
+        <p class="links"><a href="../">&larr; Back to Continuum</a><span aria-hidden="true">·</span><a href="data/SOURCES.md">Data sources</a><span aria-hidden="true">·</span><span>Map data © <a target="_blank" href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">OpenStreetMap contributors</a>, ODbL</span></p>
       </div>
     </footer>
   </main>
