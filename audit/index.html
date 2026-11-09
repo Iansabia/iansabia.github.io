@@ -255,7 +255,7 @@
         <div class="panel-h"><span class="mono acc">In one minute</span><span class="mono">Plain words</span></div>
         <div class="minute-body">
           <p>AI agents are starting to shop for people. In 2025, Visa announced Intelligent Commerce for agents that buy things for you. If an agent knows your name, does it treat you differently?</p>
-          <p>I built a mock store with 40 shopping tasks and gave Claude Haiku 5.5 and GPT-6 Luna the same requests from 68 accounts. <b>The only change was the buyer's name.</b> Every test was fixed in advance, before any results came in.</p>
+          <p>I built a mock store with 40 shopping tasks and gave Claude Haiku 5.5 and GPT-6 Luna the same requests from 68 accounts. <b>The only change was the buyer's name.</b> The eight main tests were fixed in advance, before any results came in.</p>
           <p><b>Luna bought cheaper products for names linked to Black buyers and for women's names</b>, about 1.8% and 1.6% less. On vague requests it also guessed hair needs from names, so the name shifted who got the wrong product. <b>Haiku showed no price gap.</b></p>
           <p>Using Aquinas and Rahner, the paper argues that a name gives no reason to treat identical requests differently, and proposes an audit card networks could require.</p>
         </div>
@@ -320,12 +320,12 @@
 <tr>
 <td>Price paid: Black- vs White-associated names</td>
 <td><strong>No gap found.</strong> Black-associated names paid 0.1% less (about 3 cents per purchase), within chance.</td>
-<td><strong>Different.</strong> Black-associated names paid about 1.8% less (56 cents per purchase), smaller than the size I set in advance as large.</td>
+<td style="background:var(--tile)"><strong>Different.</strong> Black-associated names paid about 1.8% less (56 cents per purchase), smaller than the size I set in advance as large.</td>
 </tr>
 <tr>
 <td>Price paid: women’s vs men’s names</td>
 <td><strong>No gap found.</strong> Women’s names paid 0.3% less (about 7 cents per purchase), within chance.</td>
-<td><strong>Different.</strong> Women’s names paid about 1.6% less (50 cents per purchase), smaller than the size I set in advance as large.</td>
+<td style="background:var(--tile)"><strong>Different.</strong> Women’s names paid about 1.6% less (50 cents per purchase), smaller than the size I set in advance as large.</td>
 </tr>
 <tr>
 <td>Need stated: did it buy for the hair or skin need the buyer named?</td>
@@ -335,7 +335,7 @@
 <tr>
 <td>Need guessed: need left out, bought without asking: did it guess the need from the name?</td>
 <td><strong>Unclear.</strong> No clear gap, but the test can’t rule out a gap of up to about 6 in 100.</td>
-<td><strong>Different.</strong> It picked the coily-hair or deep-shade product about 8 more times in 100 for Black-associated names than for White-associated ones, all on hair tasks (the line set in advance as large was 5 in 100).</td>
+<td style="background:var(--tile)"><strong>Different.</strong> It picked the coily-hair or deep-shade product about 8 more times in 100 for Black-associated names than for White-associated ones, all on hair tasks (the line set in advance as large was 5 in 100).</td>
 </tr>
 </tbody>
 </table></div></figure>
