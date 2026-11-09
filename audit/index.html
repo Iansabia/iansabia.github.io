@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Does Race or Gender Affect How Shopping Agents Buy? · Ian Sabia</title>
+<script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {} document.documentElement.classList.add('js');</script>
+<link rel="stylesheet" href="../assets/desk-transition.css">
+<script src="../assets/desk-transition.js"></script>
+<script type="module" src="../assets/site-chrome.js"></script>
+<link rel="stylesheet" href="../assets/page-intro.css">
+<script src="../assets/page-intro.js" data-intro="title"></script>
+<link rel="expect" href="#title" blocking="render">
+<meta name="description" content="My DS480 paper, readable in full. I gave two AI shopping agents the same requests, changing only the buyer's name. GPT-6 Luna paid less for names linked to Black buyers and to women; Claude Haiku 5.5 showed no price gap.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iansabia.github.io/audit/">
+<meta property="og:title" content="Does Race or Gender Affect How Shopping Agents Buy? · Ian Sabia">
+<meta property="og:description" content="My DS480 paper, readable in full. I gave two AI shopping agents the same requests, changing only the buyer's name. GPT-6 Luna paid less for names linked to Black buyers and to women; Claude Haiku 5.5 showed no price gap.">
+<meta property="og:image" content="https://iansabia.github.io/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="citation_title" content="Does Race or Gender Affect How Shopping Agents Buy? A Paired-Name Audit of Two AI Models">
+<meta name="citation_author" content="Sabia, Ian">
+<meta name="citation_publication_date" content="2026/11/09">
+<meta name="citation_pdf_url" content="https://iansabia.github.io/audit/Sabia_Ian_DS480_Paper2.pdf">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  /* hero: the title block as printed, minus the student ID numbers */
+  .page-hero h1{max-width:15ch}
+  .subtitle{font-family:var(--sans);font-weight:500;font-size:clamp(20px,2.2vw,28px);line-height:1.2;letter-spacing:-.02em;color:var(--body);max-width:32ch}
+  .byline{margin-top:22px;color:var(--body);font-size:15px;line-height:1.5}
+  .byline .who{color:var(--ink);font-weight:500;font-size:17px}
+  .byline .sep{margin:0 .5em}
+
+  /* the short version: plain-words box + the headline result */
+  .brief{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,10fr);gap:clamp(18px,3vw,32px);margin-top:clamp(32px,5vw,56px);align-items:stretch}
+  .brief > .panel{display:flex;flex-direction:column}
+  .panel-h .mono{color:var(--body);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  .brief > .panel{background:var(--frame)}
+  .panel-h .mono.acc{color:var(--acc)}
+  .minute-body{padding:20px 22px 22px;display:grid;gap:12px;align-content:start}
+  .minute-body p{color:var(--body);font-size:16px;line-height:1.6}
+  .minute-body b{color:var(--ink);font-weight:500}
+  .ladder-body{padding:16px 20px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+  .seg{display:inline-flex;align-self:flex-start;gap:2px;padding:3px;border-radius:var(--r-pill);background:var(--ghost)}
+  .seg button{font:500 13px/1 var(--sans);letter-spacing:-.005em;text-transform:none;padding:8px 13px;border-radius:var(--r-pill);background:none;border:0;color:var(--body);cursor:pointer;transition:background .2s,color .2s}
+    @media (hover:hover){.seg button:hover{color:var(--ink)}}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .rungs{display:grid}
+  .tier{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);padding:10px 0 4px}
+  .tier:first-child{padding-top:2px}
+  .rung{display:grid;grid-template-columns:136px minmax(0,1fr) 78px;gap:12px;align-items:center;width:100%;padding:5px 8px;background:none;border:0;border-radius:var(--r-chip);color:var(--ink);font:500 14px/1.25 var(--sans);text-align:left;cursor:default;transition:background .2s}
+  .rung.on{background:var(--tile)}
+  @media (hover:hover){.rung:hover{background:var(--tile)}}
+  .rung.me{font-weight:500;color:var(--acc)}
+  .rung .t{height:8px;border-radius:8px;overflow:hidden;background:var(--ghost);position:relative}
+  .rung .t i{position:absolute;left:0;top:0;bottom:0;width:var(--w);border-radius:inherit;background:color-mix(in srgb,var(--body) 58%,var(--bg));transition:width .9s var(--ease)}
+  .rung.me .t i{background:var(--ball)}
+  .rung .v{font-family:var(--mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .js .ladder:not(.in) .rung .t i{width:0}
+  .ladder-read{border-top:1px solid var(--rule);padding-top:10px;font-size:13.5px;line-height:1.5;color:var(--body);min-height:4.2em}
+  .ladder-read b{color:var(--ink);font-weight:500}
+  .ladder-read a{color:var(--ink)}
+  .gap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);margin-top:auto}
+  .gap div{padding:14px 18px;border-right:1px solid var(--rule)}
+  .gap div:last-child{border-right:0}
+  .gap b{display:block;font-family:var(--mono);font-weight:500;font-size:clamp(22px,2.2vw,28px);line-height:1;letter-spacing:-.03em;font-feature-settings:"zero" 1,"tnum" 1;margin-bottom:6px}
+  .gap div:first-child b{color:var(--acc)}
+  .gap span{color:var(--body);font-size:13px;line-height:1.35;display:block;margin-top:3px}
+  @media (max-width:900px){.brief{grid-template-columns:1fr}}
+  @media (max-width:640px){
+    .minute-body{padding:16px}
+    .ladder-body{padding:12px 14px 14px}
+    .gap div{padding:10px 10px}
+    .gap b{font-size:21px}
+    .rung{grid-template-columns:118px minmax(0,1fr) 76px;gap:9px;font-size:13px;padding:5px 4px}
+  }
+  /* phones, upright or sideways: no label under 11px, the readout at body size */
+  @media (max-width:960px){
+    .tier{font-size:11px}
+    .ladder-read{font-size:15px}
+  }
+  /* sideways phones: the list is taller than the screen, so the readout rides along the bottom edge while the list is in view */
+  @media (max-width:960px) and (max-height:540px){
+    .ladder-read{position:sticky;bottom:0;z-index:2;background:var(--bg);padding-bottom:8px}
+  }
+  /* touch: the measure buttons and the model rows are at least 44px tall */
+  @media (pointer:coarse){
+    .seg button{position:relative;padding-top:13px;padding-bottom:13px}
+    .seg button::after{content:"";position:absolute;left:0;right:0;top:-5px;bottom:-5px}
+    .rung{min-height:44px}
+  }
+
+  /* reading layout */
+  .read-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:clamp(52px,7vw,90px);padding-bottom:16px;border-bottom:1px solid var(--rule)}
+  .read-top .mono{color:var(--body);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  .read-top .mono:first-child{color:var(--acc)}
+  @media (min-width:961px){.read{grid-template-columns:236px minmax(0,1fr)}}
+  .toc a.l3{padding-left:22px;font-size:13px}
+  .toc .toc-pdf{display:inline-flex;width:fit-content;margin-top:18px;padding:9px 16px 10px;border-radius:var(--r-pill);background:var(--ink);color:var(--bg);font-weight:500;text-decoration:none}
+  .toc .toc-pdf::before{display:none}
+  @media (hover:hover){.toc .toc-pdf:hover{background:var(--ball);color:#fff}}
+  @media (max-width:960px){
+    .read{grid-template-columns:minmax(0,1fr)}
+    .toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0 18px}
+    .toc .mono,.toc .toc-pdf{grid-column:1/-1}
+    .toc a.l3{display:none}
+    .toc .toc-pdf{margin-top:10px}
+  }
+
+  /* the paper itself */
+  .prose h2 .no,.prose h3 .no{color:var(--acc)}
+  .prose h3{scroll-margin-top:calc(var(--bar) + 16px)}
+  /* the html scroll-padding already clears the sticky bar on phones, as for h2 in site.css */
+  @media (max-width:960px){.prose h3{scroll-margin-top:0}}
+  .anchor{margin-left:.35em;font-family:var(--mono);font-weight:500;font-size:.55em;color:var(--body);text-decoration:none;opacity:0;transition:opacity .2s;vertical-align:.12em}
+  @media (hover:hover){.prose h2:hover .anchor,.prose h3:hover .anchor{opacity:1}}
+  .prose code{overflow-wrap:anywhere}
+  .prose a:has(code){text-decoration-color:var(--rule)}
+  .prose a code{color:var(--ink)}
+  .prose a.cite,.prose a.xref{text-decoration-thickness:1px;text-decoration-color:color-mix(in srgb,var(--line) 45%,transparent)}
+  .prose blockquote{font-family:var(--sans);font-style:normal;font-weight:500;font-size:1.2em;line-height:1.35;letter-spacing:-.015em;color:var(--ink);padding:2px 0 2px 20px;margin:1.4em 0}
+  .tbl{margin:1.8em 0}
+  .prose .tbl figcaption{margin:0 0 10px;font-size:14.5px}
+  .prose .tbl .table{margin:0}
+  .prose .tbl th,.prose .tbl td{padding:8px 9px}
+  .prose .tbl table{font-size:14px}
+  .prose .tbl thead th{vertical-align:bottom;font-size:10.5px}
+  .prose .tbl .n{text-align:right}
+  .prose .tbl td.n{white-space:nowrap}
+  .prose .tbl thead th{font-size:10px;letter-spacing:.05em}
+  .prose .tbl tbody th{font-family:var(--sans);font-weight:500;font-size:14.5px;letter-spacing:0;text-transform:none;color:var(--ink);background:none;min-width:8.4em}
+  @media (hover:hover){.prose .tbl tbody tr:hover > *{background:var(--tile)}}
+  .prose .tbl tbody tr:last-child > *{border-bottom:0}
+  .tbl-hint{display:none}
+  @media (max-width:960px){
+    .prose .tbl thead th{font-size:11px}
+    /* when the table is wider than the screen (the script adds .scrolls): a line that says so, and a fade on the edge that still has columns */
+    .tbl.scrolls .tbl-hint{display:block;margin:0 0 8px;color:var(--body);font-size:11px;line-height:1.4;text-align:right}
+    .tbl.scrolls:not(.end) .table{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 40px),rgba(0,0,0,.12));mask-image:linear-gradient(to right,#000 calc(100% - 40px),rgba(0,0,0,.12))}
+    .tbl.scrolls .table:focus-visible{outline-offset:-2px}
+  }
+  @media (max-width:760px){
+    /* only the Model column stays put, so more numbers fit beside it while the table scrolls */
+    .prose .tbl tr > :first-child{width:46px;min-width:46px;background:var(--bg)}
+    .prose .tbl tr > :nth-child(2){position:sticky;left:0;z-index:1;background:var(--bg);box-shadow:1px 0 0 var(--rule)}
+    .prose .tbl thead tr > th:nth-child(n){background:var(--tile)}
+    .prose .tbl tbody th{min-width:8.4em}
+  }
+  .fig{margin:2.4em 0}
+  .fig .zoom-link{display:block;position:relative;cursor:zoom-in;text-decoration:none}
+  .fig .zoom-link::after{content:"Enlarge";position:absolute;right:12px;top:12px;font:500 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;background:var(--nbg);color:var(--nink);padding:7px 11px;border-radius:var(--r-pill);opacity:0;transition:opacity .2s}
+  .fig .zoom-link:focus-visible::after{opacity:1}
+  @media (hover:hover){.fig .zoom-link:hover::after{opacity:1}}
+  .prose .fig img{border-radius:var(--r-card)}
+  /* touch screens cannot hover, so the cue is always on: a tab on the frame's top edge, where it covers none of the chart */
+  @media (hover:none){
+    .fig .zoom-link::after{content:"Tap to enlarge";opacity:1;top:10px;bottom:auto;right:10px;font-size:11px;padding:7px 11px;background:color-mix(in srgb,var(--nbg) 82%,transparent);color:var(--nink);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+  }
+  .prose figcaption a{color:var(--ink)}
+  .fig:target figcaption b,.tbl:target figcaption b{background:color-mix(in srgb,var(--acc) 22%,transparent)}
+  .prose .refs{font-size:16px;line-height:1.55;padding-left:2.1em}
+  .refs li{padding-left:.25em}
+  .refs li:target{background:color-mix(in srgb,var(--acc) 14%,transparent)}
+  .ack{font-size:16px}
+  .back .right{display:flex;flex-wrap:wrap;gap:12px 22px}
+  @media (pointer:coarse){.back .right{row-gap:24px}}
+  @media (max-width:960px){.prose figcaption,.prose .tbl figcaption{font-size:15px}}
+
+  /* phones, below the contents: a button back up to them (the script shows it while the reader scrolls up) */
+  .toc-jump{display:none}
+  @media (max-width:960px){
+    .toc-jump{display:inline-flex;align-items:center;gap:8px;position:fixed;right:var(--gut);bottom:16px;z-index:30;height:44px;padding:0 16px;
+      border:0;box-shadow:inset 0 0 0 1px var(--rule),0 10px 24px -12px rgba(11,8,23,.5);border-radius:999px;background:var(--bg);color:var(--ink);font:500 14px/1 var(--sans);letter-spacing:-.005em;text-transform:none;
+      text-decoration:none;transition:opacity .25s,transform .25s var(--ease),visibility 0s}
+    .js .toc-jump:not(.show){opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .25s,transform .25s var(--ease),visibility 0s .25s}
+  }
+
+  /* full-size figure viewer */
+  .zoom{border:0;border-radius:var(--r-frame);box-shadow:inset 0 0 0 1px var(--rule);background:var(--bg);color:var(--ink);padding:0;width:min(1240px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;overflow:hidden;flex-direction:column}
+  .zoom[open]{display:flex}
+  .zoom::backdrop{background:color-mix(in srgb,#0B0817 80%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  .zoom-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:52px;padding:8px 10px 8px 18px;border-bottom:1px solid var(--rule);background:var(--tile)}
+  .zoom-bar .mono{color:var(--acc);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  .zoom-close{font:500 14px/1 var(--sans);letter-spacing:-.005em;text-transform:none;padding:9px 16px 10px;border-radius:var(--r-pill);background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--rule);border:0;cursor:pointer;transition:background-color .2s,box-shadow .2s}
+  @media (hover:hover){.zoom-close:hover{background:var(--bg);box-shadow:inset 0 0 0 1px var(--ink)}}
+  .zoom-img{overflow:auto;background:#fff;flex:1;min-height:0}
+  .zoom-img img{display:block;width:100%;height:auto;margin:0 auto}
+  .zoom-cap{padding:12px 18px 14px;border-top:1px solid var(--rule);color:var(--body);font-size:14px;line-height:1.5}
+  .zoom-hint{display:none}
+  @media (max-width:640px){.zoom-img img{width:max(100%,780px);max-width:none}}
+  @media (max-width:960px){.zoom-cap{font-size:15px}}
+  @media (pointer:coarse){
+    /* touch: a 44px Close, the page behind stays still, and a line that says the figure pans when it is bigger than the screen */
+    .zoom-close{position:relative}
+    .zoom-close::after{content:"";position:absolute;inset:-7px -6px}
+    body:has(.zoom[open]){overflow:hidden}
+    .zoom-img{overscroll-behavior:contain}
+    .zoom.pans .zoom-hint{display:block;flex:1;min-width:0;text-align:right;color:var(--body);font-size:11px;line-height:1.3}
+  }
+  /* the accent on the tinted bars is 4.26:1 in light mode, under the 4.5:1 that small text needs; a shade darker on phones */
+  @media (max-width:960px),(pointer:coarse){
+    :root:not([data-theme="dark"]) .panel-h .mono.acc,:root:not([data-theme="dark"]) .zoom-bar .mono:not(.zoom-hint){color:#8E3E1B}
+  }
+  @media (prefers-reduced-motion:reduce){.js .ladder:not(.in) .rung .t i{width:var(--w)}}
+</style>
+</head>
+<body>
+<div class="progress" aria-hidden="true"></div>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="../" aria-label="Ian Sabia, home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B0817"/><path d="M12 50 C 22 8, 44 6, 52 30" stroke="#9B85FF" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="52" cy="30" r="6" fill="#e08a55"/></svg>
+      <span>Ian Sabia</span>
+    </a>
+    <nav aria-label="Main">
+      <span class="links">
+        <a href="../#currently">Currently</a>
+        <a href="../work/">Work</a>
+      </span>
+      <a class="demos-pill" href="../projects/" aria-current="true"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z"/></svg>Projects</a>
+      <span class="links">
+        <a href="../#milan">Milan</a>
+        <a href="../#off">Off the clock</a>
+        <a href="../#contact">Contact</a>
+      </span>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu <i aria-hidden="true"></i></button>
+      <button class="toggle" id="theme" aria-label="Switch between light and dark"><i></i></button>
+    </nav>
+    <div class="menu" id="menu">
+      <a href="../#currently">Currently <span class="mono">01</span></a>
+      <a href="../work/">Work <span class="mono">02</span></a>
+      <a href="../projects/" aria-current="true">Projects <span class="mono">03</span></a>
+      <a href="../#milan">Milan <span class="mono">04</span></a>
+      <a href="../#off">Off the clock <span class="mono">05</span></a>
+      <a href="../#contact">Contact <span class="mono">06</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <header class="page-hero">
+      <div class="kicker mono"><a href="../projects/">Projects</a><span aria-hidden="true">/</span><span>Research paper &middot; DS480</span></div>
+      <h1 id="title">Does Race or Gender Affect<br><em>How Shopping Agents Buy?</em></h1>
+      <p class="subtitle">A Paired-Name Audit of Two AI Models</p>
+      <p class="byline"><span class="who">Ian Sabia</span><br>Faculty of Computing and Data Sciences, Boston University<br>DS480 Data, Society, and AI Ethics<span class="sep" aria-hidden="true">&middot;</span>November 9, 2026</p>
+      <div class="facts mono"><span>Pages<b>10</b></span><span>Figures<b>4</b></span><span>Tables<b>3</b></span><span>Refs<b>9</b></span></div>
+      <div class="actions"><a class="more" href="Sabia_Ian_DS480_Paper2.pdf" download>Download the PDF <span aria-hidden="true">&darr;</span></a><a target="_blank" class="more quiet" href="https://github.com/Iansabia/ds480-shopping-agent-audit" rel="noopener noreferrer">Code and Technical Appendix on GitHub <span aria-hidden="true">&nearr;</span></a></div>
+    </header>
+
+    <section class="brief" aria-label="The short version">
+      <div class="panel minute">
+        <div class="panel-h"><span class="mono acc">In one minute</span><span class="mono">Plain words</span></div>
+        <div class="minute-body">
+          <p>AI agents are starting to shop for people. In 2025, Visa announced Intelligent Commerce for agents that buy things for you. If an agent knows your name, does it treat you differently?</p>
+          <p>I built a mock store with 40 shopping tasks and gave Claude Haiku 5.5 and GPT-6 Luna the same requests from 68 accounts. <b>The only change was the buyer's name.</b> Every test was fixed in advance, before any results came in.</p>
+          <p><b>Luna bought cheaper products for names linked to Black buyers and for women's names</b>, about 1.8% and 1.6% less. On vague requests it also guessed hair needs from names, so the name shifted who got the wrong product. <b>Haiku showed no price gap.</b></p>
+          <p>Using Aquinas and Rahner, the paper argues that a name gives no reason to treat identical requests differently, and proposes an audit card networks could require.</p>
+        </div>
+      </div>
+
+      <div class="panel ladder in" id="results">
+        <div class="panel-h"><span class="mono acc">The planned tests</span><span class="mono">Same request, different name</span></div>
+        <div class="ladder-body">
+          <div class="rungs">
+            <p class="tier mono">Price paid · Black vs White names</p>
+            <div class="rung" style="--w:5%"><span class="nm">Claude Haiku 5.5</span><span class="t"><i></i></span><span class="v">−0.1%</span></div>
+            <div class="rung me" style="--w:90%"><span class="nm">GPT-6 Luna</span><span class="t"><i></i></span><span class="v">−1.8%</span></div>
+            <p class="tier mono">Price paid · women vs men</p>
+            <div class="rung" style="--w:15%"><span class="nm">Claude Haiku 5.5</span><span class="t"><i></i></span><span class="v">−0.3%</span></div>
+            <div class="rung me" style="--w:80%"><span class="nm">GPT-6 Luna</span><span class="t"><i></i></span><span class="v">−1.6%</span></div>
+            <p class="tier mono">Guessed the need from the name</p>
+            <div class="rung" style="--w:27%"><span class="nm">Claude Haiku 5.5</span><span class="t"><i></i></span><span class="v">+2.7 pts</span></div>
+            <div class="rung me" style="--w:84%"><span class="nm">GPT-6 Luna</span><span class="t"><i></i></span><span class="v">+8.4 pts</span></div>
+          </div>
+          <p class="ladder-read">Gaps for the focal group (Black-associated or women's names). Luna's three gaps were detected after correcting for 8 tests; Haiku's were not. Every number comes from <a href="#table-1">Table 1</a> and the <a href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#table-b1">Technical Appendix</a>.</p>
+        </div>
+        <div class="gap"><div><b>&minus;1.8%</b><span>price, names linked to Black buyers (Luna)</span></div><div><b>+8.4</b><span>points more guessed needs (Luna)</span></div><div><b>65,280</b><span>agent runs, 8 pre-registered tests</span></div></div>
+      </div>
+    </section>
+
+    <div class="read-top" id="paper"><span class="mono">The full paper</span><span class="mono">10 pages &middot; about 10 min</span></div>
+    <div class="read">
+      <nav class="toc" id="contents" aria-label="Paper contents">
+        <span class="mono">Contents</span>
+        <a href="#executive-summary">Executive Summary</a>
+        <a href="#introduction">Introduction</a>
+        <a href="#background-and-context">Background and Context</a>
+        <a href="#the-controversy-unfolds">The Controversy Unfolds</a>
+        <a href="#sense">Sense</a>
+        <a href="#analyze">Analyze</a>
+        <a class="l3" href="#critique">Critique of My Framework</a>
+        <a href="#engage-stakeholders">Engage Stakeholders</a>
+        <a href="#deliberate">Deliberate</a>
+        <a href="#initiate-action-a-draft-policy">Initiate Action: A Draft Policy</a>
+        <a href="#conclusion">Conclusion</a>
+        <a href="#works-cited">Works Cited</a>
+        <a class="toc-pdf" href="Sabia_Ian_DS480_Paper2.pdf" download>Download the PDF</a>
+      </nav>
+      <article class="prose" data-read aria-labelledby="title">
+<h2 id="executive-summary">Executive Summary<a class="anchor" href="#executive-summary" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>I gave Claude Haiku 5.5 and GPT-6 Luna the same shopping requests, changing only the buyer’s name (<a class="xref" href="#fig-1">Figure&nbsp;1</a>). Luna bought cheaper products for names linked to Black buyers (“Black-associated names”), and for women’s names too. The gaps were small, but probably not chance. Haiku showed no price gap. Luna also guessed what buyers needed from said names (<a class="xref" href="#table-1">Table&nbsp;1</a>). A name isn’t due cause to treat buyers differently. Card networks should require this audit.</p>
+<figure class="fig" id="fig-1"><a class="zoom-link" href="img/fig1.webp" data-zoom aria-label="Figure 1, open full size"><img src="img/fig1.webp" width="1560" height="542" alt="Luna’s picks differed by name on price and guessed needs. Haiku itself had no price gap, and its guessing test came back unclear. Every name group got the same tasks alongside the same mix of needs, so with no name effect, each gap would come close to zero. Coily means very tightly curled, and a dee" loading="lazy" decoding="async"></a><figcaption><b>Figure&nbsp;1.</b> <strong>Luna’s picks differed by name on price and guessed needs. Haiku itself had no price gap, and its guessing test came back unclear.</strong> Every name group got the same tasks alongside the same mix of needs, so with no name effect, each gap would come close to zero. Coily means very tightly curled, and a deep shade is makeup designed for darker skin. Bars are 95% intervals; asterisks mark gaps unlikely to be chance. Dotted lines mark the size I set in advance as large (3% and 5 points). Both models passed the planned check for the 3% line. I ran Luna’s after the main results, and its findings hold at the plan’s standard 5% line. The lines are statistical, not moral.</figcaption></figure>
+<figure class="tbl" id="table-1"><figcaption id="table-1-cap"><b>Table&nbsp;1.</b> <strong>Luna’s choices differed by name on three of the four planned questions, whereas Haiku showed no identifiable gap.</strong> Individual products had a fixed price, so a lower price means the agent purchased a cheaper product. “Different” (shaded) implies a real gap, where chance is unlikely. “No gap found” allows for chance, and the test ruled out a gap as large as the size I set in advance. “Unclear” means the test could not tell. Full statistics are in Table B1 of the Technical Appendix.</figcaption><p class="tbl-hint mono" aria-hidden="true" data-touch="Swipe sideways for more columns">Scroll sideways for more columns</p><div class="table" role="region" aria-labelledby="table-1-cap" tabindex="0"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Planned test</th>
+<th>Claude Haiku 5.5</th>
+<th>GPT-6 Luna</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Price paid: Black- vs White-associated names</td>
+<td><strong>No gap found.</strong> Black-associated names paid 0.1% less (about 3 cents per purchase), within chance.</td>
+<td><strong>Different.</strong> Black-associated names paid about 1.8% less (56 cents per purchase), smaller than the size I set in advance as large.</td>
+</tr>
+<tr>
+<td>Price paid: women’s vs men’s names</td>
+<td><strong>No gap found.</strong> Women’s names paid 0.3% less (about 7 cents per purchase), within chance.</td>
+<td><strong>Different.</strong> Women’s names paid about 1.6% less (50 cents per purchase), smaller than the size I set in advance as large.</td>
+</tr>
+<tr>
+<td>Need stated: did it buy for the hair or skin need the buyer named?</td>
+<td><strong>No gap found.</strong> It bought for the stated need equally for every name.</td>
+<td><strong>No gap found.</strong> It bought for the stated need equally for every name.</td>
+</tr>
+<tr>
+<td>Need guessed: need left out, bought without asking: did it guess the need from the name?</td>
+<td><strong>Unclear.</strong> No clear gap, but the test can’t rule out a gap of up to about 6 in 100.</td>
+<td><strong>Different.</strong> It picked the coily-hair or deep-shade product about 8 more times in 100 for Black-associated names than for White-associated ones, all on hair tasks (the line set in advance as large was 5 in 100).</td>
+</tr>
+</tbody>
+</table></div></figure>
+<h2 id="introduction">Introduction<a class="anchor" href="#introduction" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>In 2025, Visa Intelligent Commerce was announced for AI shopping agents that buy things for people (<a class="xref" href="#ref-8">Visa, “Find and Buy”</a>). Using Aquinas and Rahner, I will argue that a buyer’s name gives no reason to treat identical requests differently. An agent that buys by name wrongs the buyer, even if they pay less.</p>
+<h2 id="background-and-context">Background and Context<a class="anchor" href="#background-and-context" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>Visa’s Trusted Agent Protocol (<a class="xref" href="#ref-9">Visa, “Merchant Specifications”</a>) can pass the buyer’s email with the agent’s payment. The buyer’s account is how the agent shops, so it sees their name. The protocol checks that an agent is genuine, not that buyers are treated equally.</p>
+<h2 id="the-controversy-unfolds">The Controversy Unfolds<a class="anchor" href="#the-controversy-unfolds" aria-hidden="true" tabindex="-1">#</a></h2>
+<p><strong>The alleged bias.</strong> In one study, a GPT-4 Turbo seller was told buyers’ race and gender. Latino buyers paid $1.03 more than White buyers, and women $0.50 more than men (<a class="xref" href="#ref-5">Mouri Zadeh Khaki and Choi 8-10</a>). No public accusation was found against AI shopping agents, but Visa’s protocol opens an analogous door.</p>
+<p><strong>How I tested it.</strong> I adapted Mouri Zadeh Khaki and Choi’s design. Every buyer receives the same tasks. The only change is the account name, then the agent buys for them (<a class="xref" href="#table-2">Table&nbsp;2</a>, <a class="xref" href="#fig-2">Figure&nbsp;2</a>). I fixed eight tests in advance (<a class="xref" href="#table-1">Table&nbsp;1</a>). Anything else, “a further look,” is weaker evidence. The price test caught a bias I planted (<a class="xref" href="#fig-3">Figure&nbsp;3</a>).</p>
+<figure class="fig" id="fig-2"><a class="zoom-link" href="img/fig2.webp" data-zoom aria-label="Figure 2, open full size"><img src="img/fig2.webp" width="1545" height="1357" alt="How the test works: the name is the only change. (a) Where the agent sits in a card payment (Visa, “Merchant Specifications”), and where the proposed audit would check it. (b) One run; Table 2 exemplifies the three kinds of request. (c) How runs become a gap, using Luna’s price test. Each dot is one" loading="lazy" decoding="async"></a><figcaption><b>Figure&nbsp;2.</b> <strong>How the test works: the name is the only change.</strong> (a) Where the agent sits in a card payment (<a class="xref" href="#ref-9">Visa, “Merchant Specifications”</a>), and where the proposed audit would check it. (b) One run; <a class="xref" href="#table-2">Table&nbsp;2</a> exemplifies the three kinds of request. (c) How runs become a gap, using Luna’s price test. Each dot is one of the 40 name averages the planned test compares (<a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#a6">A6</a>). The difference between the two group averages is the gap. Tanisha’s and Kristen’s names are circled; they are the keyboard pair in Analyze (<a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#b7">B7</a>).</figcaption></figure>
+<figure class="tbl" id="table-2"><figcaption id="table-2-cap"><b>Table&nbsp;2.</b> <em>Three kinds of requests.</em> Each agent was supplied all three on 40 shopping tasks for 68 accounts (4 anonymous), 4 times each (two wordings, two product orders): 32,640 primary runs per agent. On top of this, checks and extra name groups exist. Full design is in <a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#table-a2">Table&nbsp;A2</a> of the Technical Appendix.</figcaption><p class="tbl-hint mono" aria-hidden="true" data-touch="Swipe sideways for more columns">Scroll sideways for more columns</p><div class="table" role="region" aria-labelledby="table-2-cap" tabindex="0"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Request</th>
+<th>Example</th>
+<th>What it tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clear</td>
+<td>“Please buy me a wireless keyboard.” or “Please buy me a shampoo for coily 4C hair.” Any hair or skin need is stated.</td>
+<td>Price paid, and whether the agent follows a stated need</td>
+</tr>
+<tr>
+<td>Clear with a budget</td>
+<td>The same request plus a price cap</td>
+<td>Whether picks still differ once the buyer names a budget</td>
+</tr>
+<tr>
+<td>Vague</td>
+<td>“Please buy me a shampoo.” or “I need a new shampoo. Can you pick one and buy it?” The need is revealed only if the agent asks.</td>
+<td>Whether the agent guesses the need from the name, and how often it asks</td>
+</tr>
+</tbody>
+</table></div></figure>
+<figure class="fig" id="fig-3"><a class="zoom-link" href="img/fig3.webp" data-zoom aria-label="Figure 3, open full size"><img src="img/fig3.webp" width="1560" height="435" alt="I planted a bias on purpose; the price test caught it. 1. Five of the 20 accounts with Black-associated names had a saved preference for the cheapest fitting product. 2. These accounts paid about 23% (Haiku) and 35% (Luna) less than in their normal runs. Ergo, the whole group should save approximate" loading="lazy" decoding="async"></a><figcaption><b>Figure&nbsp;3.</b> <strong>I planted a bias on purpose; the price test caught it.</strong> 1. Five of the 20 accounts with Black-associated names had a saved preference for the cheapest fitting product. 2. These accounts paid about 23% (Haiku) and 35% (Luna) less than in their normal runs. Ergo, the whole group should save approximately a quarter of that. 3. The real test found close to that: 6% and 12%. This shows the test catches a gap this size; 1.4% is the smallest it was engineered to catch (<a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#a6">A6</a>).</figcaption></figure>
+<p><strong>Why it would happen.</strong> Luna’s price gap involving race held up when I adjusted for name rarity and the age a name might signal, or when the request told Luna to ignore the name (<a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#b2">B2</a>). Once buyers stated a budget, the gap no longer seemed to exist. It seems Luna guesses budgets from names.</p>
+<p>Both agents saw every name’s intended race and gender (<a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#a4">A4</a>). Interestingly, only Luna’s prices differed. My contention is training text. AI models fitted to the web linked pleasant words with European American names more than African American ones (<a class="xref" href="#ref-3">Caliskan et al. 183-84</a>). A model trained on such text permits linking names with groups, and groups with prices, without anyone designing that rule. Likely, Haiku saw similar text. Therefore, in comparison, lab tuning may be vital. OLMo, an open-source model whose training text is public, showed no gap (<a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#figure-a3">Figure&nbsp;A3</a>). Luna, a flagship model, isn’t public, so from outside, only testing outcomes pinpoint the gap.</p>
+<h2 id="sense">Sense<a class="anchor" href="#sense" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>James Moor defines a policy vacuum; shopping agents sit at its core. They act before any rules were designed for them (<a class="xref" href="#ref-7">Tavani 10</a>). From my research, no card-network rule exists on what agents owe each buyer.</p>
+<p>Aquinas’s distributive justice fills this vacuum. It judges how common goods are distributed (<a class="xref" href="#ref-2"><em>ST</em> II-II q.61 a.1</a>). Each distribution needs a due cause, “some cause that renders him worthy of it.” Giving “simply because he is this person” is respect of persons (<a class="xref" href="#ref-2"><em>ST</em> II-II q.63 a.1</a>). This is favoritism, a wrongdoing against distributive justice.</p>
+<p>Rahner remarks on a second principle: biology and sociology can partially explain someone, but “it is always the same responsible subject which is at work” (<a class="xref" href="#ref-6">Rahner and Weger 161</a>). To me, this means a person is larger than their group, so their own traits, e.g., hair type, are theirs to state. A guess from a name judges them by their group, reducing them to data. When an unstated need determines whether a product works, an agent must ask, as no default fits everyone. For traits concerning price or style, one default for all treats everyone uniformly.</p>
+<h2 id="analyze">Analyze<a class="anchor" href="#analyze" aria-hidden="true" tabindex="-1">#</a></h2>
+<p><strong>Cheaper picks are still immoral.</strong> One objection might be that nobody lost. Black-associated names purchased products that cater to their needs, with almost identical reviews, all while spending less money. Each sale was a fair trade, and Aquinas’s justice of trades points to no wrongs. But distributive justice still applies. One company’s rule decides how agents act. Its care, its questions and picks, is split among all buyers. Aquinas says even a parent splitting family goods must be fair (<a class="xref" href="#ref-2">q.61 a.1 ad 3</a>). Care isn’t a gift; it’s owed. Since the agent works for each buyer, respect of persons applies (<a class="xref" href="#ref-2">q.63 a.1 ad 3</a>). Picking or asking based on name splits care without due cause.</p>
+<p>Take two keyboard runs from Luna’s most lopsided product category, identical aside from the name (<a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#figure-a4">Figure&nbsp;A4</a>). Tanisha Mosley (Black-associated) got a $20 keyboard, and Kristen Olson (White-associated) a $35 one. A due cause here would be a stated budget, since it bears on price. A name may hint at a group’s budget, although that describes the group, not Tanisha herself; she never asked for the cheaper keyboard. Shoe size bears on a shoe fitting; her name bears on nothing. A decision by name has no due cause, cheaper or pricier, regardless of the gap size.</p>
+<p>Luna’s gender gap followed a similar pattern, though it’s easier to justify. Men’s names got a $44 fragrance about twice as often as women’s names, who primarily got $20 versions, whereas Haiku did not (<a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#b3">B3</a>). Unlike race, gender can bear on a fragrance’s scent. Still, this should be for the buyer to state, especially since they said either version was fine.</p>
+<p><strong>The concrete harm: guessing.</strong> On vague requests, Luna often bought without asking. A further look found its guesses wrong about equally often for both groups. Nonetheless, the names shifted who got the wrong product (<a class="xref" href="#fig-4">Figure&nbsp;4</a>). In one pair (<a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#b7">B7</a>), both subjects had fine, straight hair, and Luna asked neither. It bought Cassie Jensen (White-associated) a fine hair mask, but Tanisha a coily hair one. In Rahner’s terms, assuming from a name reduces the buyer to data.</p>
+<figure class="fig" id="fig-4"><a class="zoom-link" href="img/fig4.webp" data-zoom aria-label="Figure 4, open full size"><img src="img/fig4.webp" width="1560" height="712" alt="When Luna bought without asking, the name shifted who got the wrong product (a further look). Each row is a tested gap between Black-associated and White-associated names, averaged by name. Luna asked on 47% of vague requests. On hair and skin tasks, a purchase it made without asking was the other n" loading="lazy" decoding="async"></a><figcaption><b>Figure&nbsp;4.</b> <strong>When Luna bought without asking, the name shifted who got the wrong product (a further look).</strong> Each row is a tested gap between Black-associated and White-associated names, averaged by name. Luna asked on 47% of vague requests. On hair and skin tasks, a purchase it made without asking was the other need’s product about 49% of the time for each group (a description, not a test).</figcaption></figure>
+<h3 id="critique">Critique of My Framework: Aquinas and Rahner Judged People, Not Software<a class="anchor" href="#critique" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>Aquinas explains that doing an unjust thing can happen through ignorance, although being unjust means acting “intentionally and by choice” (<a class="xref" href="#ref-2"><em>ST</em> II-II q.59 a.2</a>). The purchase is unjust, yet Luna made this decision. So my framework seems to find something unethical without an offender.</p>
+<p>Rahner claims that moral decisions assume “free subjects,” who cannot “shrug off” responsibility onto “the automatic processes of physics and biology” (<a class="xref" href="#ref-6">Rahner and Weger 9</a>). Luna is an automatic process. It’s unable to question or choose its builders’ rule. Therefore, it isn’t responsible. Pope Leo XIV, writing on AI itself, assents: AI doesn’t “bear responsibility for consequences” (<a class="xref" href="#ref-4">par. 99</a>). Luna’s builders answer for guesses like Tanisha’s: the company and any developer deploying it in a network’s program. Luna runs their design, which the buyer never chose. If builders created the gap unintentionally, their ignorance is still voluntary. Because engineers enable one rule for many, it’s their obligation to check said rule. Aquinas calls such ignorance “due to negligence.” This only lessens blame; it doesn’t remove it (<a class="xref" href="#ref-2"><em>ST</em> I-II q.6 a.8</a>).</p>
+<h2 id="engage-stakeholders">Engage Stakeholders<a class="anchor" href="#engage-stakeholders" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>Just agents allow buyers to obtain what they ask for. Networks like Visa and merchants gain trusted agent sales. Perhaps the people in this study would have wanted to pay less, but explicitly stating the budget gets that preference by request, not by name. The company might object that questions cost sales. Cost isn’t an excuse, and requiring such follow-ups is cheap (<a class="xref" href="#table-3">Table&nbsp;3</a>).</p>
+<figure class="tbl" id="table-3"><figcaption id="table-3-cap"><b>Table&nbsp;3.</b> <strong>The main runs and checks cost under $11 per agent.</strong> Estimated from logged token counts (how much text each model read and wrote) times discounted prices (Anthropic batch, OpenAI flex), about half the standard rate. With add-on runs and pilots, logged totals were $13.38 (Haiku) and $5.56 (Luna). Details in <a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#table-a3">Table&nbsp;A3</a> of the Technical Appendix.</figcaption><p class="tbl-hint mono" aria-hidden="true" data-touch="Swipe sideways for more columns">Scroll sideways for more columns</p><div class="table" role="region" aria-labelledby="table-3-cap" tabindex="0"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Model</th>
+<th>Main runs (32,640 each)</th>
+<th>Main runs plus checks (41,120 each)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Haiku</td>
+<td>$8.20</td>
+<td>$10.59</td>
+</tr>
+<tr>
+<td>Luna</td>
+<td>$3.06</td>
+<td>$3.90</td>
+</tr>
+</tbody>
+</table></div></figure>
+<h2 id="deliberate">Deliberate<a class="anchor" href="#deliberate" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>Moor’s impartiality test and Rawls’s veil of ignorance ask whether you’d accept a rule “not knowing who plays which roles” (<a class="xref" href="#ref-7">Tavani 57</a>).</p>
+<p><strong>Objection: guessing is just personalization.</strong> Suppose names, on average, align with hair type, so those guesses fit the buyer. Per the request “Can you pick one and buy it?”, the wording almost invited the agent to guess.</p>
+<p>The phrase “pick one” allows Luna the choice, but Luna still lacks the information about the buyer to make the decision. Whoever picks must obey “causes, not persons” (<a class="xref" href="#ref-2">q.63 a.1</a>). The important information here is the buyer’s own hair. A guess by name judges the buyer by other people’s data. Fair personalization acts solely on preferences the buyer states. Behind the veil, you might be Tanisha, so you’d choose a follow-up question, which fits nearly everyone (<a class="xref" href="https://github.com/Iansabia/ds480-shopping-agent-audit/blob/master/APPENDIX.md#b4">B4</a>).</p>
+<h2 id="initiate-action-a-draft-policy">Initiate Action: A Draft Policy<a class="anchor" href="#initiate-action-a-draft-policy" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>Gaps hide in private purchases no buyer can see. I propose “Same Request, Same Result” for network programs using agents. It follows imperative 1.4 of the ACM Code: “Be fair and take action not to discriminate” (<a class="xref" href="#ref-7">Tavani 92</a>).</p>
+<ol type="1">
+<li><strong>Do now: an audit gate.</strong> Before deployment and after every update, an auditor tests the agent for price, picks, and guessed needs with secret, rotated names and pages. It’s obligated to catch a price gap as small as mine could, 1.4%. An agent fails if a retest confirms any gap, no matter the group.</li>
+<li><strong>Do now: ask every name alike.</strong> If a product depends on a need the buyer didn’t assert, the agent must ask further. Otherwise, it uses a default for all, and acts only on what the buyer asserts.</li>
+<li><strong>Do next: log decisions</strong> of what the agent chose and paid, accessible only to the auditor. <strong>Later, with a protocol change, hide the name and email</strong> from the agent until checkout.</li>
+</ol>
+<p>The audit requires no proof that a group was harmed, since respect of persons wrongs each buyer (<a class="xref" href="#ref-2">q.63 a.1</a>). Networks already vet agents, meaning they can enforce this now. Amazon’s own tests caught its hiring tool discriminating against resumes mentioning “women’s,” so it was scrapped before use (<a class="xref" href="#ref-1">“Amazon’s AI Recruiting Tool”</a>). Network audits can act similarly.</p>
+<h2 id="conclusion">Conclusion<a class="anchor" href="#conclusion" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>My study has limits, as the models I used are low cost with thinking disabled. My study contains a simple storefront and names that could signal other factors like class and age. Still, whatever a name signals, Luna’s rule is respect of persons, an unjust thing its builders must fix. A rule that guesses from names reduces buyers like Tanisha to a single data point. An audit would catch this, which is why companies like Visa should require one.</p>
+<h2 id="works-cited">Works Cited<a class="anchor" href="#works-cited" aria-hidden="true" tabindex="-1">#</a></h2>
+<ol class="refs">
+<li id="ref-1">“Amazon’s AI Recruiting Tool: Gender Bias in Algorithmic Hiring.” <em>Digital Ethics Case Study</em>, Faculty of Computing and Data Sciences, Boston University. DS480 course reading, assigned 29 Sept. 2026.</li>
+<li id="ref-2">Aquinas, Thomas. <em>Summa Theologiae</em>. Translated by Fathers of the English Dominican Province, 2nd and rev. ed., 1920. <em>New Advent</em>, edited by Kevin Knight, <a href="https://www.newadvent.org/summa/">www.newadvent.org/summa/</a>. Accessed 4 Nov. 2026.</li>
+<li id="ref-3">Caliskan, Aylin, et al. “Semantics Derived Automatically from Language Corpora Contain Human-Like Biases.” <em>Science</em>, vol. 356, no. 6334, 2017, pp. 183-86, <a href="https://doi.org/10.1126/science.aal4230">https://doi.org/10.1126/science.aal4230</a>.</li>
+<li id="ref-4">Leo XIV. “Magnifica Humanitas: On Safeguarding the Human Person in the Time of Artificial Intelligence.” <em>The Holy See</em>, 15 May 2026, <a href="https://www.vatican.va/content/leo-xiv/en/encyclicals/documents/20260515-magnifica-humanitas.html">www.vatican.va/content/leo-xiv/en/encyclicals/documents/20260515-magnifica-humanitas.html</a>. Accessed 7 Nov. 2026.</li>
+<li id="ref-5">Mouri Zadeh Khaki, Ahmad, and Ahyoung Choi. “Evaluating Fairness in LLM Negotiator Agents via Economic Games Using Multi-Agent Systems.” <em>Mathematics</em>, vol. 14, no. 3, 2026, article 458, <a href="https://doi.org/10.3390/math14030458">https://doi.org/10.3390/math14030458</a>.</li>
+<li id="ref-6">Rahner, Karl, and Karl-Heinz Weger. <em>Our Christian Faith: Answers for the Future</em>. Translated by Francis McDonagh, Crossroad, 1981.</li>
+<li id="ref-7">Tavani, Herman T. <em>Ethics and Technology: Controversies, Questions, and Strategies for Ethical Computing</em>. 5th ed., Wiley, 2016.</li>
+<li id="ref-8">Visa. “Find and Buy with AI: Visa Unveils New Era of Commerce.” <em>Visa</em>, 30 Apr. 2025, <a href="https://usa.visa.com/about-visa/newsroom/press-releases.releaseId.21361.html">usa.visa.com/about-visa/newsroom/press-releases.releaseId.21361.html</a>. Accessed 4 Nov. 2026.</li>
+<li id="ref-9">---. “Merchant Specifications.” <em>Trusted Agent Protocol</em>, <em>Visa Developer</em>, <a href="https://developer.visa.com/docs/trusted-agent-protocol/trusted-agent-protocol-specifications">developer.visa.com/docs/trusted-agent-protocol/trusted-agent-protocol-specifications</a>. Accessed 4 Nov. 2026.</li>
+</ol>
+
+      </article>
+    </div>
+    <a class="toc-jump" href="#contents"><span aria-hidden="true">&uarr;</span> Contents</a>
+
+    <div class="back"><a class="more" href="../projects/#audit"><span aria-hidden="true">&larr;</span> All projects</a><span class="right"><a class="more quiet" href="Sabia_Ian_DS480_Paper2.pdf" download>Download the PDF <span aria-hidden="true">&darr;</span></a><a target="_blank" class="more quiet" href="https://github.com/Iansabia/ds480-shopping-agent-audit" rel="noopener noreferrer">Code and appendix on GitHub <span aria-hidden="true">&nearr;</span></a></span></div>
+  </main>
+
+  <footer>
+    <p>Made in Boston. No trackers.</p>
+    <div class="stamp mono"><span>Revised<b>2026-11-09</b></span></div>
+  </footer>
+</div>
+
+<dialog class="zoom" id="zoom" aria-labelledby="zoomNum">
+  <div class="zoom-bar"><span class="mono" id="zoomNum">Figure</span><span class="zoom-hint mono" aria-hidden="true">Swipe to see more</span><button class="zoom-close" type="button" id="zoomClose">Close</button></div>
+  <div class="zoom-img"><img id="zoomImg" alt="" src="data:," width="956" height="750"></div>
+  <p class="zoom-cap" id="zoomCap"></p>
+</dialog>
+
+<script src="../assets/site.js"></script>
+<script>
+(() => {
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  if (coarse) document.querySelectorAll('[data-touch]').forEach((n) => { n.textContent = n.dataset.touch; });
+
+  /* the headline ladder: one row per model in Table 1. The toggle swaps the measure; hover, focus or tap shows the whole row. */
+  const lad = document.getElementById('ladder');
+  if (lad) {
+    const rungs = [...lad.querySelectorAll('.rung')], seg = [...lad.querySelectorAll('.seg button')];
+    const read = document.getElementById('ladderRead'), intro = [...read.childNodes].map((n) => n.cloneNode(true));
+    const fmt = {
+      alpha: (v) => '+' + v.toFixed(1) + ' bps',
+      sharpe: (v) => v.toFixed(3),
+      pnl: (v) => '+$' + v.toFixed(2),
+    };
+    let metric = 'alpha';
+    const paint = () => {
+      const max = Math.max(...rungs.map((r) => +r.dataset[metric]));
+      rungs.forEach((r) => {
+        const v = +r.dataset[metric];
+        r.style.setProperty('--w', (v / max * 100).toFixed(2) + '%');
+        r.querySelector('.v').textContent = fmt[metric](v);
+        r.setAttribute('aria-label', r.dataset.name + ': ' + fmt[metric](v));
+      });
+    };
+    seg.forEach((b) => b.addEventListener('click', () => {
+      metric = b.dataset.m;
+      seg.forEach((x) => x.setAttribute('aria-pressed', x === b));
+      paint();
+    }));
+    const line = (r) => {
+      const d = r.dataset, b = document.createElement('b');
+      b.textContent = d.full;
+      return [b, document.createTextNode(
+        ' (Tier ' + d.tier + '): Sharpe ' + (+d.sharpe).toFixed(3) + ', ' + fmt.alpha(+d.alpha) + ' per trade, ' + fmt.pnl(+d.pnl) +
+        ' total, ' + d.win + ' win rate over ' + (+d.trades).toLocaleString('en-US') + ' trades.' + (d.note ? ' ' + d.note : ''))];
+    };
+    const show = (r) => {
+      rungs.forEach((x) => x.classList.toggle('on', x === r));
+      read.replaceChildren(...line(r));
+    };
+    const reset = () => { rungs.forEach((x) => x.classList.remove('on')); read.replaceChildren(...intro.map((n) => n.cloneNode(true))); };
+    rungs.forEach((r) => {
+      r.addEventListener('mouseenter', () => show(r));
+      r.addEventListener('focus', () => show(r));
+      r.addEventListener('click', () => {
+        show(r);
+        /* touch: on a short screen the readout can sit below the fold, so bring it up after a tap */
+        if (coarse && read.getBoundingClientRect().bottom > innerHeight) read.scrollIntoView({ block: 'nearest' });
+      });
+    });
+    /* phones: the readout keeps the height of its longest text, so the numbers under it never jump between taps */
+    const narrow = matchMedia('(max-width: 960px)');
+    const fit = () => {
+      read.style.minHeight = '';
+      if (!narrow.matches) return;
+      const probe = read.cloneNode(false);
+      probe.removeAttribute('id'); probe.removeAttribute('aria-live'); probe.setAttribute('aria-hidden', 'true');
+      probe.style.cssText = 'position:absolute;visibility:hidden;min-height:0;width:' + read.offsetWidth + 'px';
+      read.after(probe);
+      let h = 0;
+      [intro, ...rungs.map(line)].forEach((nodes) => { probe.replaceChildren(...nodes.map((n) => n.cloneNode(true))); h = Math.max(h, probe.offsetHeight); });
+      probe.remove();
+      read.style.minHeight = h + 'px';
+    };
+    let fitW = -1;
+    new ResizeObserver(() => { if (read.offsetWidth !== fitW) { fitW = read.offsetWidth; fit(); } }).observe(lad);
+    if (document.fonts) document.fonts.ready.then(fit);
+    lad.querySelector('.rungs').addEventListener('mouseleave', () => { if (!lad.contains(document.activeElement) || !document.activeElement.classList.contains('rung')) reset(); });
+    lad.querySelector('.rungs').addEventListener('focusout', (e) => { if (!e.relatedTarget || !e.relatedTarget.classList.contains('rung')) reset(); });
+    paint();
+    const seen = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { lad.classList.add('in'); seen.disconnect(); } }, { threshold: 0.3 });
+    seen.observe(lad.querySelector('.rungs'));
+  }
+
+  /* figures open full size in a dialog; without JS the link opens the image itself */
+  const dlg = document.getElementById('zoom');
+  if (dlg && typeof dlg.showModal === 'function') {
+    const img = document.getElementById('zoomImg'), num = document.getElementById('zoomNum'), cap = document.getElementById('zoomCap');
+    const pane = dlg.querySelector('.zoom-img');
+    /* "pans" shows the swipe line on touch screens when the figure is bigger than the viewer */
+    const pans = () => dlg.classList.toggle('pans', pane.scrollWidth > pane.clientWidth + 1 || pane.scrollHeight > pane.clientHeight + 1);
+    let from = null;
+    document.querySelectorAll('a[data-zoom]').forEach((a) => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const fig = a.closest('figure'), small = a.querySelector('img'), text = fig.querySelector('figcaption').textContent.trim();
+      from = a;
+      img.src = a.getAttribute('href'); img.alt = small.alt; img.width = small.width; img.height = small.height;
+      num.textContent = text.slice(0, text.indexOf('.', 5) + 1);
+      cap.textContent = text.slice(text.indexOf('.', 5) + 1).trim();
+      dlg.showModal();
+      pane.scrollTo(0, 0);
+      pans();
+    }));
+    img.addEventListener('load', pans);
+    addEventListener('resize', () => { if (dlg.open) pans(); });
+    document.getElementById('zoomClose').addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener('close', () => { if (from) from.focus(); });
+  }
+
+  /* the results table: on a narrow screen, say that it scrolls sideways and fade the edge until the last column is in view */
+  const tbl = document.getElementById('table-1'), sc = tbl && tbl.querySelector('.table');
+  if (sc) {
+    const upd = () => {
+      tbl.classList.toggle('scrolls', sc.scrollWidth > sc.clientWidth + 1);
+      tbl.classList.toggle('end', sc.scrollLeft + sc.clientWidth >= sc.scrollWidth - 2);
+    };
+    sc.addEventListener('scroll', upd, { passive: true });
+    const ro = new ResizeObserver(upd);
+    ro.observe(sc); ro.observe(sc.querySelector('table'));
+  }
+
+  /* phones: the contents sit near the top of a long page, so a button leads back to them. It shows while the reader
+     scrolls up (the way back), stays out of the text while they scroll down, and hides near the contents and the page end. */
+  const jump = document.querySelector('.toc-jump'), contents = document.getElementById('contents'), back = document.querySelector('.back');
+  if (jump && contents && back) {
+    let queued = false, lastY = scrollY, up = false;
+    const set = () => {
+      queued = false;
+      if (Math.abs(scrollY - lastY) > 24) { up = scrollY < lastY; lastY = scrollY; }
+      jump.classList.toggle('show', up && contents.getBoundingClientRect().bottom < 0 && back.getBoundingClientRect().top > innerHeight);
+    };
+    const later = () => { if (!queued) { queued = true; requestAnimationFrame(set); } };
+    addEventListener('scroll', later, { passive: true }); addEventListener('resize', later); set();
+  }
+})();
+</script>
+</body>
+</html>
