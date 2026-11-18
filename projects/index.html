@@ -11,11 +11,11 @@
 <link rel="stylesheet" href="../assets/page-intro.css">
 <script src="../assets/page-intro.js" data-intro="title"></script>
 <link rel="expect" href="#main-h1" blocking="render">
-<meta name="description" content="Ian Sabia's projects, each with a demo you can try: SwapChain, Continuum's AI golf caddy, a self-driving model for NVIDIA's challenge, a fantasy football agent, a research paper, an AI graphing calculator and a fix inside Omi.">
+<meta name="description" content="Ian Sabia's projects, each with a demo you can try: SwapChain, Continuum's AI golf caddy, a self-driving model for NVIDIA's challenge, a fantasy football agent, an AI graphing calculator and a fix inside Omi.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://iansabia.github.io/projects/">
 <meta property="og:title" content="Projects · Ian Sabia">
-<meta property="og:description" content="Projects with demos you can try: a live app, a film, a research result, a calculator build and an open-source fix.">
+<meta property="og:description" content="Projects with demos you can try: a live app, a film, a calculator build and an open-source fix.">
 <meta property="og:image" content="https://iansabia.github.io/projects/img/app-light.webp">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0817'/%3E%3Cpath d='M12 50 C 22 8, 44 6, 52 30' stroke='%239B85FF' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='30' r='6' fill='%23e08a55'/%3E%3C/svg%3E">
@@ -134,6 +134,7 @@
       </span>
       <a class="demos-pill" href="../projects/" aria-current="true"><svg viewBox="0 0 11 13" aria-hidden="true"><path d="M0 0v13l11-6.5z"/></svg>Projects</a>
       <span class="links">
+        <a href="../research/">Research</a>
         <a href="../#milan">Milan</a>
         <a href="../#off">Off the clock</a>
         <a href="../#contact">Contact</a>
@@ -145,9 +146,10 @@
       <a href="../#currently">Currently <span class="mono">01</span></a>
       <a href="../work/">Work <span class="mono">02</span></a>
       <a href="../projects/" aria-current="true">Projects <span class="mono">03</span></a>
-      <a href="../#milan">Milan <span class="mono">04</span></a>
-      <a href="../#off">Off the clock <span class="mono">05</span></a>
-      <a href="../#contact">Contact <span class="mono">06</span></a>
+      <a href="../research/">Research <span class="mono">04</span></a>
+      <a href="../#milan">Milan <span class="mono">05</span></a>
+      <a href="../#off">Off the clock <span class="mono">06</span></a>
+      <a href="../#contact">Contact <span class="mono">07</span></a>
     </div>
   </header>
 
@@ -228,34 +230,14 @@
           <div class="ctas"><a class="pill sm" data-demo data-demo-title="A week with the bot" href="../fantasy/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../fantasy/">Project page</a></div>
         </article>
 
-        <article class="demo reveal" id="paper">
-          <a class="shot shot-paper" data-demo href="../paper/#ladder" tabindex="-1" aria-hidden="true"><span class="shot-in">
-            <img class="l" src="img/paper-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/paper-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
-          </a>
-          <div class="tags"><span class="lbl acc">05 / Research &middot; DS340</span><span class="stars" data-repo="Iansabia/DS340-Project"></span></div>
-          <h2>Complexity is not an edge</h2>
-          <p>Polymarket and Kalshi often price the same event differently. Does a fancier model profit more from those gaps? No. The simplest model won, with about 30&times; more edge per trade.</p>
-          <div class="ctas"><a class="pill sm" data-demo data-demo-title="The headline result" href="../paper/#ladder">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../paper/">Read the paper</a></div>
-        </article>
 
-        <article class="demo reveal" id="audit">
-          <a class="shot shot-audit" data-demo data-demo-title="Does race or gender affect how shopping agents buy?" href="../audit/" tabindex="-1" aria-hidden="true"><span class="shot-in">
-            <img class="l" src="img/audit-light.webp" alt="" width="1120" height="700" loading="lazy">
-            <img class="d" src="img/audit-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
-          </a>
-          <div class="tags"><span class="lbl acc">06 / Research &middot; DS480</span><span class="stars" data-repo="Iansabia/ds480-shopping-agent-audit"></span></div>
-          <h2>Does a name change what an AI agent buys?</h2>
-          <p>AI agents are starting to shop for people. I built a mock store and ran a pre-registered audit: 65,280 runs of the same requests on Claude Haiku 5.5 and GPT-6 Luna, with only the buyer's name changed. Luna paid less for names associated with Black buyers and with women, and guessed hair needs from names. Haiku showed no price gap.</p>
-          <div class="ctas"><a class="pill sm" data-demo data-demo-title="Does race or gender affect how shopping agents buy?" href="../audit/">Read the paper <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="https://github.com/Iansabia/ds480-shopping-agent-audit">Code and appendix</a></div>
-        </article>
 
         <article class="demo reveal" id="calculator">
           <a class="shot shot-calculator" data-demo href="../calculator/#demo" tabindex="-1" aria-hidden="true"><span class="shot-in">
             <img class="l" src="img/calc-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/calc-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
-          <div class="tags"><span class="lbl acc">07 / C++ &middot; ESP32-S3</span><span class="stars" data-repo="OtterCadGH/nternet-Link"></span></div>
+          <div class="tags"><span class="lbl acc">05 / C++ &middot; ESP32-S3</span><span class="stars" data-repo="OtterCadGH/nternet-Link"></span></div>
           <h2>An AI graphing calculator</h2>
           <p>A camera and an ESP32 chip wired into a TI-Nspire. It photographs a handwritten problem and shows a worked solution on the calculator. I wrote the firmware, the calculator client and the local proxy.</p>
           <div class="ctas"><a class="pill sm" data-demo href="../calculator/#demo">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../calculator/">Project page</a></div>
@@ -266,7 +248,7 @@
             <img class="l" src="img/omi-light.webp" alt="" width="1120" height="700" loading="lazy">
             <img class="d" src="img/omi-dark.webp" alt="" width="1120" height="700" loading="lazy"></span>
           </a>
-          <div class="tags"><span class="lbl acc">08 / TypeScript &middot; open source</span><span class="stars" data-repo="BasedHardware/omi"></span></div>
+          <div class="tags"><span class="lbl acc">06 / TypeScript &middot; open source</span><span class="stars" data-repo="BasedHardware/omi"></span></div>
           <h2>A fix inside Omi</h2>
           <p>Omi is an open-source AI wearable. Its macOS app broke chat and tasks whenever two database transactions nested. I wrote a failing test first, fixed it, and it was merged into main.</p>
           <div class="ctas"><a class="pill sm" data-demo data-demo-title="Step through the bug" href="../omi/#stack">Try the demo <span aria-hidden="true">&rarr;</span></a><a class="pill sm ghost" href="../omi/">Project page</a></div>
@@ -277,6 +259,7 @@
 
     <section class="from-work" id="from-work">
       <a class="fw reveal" href="../work/"><span><span class="lbl">Work</span>Demos from my work are on the Work page</span><span class="arrow-chip" aria-hidden="true"><span>&rarr;</span></span></a>
+      <a class="fw reveal" href="../research/"><span><span class="lbl">Research</span>The two papers, with their demos, are on the Research page</span><span class="arrow-chip" aria-hidden="true"><span>&rarr;</span></span></a>
     </section>
 
     <div class="back"><a class="more" href="../"><span aria-hidden="true">&larr;</span> Home</a><a class="more quiet" href="../work/">Work <span aria-hidden="true">&rarr;</span></a></div>
@@ -284,7 +267,7 @@
 
   <footer>
     <p>Made in Boston. No trackers.</p>
-    <div class="stamp mono"><span>Revised<b>2026-11-04</b></span></div>
+    <div class="stamp mono"><span>Revised<b>2026-11-18</b></span></div>
   </footer>
 </div>
 <script src="../assets/site.js"></script>
